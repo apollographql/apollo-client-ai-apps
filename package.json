@@ -1,5 +1,5 @@
 {
-  "name": "apollo-ai-apps-client",
+  "name": "@apollo/ai-apps-client",
   "version": "0.1.0",
   "main": "dist/index.js",
   "module": "dist/index.js",
