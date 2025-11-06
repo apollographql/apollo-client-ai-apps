@@ -1,12 +1,19 @@
 {
   "name": "@apollo/ai-apps-client",
   "version": "0.1.0",
+  "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./vite": "./dist/vite/index.js"
+  },
   "scripts": {
     "dev": "node ./scripts/dev.mjs",
-    "build": "node ./scripts/build.mjs && tsc src/index.ts --emitDeclarationOnly --declaration --outDir dist --skipLibCheck --lib ES2015,DOM --target ES2015",
+    "build": "npm run build:react && npm run build:vite",
+    "build:react": "node ./scripts/build.mjs && tsc src/index.ts --emitDeclarationOnly --declaration --outDir dist --skipLibCheck --lib ES2015,DOM --target ES2015 --moduleResolution bundler --jsx react",
+    "build:vite": "node ./scripts/build-vite.mjs && tsc src/vite/index.ts --emitDeclarationOnly --declaration --outDir dist/vite --skipLibCheck --lib ES2015,DOM --target ES2020 --module esnext --moduleResolution node  --allowSyntheticDefaultImports",
     "changeset:new": "npx @changesets/cli",
     "changeset:version": "npx @changesets/cli version"
   },
@@ -15,12 +22,20 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@types/node": "^24.10.0",
     "@types/react": "^19.2.2",
     "esbuild": "^0.25.12",
     "react": "^19.2.0",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
-    "react": "^19.2.0"
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "dependencies": {
+    "@apollo/client": "^4.0.9",
+    "@graphql-tools/graphql-tag-pluck": "^8.3.23",
+    "crypto-hash": "^4.0.0",
+    "glob": "^11.0.3"
   }
 }

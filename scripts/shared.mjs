@@ -5,4 +5,5 @@ export const sharedConfig = {
   platform: "browser",
   format: "esm",
   packages: "external",
+  external: ["react", "react-dom"],
 };
