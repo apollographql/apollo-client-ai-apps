@@ -32,6 +32,8 @@ const toolCallLink = new ApolloLink((operation) => {
 // });
 
 export class ExtendedApolloClient extends ApolloClient {
+  manifest: any;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(options: { manifest: any }) {
     super({
@@ -42,13 +44,13 @@ export class ExtendedApolloClient extends ApolloClient {
       }),
     });
 
-    this.prefetchData(options.manifest);
+    this.manifest = options.manifest;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async prefetchData(manifest: any) {
+  async prefetchData() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    manifest.operations.forEach((operation: any) => {
+    this.manifest.operations.forEach((operation: any) => {
       if (operation.prefetch && window.openai.toolOutput.structuredContent[operation.prefetchID]) {
         this.writeQuery({
           query: parse(operation.body),
