@@ -12,6 +12,7 @@ const root = process.cwd();
 
 export const OperationManifestPlugin = () => {
   const cache = new Map();
+  let packageJson: any = null;
 
   const clientCache = new InMemoryCache();
   const client = new ApolloClient({
@@ -74,7 +75,11 @@ export const OperationManifestPlugin = () => {
 
     const manifest = {
       format: "apollo-ai-app-manifest",
-      version: 1,
+      version: "1",
+      name: packageJson.name,
+      description: packageJson.description,
+      hash: createHash("sha256").update(Date.now().toString()).digest("hex"),
+      // hash, name, description
       operations: Array.from(cache.values()).flatMap((entry) => entry.operations),
     };
     writeFileSync(".application-manifest.json", JSON.stringify(manifest));
@@ -84,6 +89,9 @@ export const OperationManifestPlugin = () => {
     name: "OperationManifest",
 
     async buildStart() {
+      // Read package.json on start
+      packageJson = JSON.parse(readFileSync("package.json", "utf-8"));
+
       // Scan all files on startup
       const files = await glob("src/**/*.{ts,tsx,js,jsx}");
 
@@ -97,7 +105,10 @@ export const OperationManifestPlugin = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     configureServer(server: any) {
       server.watcher.on("change", async (file: string) => {
-        if (file.match(/\.(jsx?|tsx?)$/)) {
+        if (file.endsWith("package.json")) {
+          packageJson = JSON.parse(readFileSync("package.json", "utf-8"));
+          await generateManifest();
+        } else if (file.match(/\.(jsx?|tsx?)$/)) {
           await processFile(file);
           await generateManifest();
         }
