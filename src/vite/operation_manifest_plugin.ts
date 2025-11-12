@@ -13,6 +13,7 @@ const root = process.cwd();
 export const OperationManifestPlugin = () => {
   const cache = new Map();
   let packageJson: any = null;
+  let config: any = null;
 
   const clientCache = new InMemoryCache();
   const client = new ApolloClient({
@@ -73,20 +74,49 @@ export const OperationManifestPlugin = () => {
       );
     }
 
+    let resource = "";
+    if (config.command === "serve") {
+      resource = `http://${config.server.host ?? "localhost"}:${config.server.port}`;
+    } else {
+      let entryPoint = packageJson.entry?.[config.mode];
+      if (entryPoint) {
+        resource = entryPoint;
+      } else if (config.mode === "production") {
+        resource = "index.html";
+      } else {
+        throw new Error(
+          `No entry point found for mode "${config.mode}". Entry points other than "development" and "production" must be defined in package.json file.`
+        );
+      }
+    }
+
     const manifest = {
       format: "apollo-ai-app-manifest",
       version: "1",
       name: packageJson.name,
       description: packageJson.description,
       hash: createHash("sha256").update(Date.now().toString()).digest("hex"),
-      // hash, name, description
       operations: Array.from(cache.values()).flatMap((entry) => entry.operations),
+      resource,
     };
-    writeFileSync(".application-manifest.json", JSON.stringify(manifest));
+
+    if (config.command === "build") {
+      const dest = path.resolve(root, "dist/.application-manifest.json");
+      fs.mkdirSync(path.dirname(dest), { recursive: true });
+      writeFileSync(dest, JSON.stringify(manifest));
+      console.log("File written!");
+    } else {
+      writeFileSync(".application-manifest.json", JSON.stringify(manifest));
+    }
   };
 
   return {
     name: "OperationManifest",
+
+    async configResolved(resolvedConfig: any) {
+      //console.log({ mode: config.mode, server: config.server, command: config.command });
+      config = resolvedConfig;
+    },
 
     async buildStart() {
       // Read package.json on start
@@ -99,7 +129,11 @@ export const OperationManifestPlugin = () => {
         const fullPath = path.resolve(root, file);
         await processFile(fullPath);
       }
-      await generateManifest();
+
+      // We don't want to do this here on builds cause it just gets overwritten anyways. We'll call it on writeBundle instead.
+      if (config.command === "serve") {
+        await generateManifest();
+      }
     },
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -115,11 +149,8 @@ export const OperationManifestPlugin = () => {
       });
     },
 
-    writeBundle() {
-      const src = path.resolve(root, ".application-manifest.json");
-      const dest = path.resolve(root, "dist/.application-manifest.json");
-      fs.mkdirSync(path.dirname(dest), { recursive: true });
-      fs.copyFileSync(src, dest);
+    async writeBundle() {
+      await generateManifest();
     },
   };
 };
