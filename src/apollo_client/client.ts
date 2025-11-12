@@ -20,9 +20,9 @@ const toolCallLink = new ApolloLink((operation) => {
   const { query, variables } = selectHttpOptionsAndBody(operation, fallbackHttpConfig, contextConfig).body;
 
   return Observable.from(
-    window.openai.callTool("execute_query", { query, variables })
+    window.openai.callTool("execute", { query, variables })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ).pipe(Observable.map((result) => ({ data: (result as any).data as any })));
+  ).pipe(Observable.map((result) => ({ data: result.structuredContent.data })));
 });
 
 // TODO: In the future if/when we support PQs again, do pqLink.concat(toolCallLink)
@@ -51,10 +51,10 @@ export class ExtendedApolloClient extends ApolloClient {
   async prefetchData() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.manifest.operations.forEach((operation: any) => {
-      if (operation.prefetch && window.openai.toolOutput.structuredContent[operation.prefetchID]) {
+      if (operation.prefetch && window.openai.toolOutput[operation.prefetchID]) {
         this.writeQuery({
           query: parse(operation.body),
-          data: window.openai.toolOutput.structuredContent[operation.prefetchID].data,
+          data: window.openai.toolOutput[operation.prefetchID].data,
         });
       }
     });
