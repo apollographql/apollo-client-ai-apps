@@ -76,7 +76,9 @@ export const OperationManifestPlugin = () => {
 
     let resource = "";
     if (config.command === "serve") {
-      resource = `http://${config.server.host ?? "localhost"}:${config.server.port}`;
+      resource =
+        packageJson.entry?.[config.mode] ??
+        `http${config.server.https ? "s" : ""}://${config.server.host ?? "localhost"}:${config.server.port}`;
     } else {
       let entryPoint = packageJson.entry?.[config.mode];
       if (entryPoint) {
@@ -114,7 +116,6 @@ export const OperationManifestPlugin = () => {
     name: "OperationManifest",
 
     async configResolved(resolvedConfig: any) {
-      //console.log({ mode: config.mode, server: config.server, command: config.command });
       config = resolvedConfig;
     },
 
