@@ -103,10 +103,9 @@ export const OperationManifestPlugin = () => {
     };
 
     if (config.command === "build") {
-      const dest = path.resolve(root, "dist/.application-manifest.json");
+      const dest = path.resolve(root, config.build.outDir, ".application-manifest.json");
       fs.mkdirSync(path.dirname(dest), { recursive: true });
       writeFileSync(dest, JSON.stringify(manifest));
-      console.log("File written!");
     } else {
       writeFileSync(".application-manifest.json", JSON.stringify(manifest));
     }
