@@ -2,13 +2,49 @@ import { readFileSync, writeFileSync } from "fs";
 import { glob } from "glob";
 import { gqlPluckFromCodeStringSync } from "@graphql-tools/graphql-tag-pluck";
 import { createHash } from "crypto";
-import { parse, print, visit, type DocumentNode, type OperationDefinitionNode } from "graphql";
+import {
+  Kind,
+  ListTypeNode,
+  NamedTypeNode,
+  NonNullTypeNode,
+  parse,
+  print,
+  TypeNode,
+  ValueNode,
+  visit,
+  type DocumentNode,
+  type OperationDefinitionNode,
+} from "graphql";
 import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
 import Observable from "rxjs";
 import path from "path";
 import fs from "fs";
 
 const root = process.cwd();
+
+// TODO: Do we need "validation" of the types for the different properties? Probably?
+const getRawValue = (node: ValueNode): any => {
+  switch (node.kind) {
+    case Kind.STRING:
+    case Kind.BOOLEAN:
+      return node.value;
+    case Kind.LIST:
+      return node.values.map(getRawValue);
+    case Kind.OBJECT:
+      return node.fields.reduce<Record<string, any>>((acc, field) => {
+        acc[field.name.value] = getRawValue(field.value);
+        return acc;
+      }, {});
+  }
+};
+
+export function getTypeName(type: TypeNode): string {
+  let t = type;
+  while (t.kind === "NonNullType" || t.kind === "ListType") {
+    t = (t as NonNullTypeNode | ListTypeNode).type;
+  }
+  return (t as NamedTypeNode).name.value;
+}
 
 export const OperationManifestPlugin = () => {
   const cache = new Map();
@@ -19,8 +55,14 @@ export const OperationManifestPlugin = () => {
   const client = new ApolloClient({
     cache: clientCache,
     link: new ApolloLink((operation) => {
-      const body = print(removePrefetchDirective(sortTopLevelDefinitions(operation.query)));
+      const body = print(removeClientDirective(sortTopLevelDefinitions(operation.query)));
       const name = operation.operationName;
+      const variables = (
+        operation.query.definitions.find((d) => d.kind === "OperationDefinition") as OperationDefinitionNode
+      ).variableDefinitions?.reduce(
+        (obj, varDef) => ({ ...obj, [varDef.variable.name.value]: getTypeName(varDef.type) }),
+        {}
+      );
       const type = (
         operation.query.definitions.find((d) => d.kind === "OperationDefinition") as OperationDefinitionNode
       ).operation;
@@ -31,7 +73,21 @@ export const OperationManifestPlugin = () => {
       // TODO: For now, you can only have 1 operation marked as prefetch. In the future, we'll likely support more than 1, and the "prefetchId" will be defined on the `@prefetch` itself as an argument
       const prefetchID = prefetch ? "__anonymous" : undefined;
 
-      return Observable.of({ data: { id, name, type, body, prefetch, prefetchID } });
+      const tools = (
+        operation.query.definitions.find((d) => d.kind === "OperationDefinition") as OperationDefinitionNode
+      ).directives
+        ?.filter((d) => d.name.value === "tool")
+        .map((directive) => {
+          const directiveArguments: Record<string, any> =
+            directive.arguments?.reduce((obj, arg) => ({ ...obj, [arg.name.value]: getRawValue(arg.value) }), {}) ?? {};
+          return {
+            name: directiveArguments["name"],
+            description: directiveArguments["description"],
+            extraInputs: directiveArguments["extraInputs"],
+          };
+        });
+
+      return Observable.of({ data: { id, name, type, body, variables, prefetch, prefetchID, tools } });
     }),
   });
 
@@ -55,7 +111,17 @@ export const OperationManifestPlugin = () => {
 
     const operations = [];
     for (const source of sources) {
-      const result = await client.query({ query: source.node, fetchPolicy: "no-cache" });
+      const type = (source.node.definitions.find((d) => d.kind === "OperationDefinition") as OperationDefinitionNode)
+        .operation;
+
+      let result;
+      if (type === "query") {
+        result = await client.query({ query: source.node, fetchPolicy: "no-cache" });
+      } else if (type === "mutation") {
+        result = await client.mutate({ mutation: source.node, fetchPolicy: "no-cache" });
+      } else {
+        throw new Error("Found an unsupported operation type. Only Query and Mutation are supported.");
+      }
       operations.push(result.data);
     }
 
@@ -106,9 +172,9 @@ export const OperationManifestPlugin = () => {
       const dest = path.resolve(root, config.build.outDir, ".application-manifest.json");
       fs.mkdirSync(path.dirname(dest), { recursive: true });
       writeFileSync(dest, JSON.stringify(manifest));
-    } else {
-      writeFileSync(".application-manifest.json", JSON.stringify(manifest));
     }
+    // Always write to the dev location so that the app can bundle the manifest content
+    writeFileSync(".application-manifest.json", JSON.stringify(manifest));
   };
 
   return {
@@ -196,12 +262,12 @@ export function sortTopLevelDefinitions(query: DocumentNode): DocumentNode {
   };
 }
 
-function removePrefetchDirective(doc: DocumentNode) {
+function removeClientDirective(doc: DocumentNode) {
   return visit(doc, {
     OperationDefinition(node) {
       return {
         ...node,
-        directives: node.directives?.filter((d) => d.name.value !== "prefetch"),
+        directives: node.directives?.filter((d) => d.name.value !== "prefetch" && d.name.value !== "tool"),
       };
     },
   });
