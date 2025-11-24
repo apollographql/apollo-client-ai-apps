@@ -15,6 +15,9 @@ import { ApplicationManifest } from "../types/application-manifest";
 // const pqLink = new PersistedQueryLink({
 //   sha256: (queryString) => sha256(queryString),
 // });
+
+// Normally, ApolloClient uses an HttpLink and sends the graphql request over HTTP
+// In our case, we're are sending the graphql request over the "execute" tool call
 const toolCallLink = new ApolloLink((operation) => {
   const context = operation.getContext();
   const contextConfig = {
@@ -30,6 +33,7 @@ const toolCallLink = new ApolloLink((operation) => {
   );
 });
 
+// This allows us to extend the options with the "manifest" option AND make link/cache optional (they are normally required)
 type ExtendedApolloClientOptions = Omit<ApolloClient.Options, "link" | "cache"> & {
   link?: ApolloClient.Options["link"];
   cache?: ApolloClient.Options["cache"];
@@ -43,6 +47,7 @@ export class ExtendedApolloClient extends ApolloClient {
     super({
       link: toolCallLink,
       cache: options.cache ?? new InMemoryCache(),
+      // Strip out the prefetch/tool directives so they don't get sent with the operation to the server
       documentTransform: new DocumentTransform((document) => {
         return removeDirectivesFromDocument([{ name: "prefetch" }, { name: "tool" }], document)!;
       }),

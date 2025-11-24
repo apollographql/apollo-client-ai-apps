@@ -9,6 +9,9 @@ export const ExtendedApolloProvider = ({
 }: React.PropsWithChildren<{ client: ExtendedApolloClient }>) => {
   const [hasPreloaded, setHasPreloaded] = useState(false);
 
+  // This is to prevent against a race condition. We don't know if window.openai will be available when this loads or if it will become available shortly after.
+  // So... we create the event listener and whenever it is available, then we can process the prefetch/tool data.
+  // In practice, this should be pretty much instant
   useEffect(() => {
     const prefetchData = async () => {
       await client.prefetchData();
