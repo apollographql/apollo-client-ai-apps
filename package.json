@@ -17,7 +17,7 @@
     "build": "npm run build:react && npm run build:vite",
     "build:react": "node ./scripts/build.mjs && tsc src/index.ts --emitDeclarationOnly --declaration --outDir dist --skipLibCheck --lib ES2015,DOM --target ES2015 --moduleResolution bundler --jsx react",
     "build:vite": "node ./scripts/build-vite.mjs && tsc src/vite/index.ts --emitDeclarationOnly --declaration --outDir dist/vite --skipLibCheck --lib ES2015,DOM --target ES2020 --module esnext --moduleResolution node  --allowSyntheticDefaultImports",
-    "changeset:new": "npx @changesets/cli",
+    "changeset": "npx @changesets/cli",
     "changeset:version": "npx @changesets/cli version",
     "test": "vitest run --coverage",
     "test:watch": "vitest --coverage"
