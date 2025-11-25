@@ -33,7 +33,7 @@ jobs:
               shell: bash
               run: npm run test
 
-            - uses: knope-dev/action@v1
+            - uses: knope-dev/action@v2
               with:
                   version: 0.21.5
 
