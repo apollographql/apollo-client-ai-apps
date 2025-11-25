@@ -16,18 +16,23 @@
     "build:vite": "node ./scripts/build-vite.mjs && tsc src/vite/index.ts --emitDeclarationOnly --declaration --outDir dist/vite --skipLibCheck --lib ES2015,DOM --target ES2020 --module esnext --moduleResolution node  --allowSyntheticDefaultImports",
     "changeset:new": "npx @changesets/cli",
     "changeset:version": "npx @changesets/cli version",
-    "test": "vitest --coverage"
+    "test": "vitest run --coverage",
+    "test:watch": "vitest --coverage"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
     "@types/node": "^24.10.0",
     "@types/react": "^19.2.2",
+    "@vitejs/plugin-react": "^5.1.1",
     "@vitest/coverage-v8": "^4.0.13",
     "esbuild": "^0.25.12",
     "graphql": "^16.9.0",
+    "happy-dom": "^20.0.10",
     "rxjs": "^7.8.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.13"

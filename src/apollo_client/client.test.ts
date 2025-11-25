@@ -5,31 +5,29 @@ import { parse } from "graphql";
 
 describe("Client Basics", () => {
   test("Should execute tool call when client.query is called", async () => {
-    vi.stubGlobal("window", {
-      openai: {
-        toolInput: {},
-        toolOutput: {},
-        toolResponseMetadata: {
-          toolName: "the-store--Get Product",
-        },
-        callTool: vi.fn(async (name: string, args: Record<string, unknown>) => {
-          return {
-            structuredContent: {
-              data: {
-                product: {
-                  id: "1",
-                  title: "Pen",
-                  rating: 5,
-                  price: 1.0,
-                  description: "Awesome pen",
-                  images: [],
-                  __typename: "Product",
-                },
+    vi.stubGlobal("openai", {
+      toolInput: {},
+      toolOutput: {},
+      toolResponseMetadata: {
+        toolName: "the-store--Get Product",
+      },
+      callTool: vi.fn(async (name: string, args: Record<string, unknown>) => {
+        return {
+          structuredContent: {
+            data: {
+              product: {
+                id: "1",
+                title: "Pen",
+                rating: 5,
+                price: 1.0,
+                description: "Awesome pen",
+                images: [],
+                __typename: "Product",
               },
             },
-          };
-        }),
-      },
+          },
+        };
+      }),
     });
 
     const manifest = {
@@ -84,29 +82,27 @@ describe("Client Basics", () => {
 
 describe("prefetchData", () => {
   test("Should cache tool response when data is provided", async () => {
-    vi.stubGlobal("window", {
-      openai: {
-        toolInput: {
-          id: 1,
-        },
-        toolOutput: {
-          result: {
-            data: {
-              product: {
-                id: "1",
-                title: "Pen",
-                rating: 5,
-                price: 1.0,
-                description: "Awesome pen",
-                images: [],
-                __typename: "Product",
-              },
+    vi.stubGlobal("openai", {
+      toolInput: {
+        id: 1,
+      },
+      toolOutput: {
+        result: {
+          data: {
+            product: {
+              id: "1",
+              title: "Pen",
+              rating: 5,
+              price: 1.0,
+              description: "Awesome pen",
+              images: [],
+              __typename: "Product",
             },
           },
         },
-        toolResponseMetadata: {
-          toolName: "the-store--Get Product",
-        },
+      },
+      toolResponseMetadata: {
+        toolName: "the-store--Get Product",
       },
     });
 
@@ -157,32 +153,30 @@ describe("prefetchData", () => {
   });
 
   test("Should cache prefetched data when prefetched data is provided", async () => {
-    vi.stubGlobal("window", {
-      openai: {
-        toolInput: {},
-        toolOutput: {
-          result: {},
-          prefetch: {
-            __anonymous: {
-              data: {
-                topProducts: [
-                  {
-                    id: "2",
-                    title: "iPhone 17",
-                    rating: 5,
-                    price: 999.99,
-                    description: "Awesome phone",
-                    images: [],
-                    __typename: "Product",
-                  },
-                ],
-              },
+    vi.stubGlobal("openai", {
+      toolInput: {},
+      toolOutput: {
+        result: {},
+        prefetch: {
+          __anonymous: {
+            data: {
+              topProducts: [
+                {
+                  id: "2",
+                  title: "iPhone 17",
+                  rating: 5,
+                  price: 999.99,
+                  description: "Awesome phone",
+                  images: [],
+                  __typename: "Product",
+                },
+              ],
             },
           },
         },
-        toolResponseMetadata: {
-          toolName: "the-store--Get Product",
-        },
+      },
+      toolResponseMetadata: {
+        toolName: "the-store--Get Product",
       },
     });
 
@@ -234,46 +228,44 @@ describe("prefetchData", () => {
   });
 
   test("Should cache both prefetch and tool response when both are provided", async () => {
-    vi.stubGlobal("window", {
-      openai: {
-        toolInput: {
-          id: 1,
+    vi.stubGlobal("openai", {
+      toolInput: {
+        id: 1,
+      },
+      toolOutput: {
+        result: {
+          data: {
+            product: {
+              id: "1",
+              title: "Pen",
+              rating: 5,
+              price: 1.0,
+              description: "Awesome pen",
+              images: [],
+              __typename: "Product",
+            },
+          },
         },
-        toolOutput: {
-          result: {
+        prefetch: {
+          __anonymous: {
             data: {
-              product: {
-                id: "1",
-                title: "Pen",
-                rating: 5,
-                price: 1.0,
-                description: "Awesome pen",
-                images: [],
-                __typename: "Product",
-              },
-            },
-          },
-          prefetch: {
-            __anonymous: {
-              data: {
-                topProducts: [
-                  {
-                    id: "2",
-                    title: "iPhone 17",
-                    rating: 5,
-                    price: 999.99,
-                    description: "Awesome phone",
-                    images: [],
-                    __typename: "Product",
-                  },
-                ],
-              },
+              topProducts: [
+                {
+                  id: "2",
+                  title: "iPhone 17",
+                  rating: 5,
+                  price: 999.99,
+                  description: "Awesome phone",
+                  images: [],
+                  __typename: "Product",
+                },
+              ],
             },
           },
         },
-        toolResponseMetadata: {
-          toolName: "the-store--Get Product",
-        },
+      },
+      toolResponseMetadata: {
+        toolName: "the-store--Get Product",
       },
     });
 
@@ -346,30 +338,28 @@ describe("prefetchData", () => {
   });
 
   test("Should exclude extra inputs when writing to cache", async () => {
-    vi.stubGlobal("window", {
-      openai: {
-        toolInput: {
-          id: 1,
-          myOtherThing: 2,
-        },
-        toolOutput: {
-          result: {
-            data: {
-              product: {
-                id: "1",
-                title: "Pen",
-                rating: 5,
-                price: 1.0,
-                description: "Awesome pen",
-                images: [],
-                __typename: "Product",
-              },
+    vi.stubGlobal("openai", {
+      toolInput: {
+        id: 1,
+        myOtherThing: 2,
+      },
+      toolOutput: {
+        result: {
+          data: {
+            product: {
+              id: "1",
+              title: "Pen",
+              rating: 5,
+              price: 1.0,
+              description: "Awesome pen",
+              images: [],
+              __typename: "Product",
             },
           },
         },
-        toolResponseMetadata: {
-          toolName: "the-store--Get Product",
-        },
+      },
+      toolResponseMetadata: {
+        toolName: "the-store--Get Product",
       },
     });
 

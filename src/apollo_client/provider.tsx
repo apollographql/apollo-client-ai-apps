@@ -23,7 +23,7 @@ export const ExtendedApolloProvider = ({
       passive: true,
     });
 
-    if (window.openai.toolOutput) {
+    if (window.openai?.toolOutput) {
       window.dispatchEvent(new CustomEvent(SET_GLOBALS_EVENT_TYPE));
     }
   }, [setHasPreloaded]);
