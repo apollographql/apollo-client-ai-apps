@@ -166,6 +166,10 @@ export const OperationManifestPlugin = () => {
       hash: createHash("sha256").update(Date.now().toString()).digest("hex"),
       operations: Array.from(cache.values()).flatMap((entry) => entry.operations),
       resource,
+      csp: {
+        connectDomains: packageJson.csp?.connectDomains ?? [],
+        resourceDomains: packageJson.csp?.resourceDomains ?? [],
+      },
     };
 
     if (config.command === "build") {
