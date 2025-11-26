@@ -1,1 +1,1 @@
-export * from "./operation_manifest_plugin";
+export * from "./application_manifest_plugin";
