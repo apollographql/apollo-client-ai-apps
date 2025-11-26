@@ -15,19 +15,13 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - name: Append NPM token to .npmrc
-              run: |
-                  cat << EOF > "$HOME/.npmrc"
-                      provenance=true
-                      //registry.npmjs.org/:_authToken=$NPM_TOKEN
-                  EOF
-              env:
-                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
             - name: Setup Node.js 20.x
               uses: actions/setup-node@v4
               with:
                   node-version: 20.x
+                  registry-url: "https://registry.npmjs.org/"
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
             - name: Install dependencies
               shell: bash
