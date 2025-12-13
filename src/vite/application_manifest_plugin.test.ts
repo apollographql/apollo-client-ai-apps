@@ -4,6 +4,8 @@ import fs from "fs";
 import * as glob from "glob";
 import path from "path";
 
+const root = process.cwd();
+
 vi.mock(import("fs"), async (importOriginal) => {
   const actual = await importOriginal();
   return {
@@ -21,7 +23,7 @@ vi.mock(import("path"), async (importOriginal) => {
   return {
     default: {
       ...actual.default,
-      resolve: vi.fn(),
+      resolve: vi.fn((...args) => args.map((a, i) => (i === 0 ? a : a.replace(/^\//, ""))).join("/")),
       dirname: vi.fn(),
     },
   };
@@ -43,7 +45,7 @@ describe("buildStart", () => {
     vi.spyOn(fs, "readFileSync").mockImplementation((path) => {
       if (path === "package.json") {
         return JSON.stringify({});
-      } else if (path === "my-component.tsx") {
+      } else if (path === root + "/my-component.tsx") {
         return `
             const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(name: "hello-world", description: "This is an awesome tool!", extraInputs: [{
               name: "doStuff",
@@ -54,11 +56,10 @@ describe("buildStart", () => {
       }
     });
     vi.spyOn(glob, "glob").mockImplementation(() => Promise.resolve(["my-component.tsx"]));
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
     vi.spyOn(fs, "writeFileSync");
 
     const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
+    plugin.configResolved({ command: "serve", server: {}, build: { outDir: "/dist" } });
     await plugin.buildStart();
     let [file, content] = (fs.writeFileSync as unknown as Mock).mock.calls[0];
 
@@ -66,8 +67,8 @@ describe("buildStart", () => {
     let contentObj = JSON.parse(content);
     contentObj.hash = "abc";
 
-    expect(fs.writeFileSync).toHaveBeenCalledOnce();
-    expect(file).toBe(".application-manifest.json");
+    expect(fs.writeFileSync).toHaveBeenCalledTimes(2);
+    expect(file).toBe(root + "/dist/.application-manifest.json");
     expect(contentObj).toMatchInlineSnapshot(`
       {
         "csp": {
@@ -134,18 +135,17 @@ describe("buildStart", () => {
     vi.spyOn(fs, "readFileSync").mockImplementation((path) => {
       if (path === "package.json") {
         return JSON.stringify({});
-      } else if (path === "my-component.tsx") {
+      } else if (path === root + "/my-component.tsx") {
         return `
             const MY_QUERY = \`query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
         `;
       }
     });
     vi.spyOn(glob, "glob").mockImplementation(() => Promise.resolve(["my-component.tsx"]));
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
     vi.spyOn(fs, "writeFileSync");
 
     const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
+    plugin.configResolved({ command: "serve", server: {}, build: { outDir: "/dist" } });
     await plugin.buildStart();
     let [file, content] = (fs.writeFileSync as unknown as Mock).mock.calls[0];
 
@@ -153,8 +153,8 @@ describe("buildStart", () => {
     let contentObj = JSON.parse(content);
     contentObj.hash = "abc";
 
-    expect(fs.writeFileSync).toHaveBeenCalledOnce();
-    expect(file).toBe(".application-manifest.json");
+    expect(fs.writeFileSync).toHaveBeenCalledTimes(2);
+    expect(file).toBe(root + "/dist/.application-manifest.json");
     expect(contentObj).toMatchInlineSnapshot(`
       {
         "csp": {
@@ -174,18 +174,17 @@ describe("buildStart", () => {
     vi.spyOn(fs, "readFileSync").mockImplementation((path) => {
       if (path === "package.json") {
         return JSON.stringify({});
-      } else if (path === "my-component.tsx") {
+      } else if (path === root + "/my-component.tsx") {
         return `
             const MY_QUERY = gql\`query HelloWorldQuery { helloWorld }\`;
         `;
       }
     });
     vi.spyOn(glob, "glob").mockImplementation(() => Promise.resolve(["my-component.tsx"]));
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
     vi.spyOn(fs, "writeFileSync");
 
     const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
+    plugin.configResolved({ command: "serve", server: {}, build: { outDir: "/dist" } });
     await plugin.buildStart();
     let [file, content] = (fs.writeFileSync as unknown as Mock).mock.calls[0];
 
@@ -193,8 +192,8 @@ describe("buildStart", () => {
     let contentObj = JSON.parse(content);
     contentObj.hash = "abc";
 
-    expect(fs.writeFileSync).toHaveBeenCalledOnce();
-    expect(file).toBe(".application-manifest.json");
+    expect(fs.writeFileSync).toHaveBeenCalledTimes(2);
+    expect(file).toBe(root + "/dist/.application-manifest.json");
     expect(contentObj).toMatchInlineSnapshot(`
       {
         "csp": {
@@ -226,18 +225,17 @@ describe("buildStart", () => {
     vi.spyOn(fs, "readFileSync").mockImplementation((path) => {
       if (path === "package.json") {
         return JSON.stringify({});
-      } else if (path === "my-component.tsx") {
+      } else if (path === root + "/my-component.tsx") {
         return `
             const MY_QUERY = gql\`query HelloWorldQuery @prefetch { helloWorld }\`;
         `;
       }
     });
     vi.spyOn(glob, "glob").mockImplementation(() => Promise.resolve(["my-component.tsx"]));
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
     vi.spyOn(fs, "writeFileSync");
 
     const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
+    plugin.configResolved({ command: "serve", server: {}, build: { outDir: "/dist" } });
     await plugin.buildStart();
     let [file, content] = (fs.writeFileSync as unknown as Mock).mock.calls[0];
 
@@ -245,8 +243,8 @@ describe("buildStart", () => {
     let contentObj = JSON.parse(content);
     contentObj.hash = "abc";
 
-    expect(fs.writeFileSync).toHaveBeenCalledOnce();
-    expect(file).toBe(".application-manifest.json");
+    expect(fs.writeFileSync).toHaveBeenCalledTimes(2);
+    expect(file).toBe(root + "/dist/.application-manifest.json");
     expect(contentObj).toMatchInlineSnapshot(`
       {
         "csp": {
@@ -301,18 +299,17 @@ describe("buildStart", () => {
     vi.spyOn(fs, "readFileSync").mockImplementation((path) => {
       if (path === "package.json") {
         return JSON.stringify({});
-      } else if (path === "my-component.tsx") {
+      } else if (path === root + "/my-component.tsx") {
         return `
             const MY_QUERY = gql\`mutation HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
         `;
       }
     });
     vi.spyOn(glob, "glob").mockImplementation(() => Promise.resolve(["my-component.tsx"]));
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
     vi.spyOn(fs, "writeFileSync");
 
     const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
+    plugin.configResolved({ command: "serve", server: {}, build: { outDir: "/dist" } });
     await plugin.buildStart();
     let [file, content] = (fs.writeFileSync as unknown as Mock).mock.calls[0];
 
@@ -320,8 +317,8 @@ describe("buildStart", () => {
     let contentObj = JSON.parse(content);
     contentObj.hash = "abc";
 
-    expect(fs.writeFileSync).toHaveBeenCalledOnce();
-    expect(file).toBe(".application-manifest.json");
+    expect(fs.writeFileSync).toHaveBeenCalledTimes(2);
+    expect(file).toBe(root + "/dist/.application-manifest.json");
     expect(contentObj).toMatchInlineSnapshot(`
       {
         "csp": {
@@ -395,7 +392,7 @@ describe("buildStart", () => {
     vi.spyOn(fs, "writeFileSync");
 
     const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", mode: "staging", server: {} });
+    plugin.configResolved({ command: "serve", mode: "staging", server: {}, build: { outDir: "/dist" } });
     await plugin.buildStart();
 
     let [file, content] = (fs.writeFileSync as unknown as Mock).mock.calls[0];
@@ -419,7 +416,7 @@ describe("buildStart", () => {
     vi.spyOn(fs, "writeFileSync");
 
     const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: { https: {}, port: "5678" } });
+    plugin.configResolved({ command: "serve", server: { https: {}, port: "5678" }, build: { outDir: "/dist" } });
     await plugin.buildStart();
 
     let [file, content] = (fs.writeFileSync as unknown as Mock).mock.calls[0];
@@ -443,7 +440,11 @@ describe("buildStart", () => {
     vi.spyOn(fs, "writeFileSync");
 
     const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: { port: "5678", host: "awesome.com" } });
+    plugin.configResolved({
+      command: "serve",
+      server: { port: "5678", host: "awesome.com" },
+      build: { outDir: "/dist" },
+    });
     await plugin.buildStart();
 
     let [file, content] = (fs.writeFileSync as unknown as Mock).mock.calls[0];
@@ -590,7 +591,7 @@ describe("buildStart", () => {
     vi.spyOn(fs, "readFileSync").mockImplementation((path) => {
       if (path === "package.json") {
         return JSON.stringify({});
-      } else if (path === "my-component.tsx") {
+      } else if (path === root + "/my-component.tsx") {
         return `
             const MY_QUERY = gql\`
               fragment A on User { firstName } 
@@ -608,11 +609,10 @@ describe("buildStart", () => {
       }
     });
     vi.spyOn(glob, "glob").mockImplementation(() => Promise.resolve(["my-component.tsx"]));
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
     vi.spyOn(fs, "writeFileSync");
 
     const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
+    plugin.configResolved({ command: "serve", server: {}, build: { outDir: "/dist" } });
     await plugin.buildStart();
     let [file, content] = (fs.writeFileSync as unknown as Mock).mock.calls[0];
 
@@ -620,8 +620,8 @@ describe("buildStart", () => {
     let contentObj = JSON.parse(content);
     contentObj.hash = "abc";
 
-    expect(fs.writeFileSync).toHaveBeenCalledOnce();
-    expect(file).toBe(".application-manifest.json");
+    expect(fs.writeFileSync).toHaveBeenCalledTimes(2);
+    expect(file).toBe(`${root}/dist/.application-manifest.json`);
     expect(contentObj).toMatchInlineSnapshot(`
       {
         "csp": {
@@ -819,12 +819,12 @@ describe("configureServer", () => {
     server.watcher.init();
 
     const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
+    plugin.configResolved({ command: "serve", server: {}, build: { outDir: "/dist" } });
     await plugin.buildStart();
     await plugin.configureServer(server);
     await server.watcher.trigger("package.json");
     await server.watcher.trigger("my-component.tsx");
 
-    expect(fs.writeFileSync).toBeCalledTimes(3);
+    expect(fs.writeFileSync).toBeCalledTimes(6);
   });
 });

@@ -207,11 +207,11 @@ export const ApplicationManifestPlugin = () => {
       },
     };
 
-    if (config.command === "build") {
-      const dest = path.resolve(root, config.build.outDir, ".application-manifest.json");
-      mkdirSync(path.dirname(dest), { recursive: true });
-      writeFileSync(dest, JSON.stringify(manifest));
-    }
+    // Always write to build directory so the MCP server picks it up
+    const dest = path.resolve(root, config.build.outDir, ".application-manifest.json");
+    mkdirSync(path.dirname(dest), { recursive: true });
+    writeFileSync(dest, JSON.stringify(manifest));
+
     // Always write to the dev location so that the app can bundle the manifest content
     writeFileSync(".application-manifest.json", JSON.stringify(manifest));
   };
