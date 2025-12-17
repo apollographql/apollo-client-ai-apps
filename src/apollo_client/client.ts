@@ -1,7 +1,9 @@
+import type { ApolloLink } from "@apollo/client";
 import { ApolloClient } from "@apollo/client";
 import { DocumentTransform } from "@apollo/client";
 import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
 import { parse } from "graphql";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import "../types/openai";
 import { ApplicationManifest } from "../types/application-manifest";
 import { ToolCallLink } from "./link/ToolCallLink";
@@ -24,9 +26,15 @@ export class ExtendedApolloClient extends ApolloClient {
   manifest: ApplicationManifest;
 
   constructor(options: ExtendedApolloClientOptions) {
+    const link = options.link ?? new ToolCallLink();
+
+    if (__DEV__) {
+      validateLink(link);
+    }
+
     super({
       ...options,
-      link: new ToolCallLink(),
+      link,
       // Strip out the prefetch/tool directives so they don't get sent with the operation to the server
       documentTransform: new DocumentTransform((document) => {
         return removeDirectivesFromDocument(
@@ -78,5 +86,17 @@ export class ExtendedApolloClient extends ApolloClient {
         });
       }
     });
+  }
+}
+
+function validateLink(link: ApolloLink) {
+  let terminatingLink = link;
+
+  while (terminatingLink.right) {
+    terminatingLink = terminatingLink.right;
+  }
+
+  if (!(terminatingLink instanceof ToolCallLink)) {
+    throw new Error("The terminating link must be a `ToolCallLink`.");
   }
 }
