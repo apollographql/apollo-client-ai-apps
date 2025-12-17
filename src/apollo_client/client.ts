@@ -1,4 +1,4 @@
-import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
+import { ApolloClient, ApolloLink } from "@apollo/client";
 import { from, map } from "rxjs";
 import { selectHttpOptionsAndBody } from "@apollo/client/link/http";
 import { fallbackHttpConfig } from "@apollo/client/link/http";
@@ -43,7 +43,7 @@ type ExtendedApolloClientOptions = Omit<
   "link" | "cache"
 > & {
   link?: ApolloClient.Options["link"];
-  cache?: ApolloClient.Options["cache"];
+  cache: ApolloClient.Options["cache"];
   manifest: ApplicationManifest;
 };
 
@@ -53,7 +53,7 @@ export class ExtendedApolloClient extends ApolloClient {
   constructor(options: ExtendedApolloClientOptions) {
     super({
       link: toolCallLink,
-      cache: options.cache ?? new InMemoryCache(),
+      cache: options.cache,
       // Strip out the prefetch/tool directives so they don't get sent with the operation to the server
       documentTransform: new DocumentTransform((document) => {
         return removeDirectivesFromDocument(
