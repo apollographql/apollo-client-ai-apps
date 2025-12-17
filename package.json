@@ -22,7 +22,9 @@
     "build:vite": "node ./scripts/build-vite.mjs && tsc src/vite/index.ts --emitDeclarationOnly --declaration --outDir dist/vite --skipLibCheck --lib ES2015,DOM --target ES2020 --module esnext --moduleResolution node  --allowSyntheticDefaultImports",
     "test": "vitest run --coverage",
     "test:watch": "vitest --coverage",
-    "changeset": "knope document-change"
+    "changeset": "knope document-change",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "keywords": [],
   "author": "",
