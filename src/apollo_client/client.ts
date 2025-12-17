@@ -37,13 +37,9 @@ const toolCallLink = new ApolloLink((operation) => {
   );
 });
 
-// This allows us to extend the options with the "manifest" option AND make link/cache optional (they are normally required)
-type ExtendedApolloClientOptions = Omit<
-  ApolloClient.Options,
-  "link" | "cache"
-> & {
+// This allows us to extend the options with the "manifest" option AND make link optional (it is normally required)
+type ExtendedApolloClientOptions = Omit<ApolloClient.Options, "link"> & {
   link?: ApolloClient.Options["link"];
-  cache: ApolloClient.Options["cache"];
   manifest: ApplicationManifest;
 };
 
