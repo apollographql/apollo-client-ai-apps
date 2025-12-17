@@ -26,7 +26,7 @@ export const ExtendedApolloProvider = ({
     if (window.openai?.toolOutput) {
       window.dispatchEvent(new CustomEvent(SET_GLOBALS_EVENT_TYPE));
     }
-  }, [setHasPreloaded]);
+  }, []);
 
   return hasPreloaded ?
       <ApolloProvider client={client}>{children}</ApolloProvider>
