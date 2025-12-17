@@ -26,6 +26,10 @@ export const ExtendedApolloProvider = ({
     if (window.openai?.toolOutput) {
       window.dispatchEvent(new CustomEvent(SET_GLOBALS_EVENT_TYPE));
     }
+
+    return () => {
+      window.removeEventListener(SET_GLOBALS_EVENT_TYPE, prefetchData);
+    };
   }, []);
 
   return hasPreloaded ?
