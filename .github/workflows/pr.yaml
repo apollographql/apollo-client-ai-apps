@@ -26,3 +26,7 @@ jobs:
       - name: Test
         shell: bash
         run: npm run test
+
+      - name: Check formatting
+        shell: bash
+        run: npm run format:check
