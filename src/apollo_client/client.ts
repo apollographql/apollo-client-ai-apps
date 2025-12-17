@@ -48,8 +48,8 @@ export class ExtendedApolloClient extends ApolloClient {
 
   constructor(options: ExtendedApolloClientOptions) {
     super({
+      ...options,
       link: toolCallLink,
-      cache: options.cache,
       // Strip out the prefetch/tool directives so they don't get sent with the operation to the server
       documentTransform: new DocumentTransform((document) => {
         return removeDirectivesFromDocument(
