@@ -1,5 +1,5 @@
 import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
-import * as Observable from "rxjs";
+import { from, map } from "rxjs";
 import { selectHttpOptionsAndBody } from "@apollo/client/link/http";
 import { fallbackHttpConfig } from "@apollo/client/link/http";
 import { DocumentTransform } from "@apollo/client";
@@ -32,9 +32,9 @@ const toolCallLink = new ApolloLink((operation) => {
     contextConfig
   ).body;
 
-  return Observable.from(
-    window.openai.callTool("execute", { query, variables })
-  ).pipe(Observable.map((result) => ({ data: result.structuredContent.data })));
+  return from(window.openai.callTool("execute", { query, variables })).pipe(
+    map((result) => ({ data: result.structuredContent.data }))
+  );
 });
 
 // This allows us to extend the options with the "manifest" option AND make link/cache optional (they are normally required)
