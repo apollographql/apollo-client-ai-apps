@@ -2,6 +2,7 @@ import { expect, test, describe, vi } from "vitest";
 import { ExtendedApolloClient } from "./client";
 import { ApplicationManifest } from "../types/application-manifest";
 import { parse } from "graphql";
+import { InMemoryCache } from "@apollo/client";
 
 describe("Client Basics", () => {
   test("Should execute tool call when client.query is called", async () => {
@@ -57,6 +58,7 @@ describe("Client Basics", () => {
     };
 
     const client = new ExtendedApolloClient({
+      cache: new InMemoryCache(),
       manifest: manifest as ApplicationManifest,
     });
 
@@ -145,6 +147,7 @@ describe("prefetchData", () => {
     };
 
     const client = new ExtendedApolloClient({
+      cache: new InMemoryCache(),
       manifest: manifest as ApplicationManifest,
     });
     await client.prefetchData();
@@ -226,6 +229,7 @@ describe("prefetchData", () => {
     };
 
     const client = new ExtendedApolloClient({
+      cache: new InMemoryCache(),
       manifest: manifest as ApplicationManifest,
     });
     await client.prefetchData();
@@ -335,6 +339,7 @@ describe("prefetchData", () => {
     };
 
     const client = new ExtendedApolloClient({
+      cache: new InMemoryCache(),
       manifest: manifest as ApplicationManifest,
     });
     await client.prefetchData();
@@ -425,6 +430,7 @@ describe("prefetchData", () => {
     };
 
     const client = new ExtendedApolloClient({
+      cache: new InMemoryCache(),
       manifest: manifest as ApplicationManifest,
     });
     await client.prefetchData();
