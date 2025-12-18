@@ -96,7 +96,7 @@ function validateTerminatingLink(link: ApolloLink) {
     terminatingLink = terminatingLink.right;
   }
 
-  if (!(terminatingLink instanceof ToolCallLink)) {
+  if (terminatingLink.constructor.name !== "ToolCallLink") {
     throw new Error("The terminating link must be a `ToolCallLink`.");
   }
 }
