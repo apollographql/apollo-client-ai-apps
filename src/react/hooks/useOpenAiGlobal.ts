@@ -3,7 +3,7 @@ import {
   SET_GLOBALS_EVENT_TYPE,
   SetGlobalsEvent,
   OpenAiGlobals,
-} from "../types/openai";
+} from "../../types/openai";
 
 export function useOpenAiGlobal<K extends keyof OpenAiGlobals>(
   key: K

@@ -6,7 +6,7 @@ import { parse } from "graphql";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import "../types/openai";
 import { ApplicationManifest } from "../types/application-manifest";
-import { ToolCallLink } from "./link/ToolCallLink";
+import { ToolCallLink } from "../link/ToolCallLink";
 
 // TODO: In the future if/when we support PQs again, do pqLink.concat(toolCallLink)
 // Commenting this out for now.

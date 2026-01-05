@@ -1,7 +1,7 @@
 import { expect, test, vi } from "vitest";
-import { ExtendedApolloProvider } from "./provider";
+import { ExtendedApolloProvider } from "./ApolloProvider";
 import { render } from "@testing-library/react";
-import { ExtendedApolloClient } from "./client";
+import { ExtendedApolloClient } from "../core/ApolloClient";
 import { SET_GLOBALS_EVENT_TYPE } from "../types/openai";
 
 test("Should call prefetch data when window.open is immediately available", () => {

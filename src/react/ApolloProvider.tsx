@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ApolloProvider } from "@apollo/client/react";
-import { ExtendedApolloClient } from "./client";
+import { ExtendedApolloClient } from "../core/ApolloClient";
 import { SET_GLOBALS_EVENT_TYPE } from "../types/openai";
 
 export const ExtendedApolloProvider = ({

@@ -1,4 +1,4 @@
-import { DisplayMode } from "../types/openai";
+import { DisplayMode } from "../../types/openai";
 
 export const useRequestDisplayMode = () => {
   return async (args: { mode: DisplayMode }) => {
