@@ -2,7 +2,9 @@ import { expect, test, describe, vi } from "vitest";
 import { ExtendedApolloClient } from "./client";
 import { ApplicationManifest } from "../types/application-manifest";
 import { parse } from "graphql";
-import { InMemoryCache } from "@apollo/client";
+import { ApolloLink, HttpLink, InMemoryCache } from "@apollo/client";
+import { ApolloClient } from "..";
+import { ToolCallLink } from "./link/ToolCallLink";
 
 describe("Client Basics", () => {
   test("Should execute tool call when client.query is called", async () => {
@@ -456,3 +458,167 @@ describe("prefetchData", () => {
     `);
   });
 });
+
+describe("custom links", () => {
+  test("allows for custom links provided to the constructor", async () => {
+    vi.stubGlobal("openai", {
+      toolInput: {},
+      toolOutput: {},
+      toolResponseMetadata: {
+        toolName: "the-store--Get Product",
+      },
+      callTool: vi.fn(async (name: string, args: Record<string, unknown>) => {
+        return {
+          structuredContent: {
+            data: {
+              product: {
+                id: "1",
+                title: "Pen",
+                rating: 5,
+                price: 1.0,
+                description: "Awesome pen",
+                images: [],
+                __typename: "Product",
+              },
+            },
+          },
+        };
+      }),
+    });
+
+    const manifest = createManifest();
+    const linkHandler = vi.fn<ApolloLink.RequestHandler>((operation, forward) =>
+      forward(operation)
+    );
+
+    const client = new ApolloClient({
+      manifest,
+      cache: new InMemoryCache(),
+      link: ApolloLink.from([new ApolloLink(linkHandler), new ToolCallLink()]),
+    });
+
+    const variables = { id: "1" };
+    const query = parse(manifest.operations[0].body);
+
+    await expect(client.query({ query, variables })).resolves.toStrictEqual({
+      data: {
+        product: {
+          id: "1",
+          title: "Pen",
+          rating: 5,
+          price: 1.0,
+          description: "Awesome pen",
+          images: [],
+          __typename: "Product",
+        },
+      },
+    });
+
+    expect(linkHandler).toHaveBeenCalledOnce();
+    expect(linkHandler).toHaveBeenCalledWith(
+      expect.objectContaining({ query, variables, operationType: "query" }),
+      expect.any(Function)
+    );
+  });
+
+  test("enforces ToolCallLink as terminating link", async () => {
+    const manifest = createManifest();
+    const expectedError = new Error(
+      "The terminating link must be a `ToolCallLink`. If you are using a `split` link, ensure the `right` branch uses a `ToolCallLink` as the terminating link."
+    );
+
+    expect(() => {
+      new ApolloClient({
+        manifest,
+        cache: new InMemoryCache(),
+        link: new HttpLink(),
+      });
+    }).toThrow(expectedError);
+
+    expect(() => {
+      new ApolloClient({
+        manifest,
+        cache: new InMemoryCache(),
+        link: new ApolloLink(),
+      });
+    }).toThrow(expectedError);
+
+    expect(() => {
+      new ApolloClient({
+        manifest,
+        cache: new InMemoryCache(),
+        link: ApolloLink.from([new ApolloLink(), new HttpLink()]),
+      });
+    }).toThrow(expectedError);
+
+    expect(() => {
+      new ApolloClient({
+        manifest,
+        cache: new InMemoryCache(),
+        link: ApolloLink.split(() => true, new ApolloLink(), new HttpLink()),
+      });
+    }).toThrow(expectedError);
+
+    expect(() => {
+      new ApolloClient({
+        manifest,
+        cache: new InMemoryCache(),
+        link: ApolloLink.split(() => true, new ToolCallLink(), new HttpLink()),
+      });
+    }).toThrow(expectedError);
+
+    // Allow you to use a custom terminating link for `split` links if the
+    // custom link is the `left` branch link.
+    expect(() => {
+      new ApolloClient({
+        manifest,
+        cache: new InMemoryCache(),
+        link: ApolloLink.split(() => true, new HttpLink(), new ToolCallLink()),
+      });
+    }).not.toThrow(expectedError);
+
+    expect(() => {
+      new ApolloClient({
+        manifest,
+        cache: new InMemoryCache(),
+        link: ApolloLink.split(
+          () => true,
+          new ToolCallLink(),
+          new ToolCallLink()
+        ),
+      });
+    }).not.toThrow();
+  });
+});
+
+function createManifest(
+  overrides?: Partial<ApplicationManifest>
+): ApplicationManifest {
+  return {
+    format: "apollo-ai-app-manifest",
+    version: "1",
+    name: "the-store",
+    description:
+      "An online store selling a variety of high quality products across many different categories.",
+    hash: "f6a24922f6ad6ed8c2aa57baf3b8242ae5f38a09a6df3f2693077732434c4256",
+    operations: [
+      {
+        id: "c43af26552874026c3fb346148c5795896aa2f3a872410a0a2621cffee25291c",
+        name: "Product",
+        type: "query",
+        body: "query Product($id: ID!) {\n  product(id: $id) {\n    id\n    title\n    rating\n    price\n    description\n    images\n    __typename\n  }\n}",
+        variables: { id: "ID" },
+        prefetch: false,
+        tools: [
+          {
+            name: "Get Product",
+            description: "Shows the details page for a specific product.",
+          },
+        ],
+      },
+    ],
+    resource: "index.html",
+    csp: { resourceDomains: [], connectDomains: [] },
+    ...overrides,
+  };
+}

@@ -1,12 +1,12 @@
-import { ApolloClient, ApolloLink } from "@apollo/client";
-import { from, map } from "rxjs";
-import { selectHttpOptionsAndBody } from "@apollo/client/link/http";
-import { fallbackHttpConfig } from "@apollo/client/link/http";
+import type { ApolloLink } from "@apollo/client";
+import { ApolloClient } from "@apollo/client";
 import { DocumentTransform } from "@apollo/client";
 import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
 import { parse } from "graphql";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import "../types/openai";
 import { ApplicationManifest } from "../types/application-manifest";
+import { ToolCallLink } from "./link/ToolCallLink";
 
 // TODO: In the future if/when we support PQs again, do pqLink.concat(toolCallLink)
 // Commenting this out for now.
@@ -15,27 +15,6 @@ import { ApplicationManifest } from "../types/application-manifest";
 // const pqLink = new PersistedQueryLink({
 //   sha256: (queryString) => sha256(queryString),
 // });
-
-// Normally, ApolloClient uses an HttpLink and sends the graphql request over HTTP
-// In our case, we're are sending the graphql request over the "execute" tool call
-const toolCallLink = new ApolloLink((operation) => {
-  const context = operation.getContext();
-  const contextConfig = {
-    http: context.http,
-    options: context.fetchOptions,
-    credentials: context.credentials,
-    headers: context.headers,
-  };
-  const { query, variables } = selectHttpOptionsAndBody(
-    operation,
-    fallbackHttpConfig,
-    contextConfig
-  ).body;
-
-  return from(window.openai.callTool("execute", { query, variables })).pipe(
-    map((result) => ({ data: result.structuredContent.data }))
-  );
-});
 
 // This allows us to extend the options with the "manifest" option AND make link optional (it is normally required)
 type ExtendedApolloClientOptions = Omit<ApolloClient.Options, "link"> & {
@@ -47,9 +26,15 @@ export class ExtendedApolloClient extends ApolloClient {
   manifest: ApplicationManifest;
 
   constructor(options: ExtendedApolloClientOptions) {
+    const link = options.link ?? new ToolCallLink();
+
+    if (__DEV__) {
+      validateTerminatingLink(link);
+    }
+
     super({
       ...options,
-      link: toolCallLink,
+      link,
       // Strip out the prefetch/tool directives so they don't get sent with the operation to the server
       documentTransform: new DocumentTransform((document) => {
         return removeDirectivesFromDocument(
@@ -101,5 +86,19 @@ export class ExtendedApolloClient extends ApolloClient {
         });
       }
     });
+  }
+}
+
+function validateTerminatingLink(link: ApolloLink) {
+  let terminatingLink = link;
+
+  while (terminatingLink.right) {
+    terminatingLink = terminatingLink.right;
+  }
+
+  if (terminatingLink.constructor.name !== "ToolCallLink") {
+    throw new Error(
+      "The terminating link must be a `ToolCallLink`. If you are using a `split` link, ensure the `right` branch uses a `ToolCallLink` as the terminating link."
+    );
   }
 }

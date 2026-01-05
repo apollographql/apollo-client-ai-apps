@@ -10,3 +10,4 @@ export * from "./hooks/useToolEffect";
 export * from "@apollo/client";
 export { ExtendedApolloClient as ApolloClient } from "./apollo_client/client";
 export { ExtendedApolloProvider as ApolloProvider } from "./apollo_client/provider";
+export { ToolCallLink } from "./apollo_client/link/ToolCallLink";
