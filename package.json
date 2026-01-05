@@ -17,9 +17,11 @@
   },
   "scripts": {
     "dev": "node ./scripts/dev.mjs",
+    "prebuild": "npm run clean",
     "build": "npm run build:react && npm run build:vite",
     "build:react": "node ./scripts/build.mjs && tsc src/index.ts --emitDeclarationOnly --declaration --outDir dist --skipLibCheck --lib ES2015,DOM --target ES2015 --moduleResolution bundler --jsx react",
     "build:vite": "node ./scripts/build-vite.mjs && tsc src/vite/index.ts --emitDeclarationOnly --declaration --outDir dist/vite --skipLibCheck --lib ES2015,DOM --target ES2020 --module esnext --moduleResolution node  --allowSyntheticDefaultImports",
+    "clean": "rimraf dist",
     "test": "vitest run --coverage",
     "test:watch": "vitest --coverage",
     "changeset": "knope document-change",
@@ -42,6 +44,7 @@
     "graphql": "^16.9.0",
     "happy-dom": "^20.0.10",
     "prettier": "^3.7.4",
+    "rimraf": "^6.1.2",
     "rxjs": "^7.8.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.13"
