@@ -12,6 +12,6 @@ export { useToolResponseMetadata } from "./react/hooks/useToolResponseMetadata";
 export { useWidgetState } from "./react/hooks/useWidgetState";
 
 export * from "@apollo/client";
-export { ExtendedApolloClient as ApolloClient } from "./core/ApolloClient";
+export { ApolloClient } from "./core/ApolloClient";
 export { ExtendedApolloProvider as ApolloProvider } from "./react/ApolloProvider";
 export { ToolCallLink } from "./link/ToolCallLink";

@@ -1,7 +1,7 @@
 import { expect, test, vi } from "vitest";
 import { ExtendedApolloProvider } from "./ApolloProvider";
 import { render } from "@testing-library/react";
-import { ExtendedApolloClient } from "../core/ApolloClient";
+import { ApolloClient } from "../core/ApolloClient";
 import { SET_GLOBALS_EVENT_TYPE } from "../types/openai";
 
 test("Should call prefetch data when window.open is immediately available", () => {
@@ -11,7 +11,7 @@ test("Should call prefetch data when window.open is immediately available", () =
 
   const client = {
     prefetchData: vi.fn(async () => {}),
-  } as unknown as ExtendedApolloClient;
+  } as unknown as ApolloClient;
 
   render(<ExtendedApolloProvider client={client} />);
 
@@ -21,7 +21,7 @@ test("Should call prefetch data when window.open is immediately available", () =
 test("Should NOT call prefetch data when window.open is not immediately available", () => {
   const client = {
     prefetchData: vi.fn(async () => {}),
-  } as unknown as ExtendedApolloClient;
+  } as unknown as ApolloClient;
 
   render(<ExtendedApolloProvider client={client} />);
 
@@ -31,7 +31,7 @@ test("Should NOT call prefetch data when window.open is not immediately availabl
 test("Should call prefetch data when window.open is not immediately available and event is sent", () => {
   const client = {
     prefetchData: vi.fn(async () => {}),
-  } as unknown as ExtendedApolloClient;
+  } as unknown as ApolloClient;
 
   render(<ExtendedApolloProvider client={client} />);
 

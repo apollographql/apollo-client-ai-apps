@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { ApolloProvider } from "@apollo/client/react";
-import { ExtendedApolloClient } from "../core/ApolloClient";
+import { ApolloClient } from "../core/ApolloClient";
 import { SET_GLOBALS_EVENT_TYPE } from "../types/openai";
 
 export const ExtendedApolloProvider = ({
   children,
   client,
-}: React.PropsWithChildren<{ client: ExtendedApolloClient }>) => {
+}: React.PropsWithChildren<{ client: ApolloClient }>) => {
   const [hasPreloaded, setHasPreloaded] = useState(false);
 
   // This is to prevent against a race condition. We don't know if window.openai will be available when this loads or if it will become available shortly after.

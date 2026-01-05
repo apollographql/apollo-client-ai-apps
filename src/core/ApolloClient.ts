@@ -1,5 +1,5 @@
 import type { ApolloLink } from "@apollo/client";
-import { ApolloClient } from "@apollo/client";
+import { ApolloClient as BaseApolloClient } from "@apollo/client";
 import { DocumentTransform } from "@apollo/client";
 import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
 import { parse } from "graphql";
@@ -17,15 +17,15 @@ import { ToolCallLink } from "../link/ToolCallLink";
 // });
 
 // This allows us to extend the options with the "manifest" option AND make link optional (it is normally required)
-type ExtendedApolloClientOptions = Omit<ApolloClient.Options, "link"> & {
-  link?: ApolloClient.Options["link"];
+type ApolloClientOptions = Omit<BaseApolloClient.Options, "link"> & {
+  link?: BaseApolloClient.Options["link"];
   manifest: ApplicationManifest;
 };
 
-export class ExtendedApolloClient extends ApolloClient {
+export class ApolloClient extends BaseApolloClient {
   manifest: ApplicationManifest;
 
-  constructor(options: ExtendedApolloClientOptions) {
+  constructor(options: ApolloClientOptions) {
     const link = options.link ?? new ToolCallLink();
 
     if (__DEV__) {
