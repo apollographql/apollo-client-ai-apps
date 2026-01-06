@@ -25,7 +25,10 @@ export function useWidgetState<T extends UnknownObject>(
       );
   });
 
-  if (widgetStateFromWindow !== widgetState) {
+  if (
+    widgetStateFromWindow !== undefined &&
+    widgetStateFromWindow !== widgetState
+  ) {
     _setWidgetState((widgetState = widgetStateFromWindow));
   }
 
