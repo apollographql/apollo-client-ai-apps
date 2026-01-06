@@ -1,8 +1,7 @@
 import { afterEach, expect, test, vi } from "vitest";
-import { stubOpenAiGlobals } from "../testing/internal";
+import { dispatchStateChange, stubOpenAiGlobals } from "../testing/internal";
 import { renderHookToSnapshotStream } from "@testing-library/react-render-stream";
 import { useToolOutput } from "./useToolOutput";
-import { SET_GLOBALS_EVENT_TYPE } from "../types/openai";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -40,11 +39,7 @@ test("reacts to changes in globals", async () => {
   await expect(takeSnapshot()).resolves.toEqual({ initial: true });
 
   window.openai.toolOutput = { updated: true };
-  window.dispatchEvent(
-    new CustomEvent(SET_GLOBALS_EVENT_TYPE, {
-      detail: { globals: window.openai },
-    })
-  );
+  dispatchStateChange();
 
   await expect(takeSnapshot()).resolves.toEqual({ updated: true });
   await expect(takeSnapshot).not.toRerender();
