@@ -7,6 +7,7 @@ export * from "./hooks/useSendFollowUpMessage";
 export * from "./hooks/useRequestDisplayMode";
 export * from "./hooks/useToolEffect";
 export { useToolOutput } from "./hooks/useToolOutput";
+export { useToolResponseMetadata } from "./hooks/useToolResponseMetadata";
 export { useWidgetState } from "./hooks/useWidgetState";
 
 export * from "@apollo/client";
