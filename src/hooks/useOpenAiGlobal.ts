@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { useSyncExternalStore, useCallback } from "react";
 import {
   SET_GLOBALS_EVENT_TYPE,
   SetGlobalsEvent,
@@ -9,7 +9,7 @@ export function useOpenAiGlobal<K extends keyof OpenAiGlobals>(
   key: K
 ): OpenAiGlobals[K] {
   return useSyncExternalStore(
-    (onChange) => {
+    useCallback((onChange) => {
       const handleSetGlobal = (event: SetGlobalsEvent) => {
         const value = event.detail.globals[key];
         if (value === undefined) {
@@ -26,7 +26,7 @@ export function useOpenAiGlobal<K extends keyof OpenAiGlobals>(
       return () => {
         window.removeEventListener(SET_GLOBALS_EVENT_TYPE, handleSetGlobal);
       };
-    },
+    }, []),
     () => window.openai[key]
   );
 }
