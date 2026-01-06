@@ -6,6 +6,7 @@ export * from "./hooks/useToolInput";
 export * from "./hooks/useSendFollowUpMessage";
 export * from "./hooks/useRequestDisplayMode";
 export * from "./hooks/useToolEffect";
+export { useOpenExternal } from "./hooks/useOpenExternal";
 export { useToolOutput } from "./hooks/useToolOutput";
 export { useToolResponseMetadata } from "./hooks/useToolResponseMetadata";
 export { useWidgetState } from "./hooks/useWidgetState";
