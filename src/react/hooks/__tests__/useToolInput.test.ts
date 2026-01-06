@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { useToolInput } from "./useToolInput";
+import { useToolInput } from "../useToolInput";
 import { renderHook } from "@testing-library/react";
 
 test("Should return tool input when called", async () => {

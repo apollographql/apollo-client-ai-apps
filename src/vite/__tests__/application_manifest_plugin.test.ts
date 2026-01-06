@@ -1,5 +1,5 @@
 import { expect, test, vi, describe, beforeEach, Mock } from "vitest";
-import { ApplicationManifestPlugin } from "./application_manifest_plugin";
+import { ApplicationManifestPlugin } from "../application_manifest_plugin";
 import fs from "fs";
 import * as glob from "glob";
 import path from "path";
@@ -675,16 +675,16 @@ describe("buildStart", () => {
       } else if (path === root + "/my-component.tsx") {
         return `
             const MY_QUERY = gql\`
-              fragment A on User { firstName } 
-              fragment B on User { lastName } 
-              query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { 
+              fragment A on User { firstName }
+              fragment B on User { lastName }
+              query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") {
                 helloWorld {
                   ...B
                   ...A
                   ...C
-                } 
-              
-              fragment C on User { middleName } 
+                }
+
+              fragment C on User { middleName }
               }\`;
         `;
       }

@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { useCallTool } from "./useCallTool";
+import { useCallTool } from "../useCallTool";
 
 test("Should execute tool when returned function is called", async () => {
   vi.stubGlobal("openai", {

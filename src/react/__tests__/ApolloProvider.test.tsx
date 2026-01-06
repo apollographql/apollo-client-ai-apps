@@ -1,8 +1,8 @@
 import { expect, test, vi } from "vitest";
-import { ApolloProvider } from "./ApolloProvider";
+import { ApolloProvider } from "../ApolloProvider";
 import { render } from "@testing-library/react";
-import { ApolloClient } from "../core/ApolloClient";
-import { SET_GLOBALS_EVENT_TYPE } from "../types/openai";
+import { ApolloClient } from "../../core/ApolloClient";
+import { SET_GLOBALS_EVENT_TYPE } from "../../types/openai";
 
 test("Should call prefetch data when window.open is immediately available", () => {
   vi.stubGlobal("openai", {

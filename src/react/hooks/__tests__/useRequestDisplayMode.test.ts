@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
-import { useRequestDisplayMode } from "./useRequestDisplayMode";
-import { DisplayMode } from "../../types/openai";
+import { useRequestDisplayMode } from "../useRequestDisplayMode";
+import { DisplayMode } from "../../../types/openai";
 
 test("Should set display mode when returned function is called", async () => {
   vi.stubGlobal("openai", {

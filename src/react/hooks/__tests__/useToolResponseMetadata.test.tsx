@@ -1,7 +1,10 @@
 import { afterEach, expect, test, vi } from "vitest";
-import { dispatchStateChange, stubOpenAiGlobals } from "../testing/internal";
+import {
+  dispatchStateChange,
+  stubOpenAiGlobals,
+} from "../../../testing/internal";
 import { renderHookToSnapshotStream } from "@testing-library/react-render-stream";
-import { useToolResponseMetadata } from "./useToolResponseMetadata";
+import { useToolResponseMetadata } from "../useToolResponseMetadata";
 
 afterEach(() => {
   vi.unstubAllGlobals();

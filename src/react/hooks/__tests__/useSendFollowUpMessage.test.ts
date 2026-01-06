@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { useSendFollowUpMessage } from "./useSendFollowUpMessage";
+import { useSendFollowUpMessage } from "../useSendFollowUpMessage";
 
 test("Should set display mode when returned function is called", async () => {
   vi.stubGlobal("openai", {

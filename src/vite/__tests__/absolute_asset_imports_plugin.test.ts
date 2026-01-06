@@ -1,5 +1,5 @@
 import { expect, test, vi, describe, beforeEach, Mock } from "vitest";
-import { AbsoluteAssetImportsPlugin } from "./absolute_asset_imports_plugin";
+import { AbsoluteAssetImportsPlugin } from "../absolute_asset_imports_plugin";
 
 test("Should replace root relative scripts with full url when origin is provided", () => {
   const ctx = {
