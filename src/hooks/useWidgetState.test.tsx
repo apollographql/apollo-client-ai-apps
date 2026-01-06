@@ -4,12 +4,7 @@ import {
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
 import { useWidgetState } from "./useWidgetState";
-import {
-  OpenAiGlobals,
-  SET_GLOBALS_EVENT_TYPE,
-  UnknownObject,
-} from "../types/openai";
-import { fromEvent } from "rxjs";
+import { stubOpenAiGlobals } from "../testing/internal";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -150,17 +145,3 @@ test("updates value from window when changed globally", async () => {
     expect(widgetState).toEqual({ fromEvent: true });
   }
 });
-
-function stubOpenAiGlobals(globals?: Partial<OpenAiGlobals>) {
-  vi.stubGlobal("openai", {
-    setWidgetState: (state: UnknownObject) => {
-      window.openai.widgetState = state;
-      window.dispatchEvent(
-        new CustomEvent(SET_GLOBALS_EVENT_TYPE, {
-          detail: { globals: window.openai },
-        })
-      );
-    },
-    ...globals,
-  });
-}
