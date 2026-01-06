@@ -6,6 +6,7 @@ export * from "./hooks/useToolInput";
 export * from "./hooks/useSendFollowUpMessage";
 export * from "./hooks/useRequestDisplayMode";
 export * from "./hooks/useToolEffect";
+export { useWidgetState } from "./hooks/useWidgetState";
 
 export * from "@apollo/client";
 export { ExtendedApolloClient as ApolloClient } from "./apollo_client/client";
