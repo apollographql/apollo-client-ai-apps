@@ -1,4 +1,4 @@
-type UnknownObject = any;
+export type UnknownObject = Record<string, unknown>;
 
 declare global {
   interface Window {
