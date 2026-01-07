@@ -1,1 +1,1 @@
-import "./toRerender";
+import "./toRerender.js";

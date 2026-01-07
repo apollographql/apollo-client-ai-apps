@@ -5,8 +5,9 @@ import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal"
 import { parse } from "graphql";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import "../types/openai.js";
-import { ApplicationManifest } from "../types/application-manifest.js";
+import type { ApplicationManifest } from "../types/application-manifest.js";
 import { ToolCallLink } from "../link/ToolCallLink.js";
+import type { FetchResult } from "@apollo/client";
 
 // TODO: In the future if/when we support PQs again, do pqLink.concat(toolCallLink)
 // Commenting this out for now.
@@ -50,16 +51,20 @@ export class ApolloClient extends BaseApolloClient {
   }
 
   async prefetchData() {
+    const toolOutput = window.openai.toolOutput as {
+      prefetch?: Record<string, FetchResult<any>>;
+    } | null;
+
     // Write prefetched data to the cache
     this.manifest.operations.forEach((operation) => {
       if (
         operation.prefetch &&
         operation.prefetchID &&
-        window.openai.toolOutput?.prefetch?.[operation.prefetchID]
+        toolOutput?.prefetch?.[operation.prefetchID]
       ) {
         this.writeQuery({
           query: parse(operation.body),
-          data: window.openai.toolOutput.prefetch[operation.prefetchID].data,
+          data: toolOutput.prefetch[operation.prefetchID].data,
         });
       }
 

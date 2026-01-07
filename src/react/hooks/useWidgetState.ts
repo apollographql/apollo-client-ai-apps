@@ -1,6 +1,7 @@
-import { SetStateAction, useCallback, useState } from "react";
-import { UnknownObject } from "../../types/openai";
-import { useOpenAiGlobal } from "./useOpenAiGlobal";
+import type { SetStateAction } from "react";
+import { useCallback, useState } from "react";
+import type { UnknownObject } from "../../types/openai.js";
+import { useOpenAiGlobal } from "./useOpenAiGlobal.js";
 
 export function useWidgetState<T extends UnknownObject>(
   defaultState: T | (() => T)

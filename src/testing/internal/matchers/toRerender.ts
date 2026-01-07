@@ -1,11 +1,11 @@
 // Vitest port of toRerender from
 // https://github.com/testing-library/react-render-stream-testing-library/blob/main/src/expect/renderStreamMatchers.ts
-import {
+import type {
   Assertable,
   NextRenderOptions,
   RenderStream,
-  WaitForRenderTimeoutError,
 } from "@testing-library/react-render-stream";
+import { WaitForRenderTimeoutError } from "@testing-library/react-render-stream";
 
 import { expect } from "vitest";
 

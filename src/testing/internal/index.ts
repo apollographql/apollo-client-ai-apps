@@ -1,2 +1,2 @@
-export { dispatchStateChange } from "./openai/dispatchStateChange";
-export { stubOpenAiGlobals } from "./openai/stubOpenAiGlobals";
+export { dispatchStateChange } from "./openai/dispatchStateChange.js";
+export { stubOpenAiGlobals } from "./openai/stubOpenAiGlobals.js";
