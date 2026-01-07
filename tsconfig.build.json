@@ -8,6 +8,11 @@
   ],
   "compilerOptions": {
     "noEmit": false,
-    "outDir": "./dist"
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "inlineSources": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true
   }
 }
