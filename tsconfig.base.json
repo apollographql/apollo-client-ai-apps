@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "rootDir": "./src",
-    "noEmit": true,
     "noImplicitAny": true,
     "module": "nodenext",
     "moduleResolution": "nodenext",
