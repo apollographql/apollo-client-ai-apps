@@ -5,7 +5,7 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "target": "esnext",
-    "lib": ["dom", "esnext"],
+    "lib": ["esnext"],
     "exactOptionalPropertyTypes": true,
     "strict": true,
     "jsx": "react-jsx",
