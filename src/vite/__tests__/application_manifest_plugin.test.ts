@@ -562,6 +562,32 @@ describe("buildStart", () => {
     );
   });
 
+  test("Should error when tool name contains spaces", async () => {
+    vi.spyOn(fs, "readFileSync").mockImplementation((path) => {
+      if (path === "package.json") {
+        return JSON.stringify({});
+      } else if (path === "my-component.tsx") {
+        return `
+            const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello world", description: "A tool") { helloWorld }\`;
+        `;
+      }
+    });
+    vi.spyOn(glob, "glob").mockImplementation(() =>
+      Promise.resolve(["my-component.tsx"])
+    );
+    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
+    vi.spyOn(fs, "writeFileSync");
+
+    const plugin = ApplicationManifestPlugin();
+    plugin.configResolved({ command: "serve", server: {} });
+
+    await expect(
+      async () => await plugin.buildStart()
+    ).rejects.toThrowErrorMatchingInlineSnapshot(
+      `[Error: Tool with name "hello world" contains spaces which is not allowed.]`
+    );
+  });
+
   test("Should error when tool name is not a string", async () => {
     vi.spyOn(fs, "readFileSync").mockImplementation((path) => {
       if (path === "package.json") {

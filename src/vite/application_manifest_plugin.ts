@@ -140,6 +140,12 @@ export const ApplicationManifestPlugin = () => {
             throw new Error("'name' argument must be supplied for @tool");
           }
 
+          if (name.indexOf(" ") > -1) {
+            throw new Error(
+              `Tool with name "${name}" contains spaces which is not allowed.`
+            );
+          }
+
           if (!description) {
             throw new Error(
               "'description' argument must be supplied for @tool"
