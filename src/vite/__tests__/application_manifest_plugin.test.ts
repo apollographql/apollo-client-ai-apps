@@ -521,14 +521,11 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(name: "hello-w
   });
 
   test("Should error when tool name contains spaces", async () => {
-    vi.spyOn(fs, "readFileSync").mockImplementation((path) => {
-      if (path === "package.json") {
-        return JSON.stringify({});
-      } else if (path === "my-component.tsx") {
-        return `
-            const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello world", description: "A tool") { helloWorld }\`;
-        `;
-      }
+    mockReadFile({
+      "package.json": JSON.stringify({}),
+      "my-component.tsx": `
+        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello world", description: "A tool") { helloWorld }\`;
+      `,
     });
     vi.spyOn(glob, "glob").mockImplementation(() =>
       Promise.resolve(["my-component.tsx"])
