@@ -8,6 +8,6 @@
   "references": [{ "path": "./tsconfig.src.json" }],
   "compilerOptions": {
     "composite": true,
-    "types": ["node"]
+    "types": ["node", "./src/testing/internal/matchers/index.d.ts"]
   }
 }
