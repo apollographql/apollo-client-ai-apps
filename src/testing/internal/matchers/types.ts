@@ -1,4 +1,4 @@
-import { NextRenderOptions } from "@testing-library/react-render-stream";
+import type { NextRenderOptions } from "@testing-library/react-render-stream";
 
 interface CustomMatchers<R = unknown> {
   toRerender: (options?: NextRenderOptions) => Promise<R>;
