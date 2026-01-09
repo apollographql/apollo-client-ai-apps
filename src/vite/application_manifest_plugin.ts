@@ -11,6 +11,7 @@ import type {
   ValueNode,
   DocumentNode,
   OperationDefinitionNode,
+  DirectiveNode,
 } from "graphql";
 import { Kind, parse, print } from "graphql";
 import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
@@ -75,24 +76,24 @@ interface GetArgumentNodeOptions {
   required?: boolean;
 }
 
-function getToolArgument(
+function getDirectiveArgument(
   argumentName: string,
-  directiveArguments: readonly ArgumentNode[] | undefined,
+  directive: DirectiveNode,
   opts: GetArgumentNodeOptions & { required: true }
 ): ArgumentNode;
 
-function getToolArgument(
+function getDirectiveArgument(
   argumentName: string,
-  directiveArguments: readonly ArgumentNode[] | undefined,
+  directive: DirectiveNode,
   opts?: GetArgumentNodeOptions
 ): ArgumentNode | undefined;
 
-function getToolArgument(
+function getDirectiveArgument(
   argumentName: string,
-  directiveArguments: readonly ArgumentNode[] | undefined,
+  directive: DirectiveNode,
   { required = false }: { required?: boolean } = {}
 ) {
-  const argument = directiveArguments?.find(
+  const argument = directive.arguments?.find(
     (directiveArgument) => directiveArgument.name.value === argumentName
   );
 
@@ -155,19 +156,17 @@ export const ApplicationManifestPlugin = () => {
         ?.filter((d) => d.name.value === "tool")
         .map((directive) => {
           const name = getArgumentValue(
-            getToolArgument("name", directive.arguments, { required: true }),
+            getDirectiveArgument("name", directive, { required: true }),
             Kind.STRING
           );
           const description = getArgumentValue(
-            getToolArgument("description", directive.arguments, {
-              required: true,
-            }),
+            getDirectiveArgument("description", directive, { required: true }),
             Kind.STRING
           );
 
-          const extraInputsNode = getToolArgument(
+          const extraInputsNode = getDirectiveArgument(
             "extraInputs",
-            directive.arguments
+            directive
           );
 
           return {
