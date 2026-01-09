@@ -85,36 +85,34 @@ export const ApplicationManifestPlugin = () => {
         removeClientDirective(sortTopLevelDefinitions(operation.query))
       );
       const name = operation.operationName;
-      const variables = (
-        operation.query.definitions.find(
-          (d) => d.kind === "OperationDefinition"
-        ) as OperationDefinitionNode
-      ).variableDefinitions?.reduce(
+      const definition = operation.query.definitions.find(
+        (d) => d.kind === "OperationDefinition"
+      );
+
+      if (!definition) {
+        // Use `operation.query` so that the error reflects the end-user defined
+        // document, not our sorted one
+        throw new Error(
+          `Document does not contain an operation:\n${print(operation.query)}`
+        );
+      }
+
+      const { directives, operation: type } = definition;
+
+      const variables = definition.variableDefinitions?.reduce(
         (obj, varDef) => ({
           ...obj,
           [varDef.variable.name.value]: getTypeName(varDef.type),
         }),
         {}
       );
-      const type = (
-        operation.query.definitions.find(
-          (d) => d.kind === "OperationDefinition"
-        ) as OperationDefinitionNode
-      ).operation;
-      const prefetch = (
-        operation.query.definitions.find(
-          (d) => d.kind === "OperationDefinition"
-        ) as OperationDefinitionNode
-      ).directives?.some((d) => d.name.value === "prefetch");
+
+      const prefetch = directives?.some((d) => d.name.value === "prefetch");
       const id = createHash("sha256").update(body).digest("hex");
       // TODO: For now, you can only have 1 operation marked as prefetch. In the future, we'll likely support more than 1, and the "prefetchId" will be defined on the `@prefetch` itself as an argument
       const prefetchID = prefetch ? "__anonymous" : undefined;
 
-      const tools = (
-        operation.query.definitions.find(
-          (d) => d.kind === "OperationDefinition"
-        ) as OperationDefinitionNode
-      ).directives
+      const tools = directives
         ?.filter((d) => d.name.value === "tool")
         .map((directive) => {
           const name = getTypedDirectiveArgument(
