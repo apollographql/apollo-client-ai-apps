@@ -38,13 +38,23 @@ const getRawValue = (node: ValueNode): any => {
   }
 };
 
+function validateArgumentType(argument: ArgumentNode, type: Kind) {
+  const argumentType = argument.value.kind;
+
+  if (argumentType !== type) {
+    throw new Error(
+      `Expected argument '${argument.name.value}' to be of type '${type}' but found '${argumentType}' instead.`
+    );
+  }
+}
+
 const getTypedDirectiveArgument = (
   argumentName: string,
   expectedType: Kind,
   directiveArguments: readonly ArgumentNode[] | undefined
 ) => {
   if (!directiveArguments || directiveArguments.length === 0) {
-    return undefined;
+    return;
   }
 
   let argument = directiveArguments.find(
@@ -52,14 +62,10 @@ const getTypedDirectiveArgument = (
   );
 
   if (!argument) {
-    return undefined;
+    return;
   }
 
-  if (argument.value.kind != expectedType) {
-    throw new Error(
-      `Expected argument '${argumentName}' to be of type '${expectedType}' but found '${argument.value.kind}' instead.`
-    );
-  }
+  validateArgumentType(argument, expectedType);
 
   return getRawValue(argument.value);
 };
