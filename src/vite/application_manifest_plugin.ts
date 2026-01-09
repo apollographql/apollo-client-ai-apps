@@ -20,7 +20,7 @@ import path from "path";
 
 const root = process.cwd();
 
-const getRawValue = (node: ValueNode): any => {
+function getRawValue(node: ValueNode): unknown {
   switch (node.kind) {
     case Kind.STRING:
     case Kind.BOOLEAN:
@@ -37,39 +37,71 @@ const getRawValue = (node: ValueNode): any => {
         `Error when parsing directive values: unexpected type '${node.kind}'`
       );
   }
-};
-
-function validateArgumentType(argument: ArgumentNode, type: Kind) {
-  const argumentType = argument.value.kind;
-
-  if (argumentType !== type) {
-    throw new Error(
-      `Expected argument '${argument.name.value}' to be of type '${type}' but found '${argumentType}' instead.`
-    );
-  }
 }
 
-const getTypedDirectiveArgument = (
-  argumentName: string,
-  expectedType: Kind,
-  directiveArguments: readonly ArgumentNode[] | undefined
-) => {
-  if (!directiveArguments || directiveArguments.length === 0) {
-    return;
+function getArgumentValue(
+  argument: ArgumentNode,
+  expectedType: Kind.STRING
+): string;
+
+function getArgumentValue(
+  argument: ArgumentNode,
+  expectedType: Kind.BOOLEAN
+): boolean;
+
+function getArgumentValue(
+  argument: ArgumentNode,
+  expectedType: Kind.LIST
+): unknown[];
+
+function getArgumentValue(
+  argument: ArgumentNode,
+  expectedType: Kind.OBJECT
+): Record<string, unknown>;
+
+function getArgumentValue(argument: ArgumentNode, expectedType: Kind) {
+  const argumentType = argument.value.kind;
+
+  if (argumentType !== expectedType) {
+    throw new Error(
+      `Expected argument '${argument.name.value}' to be of type '${expectedType}' but found '${argumentType}' instead.`
+    );
   }
 
-  let argument = directiveArguments.find(
+  return getRawValue(argument.value);
+}
+
+interface GetArgumentNodeOptions {
+  required?: boolean;
+}
+
+function getToolArgument(
+  argumentName: string,
+  directiveArguments: readonly ArgumentNode[] | undefined,
+  opts: GetArgumentNodeOptions & { required: true }
+): ArgumentNode;
+
+function getToolArgument(
+  argumentName: string,
+  directiveArguments: readonly ArgumentNode[] | undefined,
+  opts?: GetArgumentNodeOptions
+): ArgumentNode | undefined;
+
+function getToolArgument(
+  argumentName: string,
+  directiveArguments: readonly ArgumentNode[] | undefined,
+  { required = false }: { required?: boolean } = {}
+) {
+  const argument = directiveArguments?.find(
     (directiveArgument) => directiveArgument.name.value === argumentName
   );
 
-  if (!argument) {
-    return;
+  if (required && !argument) {
+    throw new Error(`'${argumentName}' argument must be supplied for @tool`);
   }
 
-  validateArgumentType(argument, expectedType);
-
-  return getRawValue(argument.value);
-};
+  return argument;
+}
 
 function getTypeName(type: TypeNode): string {
   let t = type;
@@ -122,42 +154,27 @@ export const ApplicationManifestPlugin = () => {
       const tools = directives
         ?.filter((d) => d.name.value === "tool")
         .map((directive) => {
-          const name = getTypedDirectiveArgument(
-            "name",
-            Kind.STRING,
-            directive.arguments
+          const name = getArgumentValue(
+            getToolArgument("name", directive.arguments, { required: true }),
+            Kind.STRING
           );
-          const description = getTypedDirectiveArgument(
-            "description",
-            Kind.STRING,
-            directive.arguments
+          const description = getArgumentValue(
+            getToolArgument("description", directive.arguments, {
+              required: true,
+            }),
+            Kind.STRING
           );
-          const extraInputs = getTypedDirectiveArgument(
+
+          const extraInputsNode = getToolArgument(
             "extraInputs",
-            Kind.LIST,
             directive.arguments
           );
-
-          if (!name) {
-            throw new Error("'name' argument must be supplied for @tool");
-          }
-
-          if (name.indexOf(" ") > -1) {
-            throw new Error(
-              `Tool with name "${name}" contains spaces which is not allowed.`
-            );
-          }
-
-          if (!description) {
-            throw new Error(
-              "'description' argument must be supplied for @tool"
-            );
-          }
 
           return {
             name,
             description,
-            extraInputs,
+            extraInputs:
+              extraInputsNode && getArgumentValue(extraInputsNode, Kind.LIST),
           };
         });
 
