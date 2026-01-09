@@ -244,6 +244,8 @@ export const ApplicationManifestPlugin = () => {
           return toolOptions;
         });
 
+      // TODO: Make this object satisfy the `ManifestOperation` type. Currently
+      // it errors because we need more validation on a few of these fields
       return of({
         data: { id, name, type, body, variables, prefetch, prefetchID, tools },
       });
