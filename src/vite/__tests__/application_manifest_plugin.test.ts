@@ -47,7 +47,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(name: "hello-w
   name: "doStuff",
   type: "boolean",
   description: "Should we do stuff?"
-}]) { helloWorld(name: $name) }\`;
+}], openai: { widgetPrefersBorder: true }) { helloWorld(name: $name) }\`;
       `,
     });
 
@@ -89,6 +89,9 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(name: "hello-w
             "prefetch": false,
             "tools": [
               {
+                "_meta": {
+                  "openai/widgetPrefersBorder": true,
+                },
                 "description": "This is an awesome tool!",
                 "extraInputs": [
                   {

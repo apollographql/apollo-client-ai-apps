@@ -19,15 +19,13 @@ import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal"
 import Observable from "rxjs";
 import path from "path";
 
-interface OpenaiOptions {
-  widgetPrefersBorder?: boolean;
-}
-
 interface ToolDirectiveOptions {
   name: string;
   description: string;
   extraInputs: unknown[] | undefined;
-  openai?: OpenaiOptions;
+  _meta?: {
+    "openai/widgetPrefersBorder"?: boolean;
+  };
 }
 
 const root = process.cwd();
@@ -197,13 +195,16 @@ export const ApplicationManifestPlugin = () => {
           if (openaiNode) {
             const openai = getArgumentValue(openaiNode, Kind.OBJECT);
 
-            invariant(
-              openai.widgetPrefersBorder === undefined ||
+            if ("widgetPrefersBorder" in openai) {
+              invariant(
                 typeof openai.widgetPrefersBorder === "boolean",
-              `Expected argument 'openai.widgetPrefersBorder' to be of type 'boolean' but found '${typeof openai.widgetPrefersBorder}' instead.`
-            );
+                `Expected argument 'openai.widgetPrefersBorder' to be of type 'boolean' but found '${typeof openai.widgetPrefersBorder}' instead.`
+              );
 
-            toolOptions.openai = openai;
+              toolOptions._meta ??= {};
+              toolOptions._meta["openai/widgetPrefersBorder"] =
+                openai.widgetPrefersBorder;
+            }
           }
 
           return toolOptions;
