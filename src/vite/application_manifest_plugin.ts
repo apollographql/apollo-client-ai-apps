@@ -159,6 +159,13 @@ export const ApplicationManifestPlugin = () => {
             getDirectiveArgument("name", directive, { required: true }),
             Kind.STRING
           );
+
+          if (name.indexOf(" ") > -1) {
+            throw new Error(
+              `Tool with name "${name}" contains spaces which is not allowed.`
+            );
+          }
+
           const description = getArgumentValue(
             getDirectiveArgument("description", directive, { required: true }),
             Kind.STRING
