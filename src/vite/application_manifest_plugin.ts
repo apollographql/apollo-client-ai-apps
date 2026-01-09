@@ -109,15 +109,6 @@ function getDirectiveArgument(
   return argument;
 }
 
-function setMetaProperty<K extends keyof ManifestWidgetSettings>(
-  toolOptions: ManifestTool,
-  key: K,
-  value: ManifestWidgetSettings[K]
-) {
-  toolOptions.widgetSettings ??= {};
-  toolOptions.widgetSettings[key] = value;
-}
-
 function getTypeName(type: TypeNode): string {
   let t = type;
   while (t.kind === "NonNullType" || t.kind === "ListType") {
@@ -188,7 +179,10 @@ export const ApplicationManifestPlugin = () => {
             directive
           );
 
-          const openaiNode = getDirectiveArgument("openai", directive);
+          const widgetSettingsNode = getDirectiveArgument(
+            "widgetSettings",
+            directive
+          );
 
           const toolOptions: ManifestTool = {
             name,
@@ -202,42 +196,45 @@ export const ApplicationManifestPlugin = () => {
             ) as ManifestExtraInput[];
           }
 
-          if (openaiNode) {
-            const openai = getArgumentValue(openaiNode, Kind.OBJECT);
+          if (widgetSettingsNode) {
+            const widgetSettings = getArgumentValue(
+              widgetSettingsNode,
+              Kind.OBJECT
+            );
 
-            if ("widgetPrefersBorder" in openai) {
+            toolOptions.widgetSettings = {};
+
+            if ("prefersBorder" in widgetSettings) {
               invariant(
-                typeof openai.widgetPrefersBorder === "boolean",
-                `Expected argument 'openai.widgetPrefersBorder' to be of type 'boolean' but found '${typeof openai.widgetPrefersBorder}' instead.`
+                typeof widgetSettings.prefersBorder === "boolean",
+                `Expected argument 'widgetSettings.prefersBorder' to be of type 'boolean' but found '${typeof widgetSettings.widgetPrefersBorder}' instead.`
               );
 
-              setMetaProperty(
-                toolOptions,
-                "prefersBorder",
-                openai.widgetPrefersBorder
-              );
+              toolOptions.widgetSettings.prefersBorder =
+                widgetSettings.prefersBorder;
             }
 
-            if ("widgetDescription" in openai) {
+            if ("description" in widgetSettings) {
               invariant(
-                typeof openai.widgetDescription === "string",
-                `Expected argument 'openai.widgetDescription' to be of type 'string' but found '${typeof openai.widgetDescription}' instead.`
+                typeof widgetSettings.description === "string",
+                `Expected argument 'widgetSettings.description' to be of type 'string' but found '${typeof widgetSettings.widgetDescription}' instead.`
               );
 
-              setMetaProperty(
-                toolOptions,
-                "description",
-                openai.widgetDescription
-              );
+              toolOptions.widgetSettings.description =
+                widgetSettings.description;
             }
 
-            if ("widgetDomain" in openai) {
+            if ("domain" in widgetSettings) {
               invariant(
-                typeof openai.widgetDomain === "string",
-                `Expected argument 'openai.widgetDomain' to be of type 'string' but found '${typeof openai.widgetDomain}' instead.`
+                typeof widgetSettings.domain === "string",
+                `Expected argument 'widgetSettings.domain' to be of type 'string' but found '${typeof widgetSettings.widgetDomain}' instead.`
               );
 
-              setMetaProperty(toolOptions, "domain", openai.widgetDomain);
+              toolOptions.widgetSettings.domain = widgetSettings.domain;
+            }
+
+            if (Object.keys(toolOptions.widgetSettings).length === 0) {
+              delete toolOptions.widgetSettings;
             }
           }
 
