@@ -612,6 +612,48 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(name: "hello-w
     );
   });
 
+  test("Should error when openai.widgetPrefersBorder is not a boolean", async () => {
+    mockReadFile({
+      "package.json": JSON.stringify({}),
+      "my-component.tsx": `
+        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test", openai: { widgetPrefersBorder: "test" }) { helloWorld }\`;
+      `,
+    });
+    vi.spyOn(glob, "glob").mockImplementation(() =>
+      Promise.resolve(["my-component.tsx"])
+    );
+    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
+    vi.spyOn(fs, "writeFileSync");
+
+    const plugin = ApplicationManifestPlugin();
+    plugin.configResolved({ command: "serve", server: {} });
+
+    await expect(
+      async () => await plugin.buildStart()
+    ).rejects.toThrowErrorMatchingInlineSnapshot(
+      `[Error: Expected argument 'openai.widgetPrefersBorder' to be of type 'boolean' but found 'string' instead.]`
+    );
+  });
+
+  test("Should allow empty openai value", async () => {
+    mockReadFile({
+      "package.json": JSON.stringify({}),
+      "my-component.tsx": `
+        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test", openai: {}) { helloWorld }\`;
+      `,
+    });
+    vi.spyOn(glob, "glob").mockImplementation(() =>
+      Promise.resolve(["my-component.tsx"])
+    );
+    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
+    vi.spyOn(fs, "writeFileSync");
+
+    const plugin = ApplicationManifestPlugin();
+    plugin.configResolved({ command: "serve", server: {}, build: {} });
+
+    await expect(plugin.buildStart()).resolves.toBeUndefined();
+  });
+
   test("Should error when an unknown type is discovered", async () => {
     mockReadFile({
       "package.json": JSON.stringify({}),

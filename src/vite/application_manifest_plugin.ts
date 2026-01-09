@@ -19,6 +19,17 @@ import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal"
 import Observable from "rxjs";
 import path from "path";
 
+interface OpenaiOptions {
+  widgetPrefersBorder?: boolean;
+}
+
+interface ToolDirectiveOptions {
+  name: string;
+  description: string;
+  extraInputs: unknown[] | undefined;
+  openai?: OpenaiOptions;
+}
+
 const root = process.cwd();
 
 function getRawValue(node: ValueNode): unknown {
@@ -176,12 +187,28 @@ export const ApplicationManifestPlugin = () => {
             directive
           );
 
-          return {
+          const toolOptions: ToolDirectiveOptions = {
             name,
             description,
             extraInputs:
               extraInputsNode && getArgumentValue(extraInputsNode, Kind.LIST),
           };
+
+          const openaiNode = getDirectiveArgument("openai", directive);
+
+          if (openaiNode) {
+            const openai = getArgumentValue(openaiNode, Kind.OBJECT);
+
+            invariant(
+              openai.widgetPrefersBorder === undefined ||
+                typeof openai.widgetPrefersBorder === "boolean",
+              `Expected argument 'openai.widgetPrefersBorder' to be of type 'boolean' but found '${typeof openai.widgetPrefersBorder}' instead.`
+            );
+
+            toolOptions.openai = openai;
+          }
+
+          return toolOptions;
         });
 
       return Observable.of({
@@ -395,4 +422,10 @@ function removeClientDirective(doc: DocumentNode) {
     [{ name: "prefetch" }, { name: "tool" }],
     doc
   )!;
+}
+
+function invariant(condition: boolean, message: string): asserts condition {
+  if (!condition) {
+    throw new Error(message);
+  }
 }
