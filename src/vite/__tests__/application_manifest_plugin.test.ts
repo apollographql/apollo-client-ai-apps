@@ -48,7 +48,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(name: "hello-w
   type: "boolean",
   description: "Should we do stuff?"
 }],
-openai: { widgetPrefersBorder: true, widgetDescription: "Test" }) { helloWorld(name: $name) }\`;
+openai: { widgetPrefersBorder: true, widgetDescription: "Test", widgetDomain: "https://example.com" }) { helloWorld(name: $name) }\`;
       `,
     });
 
@@ -92,6 +92,7 @@ openai: { widgetPrefersBorder: true, widgetDescription: "Test" }) { helloWorld(n
               {
                 "_meta": {
                   "openai/widgetDescription": "Test",
+                  "openai/widgetDomain": "https://example.com",
                   "openai/widgetPrefersBorder": true,
                 },
                 "description": "This is an awesome tool!",
@@ -660,6 +661,29 @@ openai: { widgetPrefersBorder: true, widgetDescription: "Test" }) { helloWorld(n
       async () => await plugin.buildStart()
     ).rejects.toThrowErrorMatchingInlineSnapshot(
       `[Error: Expected argument 'openai.widgetDescription' to be of type 'string' but found 'boolean' instead.]`
+    );
+  });
+
+  test("Should error when openai.widgetDomain is not a string", async () => {
+    mockReadFile({
+      "package.json": JSON.stringify({}),
+      "my-component.tsx": `
+        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test", openai: { widgetDomain: true }) { helloWorld }\`;
+      `,
+    });
+    vi.spyOn(glob, "glob").mockImplementation(() =>
+      Promise.resolve(["my-component.tsx"])
+    );
+    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
+    vi.spyOn(fs, "writeFileSync");
+
+    const plugin = ApplicationManifestPlugin();
+    plugin.configResolved({ command: "serve", server: {} });
+
+    await expect(
+      async () => await plugin.buildStart()
+    ).rejects.toThrowErrorMatchingInlineSnapshot(
+      `[Error: Expected argument 'openai.widgetDomain' to be of type 'string' but found 'boolean' instead.]`
     );
   });
 

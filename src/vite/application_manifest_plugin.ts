@@ -24,8 +24,9 @@ interface ToolDirectiveOptions {
   description: string;
   extraInputs: unknown[] | undefined;
   _meta?: {
-    "openai/widgetPrefersBorder"?: boolean;
     "openai/widgetDescription"?: string;
+    "openai/widgetDomain"?: string;
+    "openai/widgetPrefersBorder"?: boolean;
   };
 }
 
@@ -216,6 +217,16 @@ export const ApplicationManifestPlugin = () => {
               toolOptions._meta ??= {};
               toolOptions._meta["openai/widgetDescription"] =
                 openai.widgetDescription;
+            }
+
+            if ("widgetDomain" in openai) {
+              invariant(
+                typeof openai.widgetDomain === "string",
+                `Expected argument 'openai.widgetDomain' to be of type 'string' but found '${typeof openai.widgetDomain}' instead.`
+              );
+
+              toolOptions._meta ??= {};
+              toolOptions._meta["openai/widgetDomain"] = openai.widgetDomain;
             }
           }
 
