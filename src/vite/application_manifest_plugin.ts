@@ -16,7 +16,7 @@ import type {
 import { Kind, parse, print } from "graphql";
 import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
 import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
-import Observable from "rxjs";
+import { of } from "rxjs";
 import path from "path";
 import type {
   ManifestExtraInput,
@@ -244,7 +244,7 @@ export const ApplicationManifestPlugin = () => {
           return toolOptions;
         });
 
-      return Observable.of({
+      return of({
         data: { id, name, type, body, variables, prefetch, prefetchID, tools },
       });
     }),
