@@ -21,7 +21,6 @@ import path from "path";
 import type {
   ManifestExtraInput,
   ManifestTool,
-  ManifestWidgetSettings,
 } from "../types/application-manifest.js";
 
 const root = process.cwd();
@@ -179,11 +178,6 @@ export const ApplicationManifestPlugin = () => {
             directive
           );
 
-          const widgetSettingsNode = getDirectiveArgument(
-            "widgetSettings",
-            directive
-          );
-
           const toolOptions: ManifestTool = {
             name,
             description,
@@ -194,48 +188,6 @@ export const ApplicationManifestPlugin = () => {
               extraInputsNode,
               Kind.LIST
             ) as ManifestExtraInput[];
-          }
-
-          if (widgetSettingsNode) {
-            const widgetSettings = getArgumentValue(
-              widgetSettingsNode,
-              Kind.OBJECT
-            ) as ManifestWidgetSettings;
-
-            toolOptions.widgetSettings = {};
-
-            if ("prefersBorder" in widgetSettings) {
-              invariant(
-                typeof widgetSettings.prefersBorder === "boolean",
-                `Expected argument 'widgetSettings.prefersBorder' to be of type 'boolean' but found '${typeof widgetSettings.prefersBorder}' instead.`
-              );
-
-              toolOptions.widgetSettings.prefersBorder =
-                widgetSettings.prefersBorder;
-            }
-
-            if ("description" in widgetSettings) {
-              invariant(
-                typeof widgetSettings.description === "string",
-                `Expected argument 'widgetSettings.description' to be of type 'string' but found '${typeof widgetSettings.description}' instead.`
-              );
-
-              toolOptions.widgetSettings.description =
-                widgetSettings.description;
-            }
-
-            if ("domain" in widgetSettings) {
-              invariant(
-                typeof widgetSettings.domain === "string",
-                `Expected argument 'widgetSettings.domain' to be of type 'string' but found '${typeof widgetSettings.domain}' instead.`
-              );
-
-              toolOptions.widgetSettings.domain = widgetSettings.domain;
-            }
-
-            if (Object.keys(toolOptions.widgetSettings).length === 0) {
-              delete toolOptions.widgetSettings;
-            }
           }
 
           return toolOptions;
