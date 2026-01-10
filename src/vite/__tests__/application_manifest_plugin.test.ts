@@ -637,7 +637,7 @@ widgetSettings: { prefersBorder: true, description: "Test", domain: "https://exa
     await expect(
       async () => await plugin.buildStart()
     ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `[Error: Expected argument 'widgetSettings.prefersBorder' to be of type 'boolean' but found 'undefined' instead.]`
+      `[Error: Expected argument 'widgetSettings.prefersBorder' to be of type 'boolean' but found 'string' instead.]`
     );
   });
 
@@ -660,7 +660,7 @@ widgetSettings: { prefersBorder: true, description: "Test", domain: "https://exa
     await expect(
       async () => await plugin.buildStart()
     ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `[Error: Expected argument 'widgetSettings.description' to be of type 'string' but found 'undefined' instead.]`
+      `[Error: Expected argument 'widgetSettings.description' to be of type 'string' but found 'boolean' instead.]`
     );
   });
 
@@ -683,7 +683,7 @@ widgetSettings: { prefersBorder: true, description: "Test", domain: "https://exa
     await expect(
       async () => await plugin.buildStart()
     ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `[Error: Expected argument 'widgetSettings.domain' to be of type 'string' but found 'undefined' instead.]`
+      `[Error: Expected argument 'widgetSettings.domain' to be of type 'string' but found 'boolean' instead.]`
     );
   });
 
