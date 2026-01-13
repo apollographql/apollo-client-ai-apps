@@ -26,3 +26,4 @@ jobs:
       - run: knope prepare-release --verbose
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE_BRANCH: ${{ github.ref_name }}
