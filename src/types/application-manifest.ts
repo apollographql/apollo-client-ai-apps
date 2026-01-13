@@ -20,13 +20,13 @@ export type ManifestOperation = {
   prefetch: boolean;
   prefetchID?: string;
   tools: ManifestTool[];
-  labels?: ManifestLabels;
 };
 
 export type ManifestTool = {
   name: string;
   description: string;
   extraInputs?: ManifestExtraInput[];
+  labels?: ManifestLabels;
 };
 
 export type ManifestWidgetSettings = {
