@@ -1,8 +1,8 @@
----
-default: minor
----
+## 0.3.3 (2026-01-13)
 
-Add support for `widgetSettings` in the manifest file. This includes `widgetSettngs.prefersBorder`, `widgetSettings.description`, and `widgetSettings.domain`.
+### Features
+
+#### Add support for `widgetSettings` in the manifest file. This includes `widgetSettngs.prefersBorder`, `widgetSettings.description`, and `widgetSettings.domain`.
 
 ```json
 // package.json
