@@ -481,7 +481,9 @@ function getLabelsFromConfig(config: LabelConfig): ManifestLabels | undefined {
     labels["toolInvocation/invoked"] = toolInvocation.invoked;
   }
 
-  return labels;
+  if (isNonEmptyObject(labels)) {
+    return labels;
+  }
 }
 
 function removeClientDirective(doc: DocumentNode) {
@@ -528,4 +530,8 @@ function validateType<Typeof extends TypeofResult>(
     typeof value === expectedType,
     `Expected '${options.propertyName}' to be of type '${expectedType}' but found '${typeof value}' instead.`
   );
+}
+
+function isNonEmptyObject(obj: object) {
+  return Object.keys(obj).length > 0;
 }
