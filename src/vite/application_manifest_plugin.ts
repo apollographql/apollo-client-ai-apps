@@ -181,6 +181,8 @@ export const ApplicationManifestPlugin = () => {
             directive
           );
 
+          const labelsNode = getDirectiveArgument("labels", directive);
+
           const toolOptions: ManifestTool = {
             name,
             description,
@@ -191,6 +193,16 @@ export const ApplicationManifestPlugin = () => {
               extraInputsNode,
               Kind.LIST
             ) as ManifestExtraInput[];
+          }
+
+          if (labelsNode) {
+            const labels = getLabelsFromConfig(
+              getArgumentValue(labelsNode, Kind.OBJECT)
+            );
+
+            if (labels) {
+              toolOptions.labels = labels;
+            }
           }
 
           return toolOptions;

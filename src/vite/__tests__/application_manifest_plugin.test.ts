@@ -63,7 +63,13 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
     name: "doStuff",
     type: "boolean",
     description: "Should we do stuff?"
-  }]
+  }],
+  labels: {
+    toolInvocation: {
+      invoking: "Testing tool...",
+      invoked: "Tested tool!"
+    }
+  }
 ) { helloWorld(name: $name) }\`;
       `,
     });
@@ -118,6 +124,10 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
                     "type": "boolean",
                   },
                 ],
+                "labels": {
+                  "toolInvocation/invoked": "Tested tool!",
+                  "toolInvocation/invoking": "Testing tool...",
+                },
                 "name": "hello-world",
               },
             ],
