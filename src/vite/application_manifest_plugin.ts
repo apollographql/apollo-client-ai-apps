@@ -308,6 +308,8 @@ export const ApplicationManifestPlugin = () => {
       resource,
       csp: {
         connectDomains: packageJson.csp?.connectDomains ?? [],
+        frameDomains: packageJson.csp?.frameDomains ?? [],
+        redirectDomains: packageJson.csp?.redirectDomains ?? [],
         resourceDomains: packageJson.csp?.resourceDomains ?? [],
       },
     };
