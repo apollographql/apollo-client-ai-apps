@@ -52,6 +52,7 @@ jobs:
                 "❌ **Changeset file missing for PR**",
                 "",
                 "All changes should include an associated changeset file.",
+                "If this change does not require a changeset, please tag this PR with the `skip-changeset` tag."
                 "Please use `knope document-change` to create a changeset. (installation instructions: https://knope.tech/installation/)"
               ].join("\n")
             });
