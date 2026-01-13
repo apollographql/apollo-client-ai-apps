@@ -50,11 +50,15 @@ describe("buildStart", () => {
         } satisfies ManifestWidgetSettings,
       }),
       [`${root}/my-component.tsx`]: `
-const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(name: "hello-world", description: "This is an awesome tool!", extraInputs: [{
-  name: "doStuff",
-  type: "boolean",
-  description: "Should we do stuff?"
-}]) { helloWorld(name: $name) }\`;
+const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
+  name: "hello-world",
+  description: "This is an awesome tool!",
+  extraInputs: [{
+    name: "doStuff",
+    type: "boolean",
+    description: "Should we do stuff?"
+  }]
+) { helloWorld(name: $name) }\`;
       `,
     });
 
