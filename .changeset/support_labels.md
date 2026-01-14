@@ -2,6 +2,8 @@
 default: minor
 ---
 
+# Support `toolInvocation` labels
+
 Add support for `labels` config for both `package.json` and `@tool` directives.
 
 ```ts
