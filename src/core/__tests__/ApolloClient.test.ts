@@ -56,7 +56,12 @@ describe("Client Basics", () => {
         },
       ],
       resource: "index.html",
-      csp: { connectDomains: [], resourceDomains: [] },
+      csp: {
+        connectDomains: [],
+        resourceDomains: [],
+        frameDomains: [],
+        redirectDomains: [],
+      },
     } satisfies ApplicationManifest;
 
     const client = new ApolloClient({
@@ -146,7 +151,12 @@ describe("prefetchData", () => {
         },
       ],
       resource: "index.html",
-      csp: { connectDomains: [], resourceDomains: [] },
+      csp: {
+        connectDomains: [],
+        resourceDomains: [],
+        frameDomains: [],
+        redirectDomains: [],
+      },
     } satisfies ApplicationManifest;
 
     const client = new ApolloClient({
@@ -430,7 +440,12 @@ describe("prefetchData", () => {
         },
       ],
       resource: "index.html",
-      csp: { connectDomains: [], resourceDomains: [] },
+      csp: {
+        connectDomains: [],
+        resourceDomains: [],
+        frameDomains: [],
+        redirectDomains: [],
+      },
     } satisfies ApplicationManifest;
 
     const client = new ApolloClient({
@@ -620,7 +635,12 @@ function createManifest(
       },
     ],
     resource: "index.html",
-    csp: { resourceDomains: [], connectDomains: [] },
+    csp: {
+      resourceDomains: [],
+      connectDomains: [],
+      frameDomains: [],
+      redirectDomains: [],
+    },
     ...overrides,
   };
 }

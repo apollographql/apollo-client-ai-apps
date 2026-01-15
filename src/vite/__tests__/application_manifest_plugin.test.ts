@@ -98,6 +98,8 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
       {
         "csp": {
           "connectDomains": [],
+          "frameDomains": [],
+          "redirectDomains": [],
           "resourceDomains": [],
         },
         "format": "apollo-ai-app-manifest",
@@ -199,6 +201,8 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
       {
         "csp": {
           "connectDomains": [],
+          "frameDomains": [],
+          "redirectDomains": [],
           "resourceDomains": [],
         },
         "format": "apollo-ai-app-manifest",
@@ -241,6 +245,8 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
       {
         "csp": {
           "connectDomains": [],
+          "frameDomains": [],
+          "redirectDomains": [],
           "resourceDomains": [],
         },
         "format": "apollo-ai-app-manifest",
@@ -295,6 +301,8 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
       {
         "csp": {
           "connectDomains": [],
+          "frameDomains": [],
+          "redirectDomains": [],
           "resourceDomains": [],
         },
         "format": "apollo-ai-app-manifest",
@@ -373,6 +381,8 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
       {
         "csp": {
           "connectDomains": [],
+          "frameDomains": [],
+          "redirectDomains": [],
           "resourceDomains": [],
         },
         "format": "apollo-ai-app-manifest",
@@ -942,6 +952,8 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
       {
         "csp": {
           "connectDomains": [],
+          "frameDomains": [],
+          "redirectDomains": [],
           "resourceDomains": [],
         },
         "format": "apollo-ai-app-manifest",
