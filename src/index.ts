@@ -34,7 +34,6 @@ export { useToolOutput } from "./react/hooks/useToolOutput.js";
 export { useToolResponseMetadata } from "./react/hooks/useToolResponseMetadata.js";
 export { useWidgetState } from "./react/hooks/useWidgetState.js";
 
-export * from "@apollo/client";
 export { ApolloClient } from "./core/ApolloClient.js";
 export { ApolloProvider } from "./react/ApolloProvider.js";
 export { ToolCallLink } from "./link/ToolCallLink.js";
