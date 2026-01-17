@@ -4,8 +4,8 @@ import { DocumentTransform } from "@apollo/client";
 import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
 import { parse } from "graphql";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import "../types/openai.js";
-import type { ApplicationManifest } from "../types/application-manifest.js";
+import "../types.js";
+import type { ApplicationManifest } from "../../types/application-manifest.js";
 import { ToolCallLink } from "../link/ToolCallLink.js";
 import type { FetchResult } from "@apollo/client";
 

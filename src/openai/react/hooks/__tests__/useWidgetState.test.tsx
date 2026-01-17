@@ -4,7 +4,7 @@ import {
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
 import { useWidgetState } from "../useWidgetState.js";
-import { stubOpenAiGlobals } from "../../../testing/internal/index.js";
+import { stubOpenAiGlobals } from "../../../../testing/internal/index.js";
 
 afterEach(() => {
   vi.unstubAllGlobals();

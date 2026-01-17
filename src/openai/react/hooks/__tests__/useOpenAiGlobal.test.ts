@@ -1,7 +1,7 @@
 import { expect, test, vi } from "vitest";
 import { useOpenAiGlobal } from "../useOpenAiGlobal.js";
 import { renderHook, act } from "@testing-library/react";
-import { SET_GLOBALS_EVENT_TYPE } from "../../../types/openai.js";
+import { SET_GLOBALS_EVENT_TYPE } from "../../../types.js";
 
 test("Should update value when globals are updated and event it triggered", async () => {
   vi.stubGlobal("openai", {

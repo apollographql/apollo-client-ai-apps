@@ -1,7 +1,7 @@
 import { expect, test, vi } from "vitest";
 import { renderHookToSnapshotStream } from "@testing-library/react-render-stream";
 import { useOpenExternal } from "../useOpenExternal.js";
-import { stubOpenAiGlobals } from "../../../testing/internal/index.js";
+import { stubOpenAiGlobals } from "../../../../testing/internal/index.js";
 
 test("calls the global openExternal function", async () => {
   const openExternalMock = vi.fn();

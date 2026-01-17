@@ -1,6 +1,6 @@
 import { expect, test, describe, vi } from "vitest";
 import { ApolloClient } from "../ApolloClient.js";
-import type { ApplicationManifest } from "../../types/application-manifest.js";
+import type { ApplicationManifest } from "../../../types/application-manifest.js";
 import { parse } from "graphql";
 import { ApolloLink, HttpLink, InMemoryCache } from "@apollo/client";
 import { ToolCallLink } from "../../link/ToolCallLink.js";

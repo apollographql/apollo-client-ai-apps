@@ -1,6 +1,6 @@
 import { useSyncExternalStore, useCallback } from "react";
-import type { SetGlobalsEvent, OpenAiGlobals } from "../../types/openai.js";
-import { SET_GLOBALS_EVENT_TYPE } from "../../types/openai.js";
+import type { SetGlobalsEvent, OpenAiGlobals } from "../../types.js";
+import { SET_GLOBALS_EVENT_TYPE } from "../../types.js";
 
 export function useOpenAiGlobal<K extends keyof OpenAiGlobals>(
   key: K

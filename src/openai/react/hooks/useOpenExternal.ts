@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import type { API } from "../../types/openai.js";
+import type { API } from "../../types.js";
 
 type OpenExternalFn = API<any>["openExternal"];
 

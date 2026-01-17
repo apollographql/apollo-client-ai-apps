@@ -3,7 +3,7 @@ import type {
   API,
   OpenAiGlobals,
   UnknownObject,
-} from "../../../types/openai.js";
+} from "../../../openai/types.js";
 import { dispatchStateChange } from "./dispatchStateChange.js";
 
 export function stubOpenAiGlobals(globals?: Partial<API<any> & OpenAiGlobals>) {
