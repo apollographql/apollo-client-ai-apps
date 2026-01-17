@@ -1,5 +1,5 @@
 import type { API, OpenAiGlobals } from "./types.js";
-import { SET_GLOBALS_EVENT_TYPE, SetGlobalsEvent } from "./types.js";
+import type { SET_GLOBALS_EVENT_TYPE, SetGlobalsEvent } from "./types.js";
 
 declare global {
   interface Window {
