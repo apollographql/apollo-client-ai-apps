@@ -20,6 +20,10 @@
       "types": "./dist/openai/index.d.ts",
       "default": "./dist/openai/index.js"
     },
+    "./openai/globals": {
+      "types": "./dist/openai/globals.d.ts",
+      "default": "./dist/openai/globals.js"
+    },
     "./vite": {
       "types": "./dist/vite/index.d.ts",
       "default": "./dist/vite/index.js"

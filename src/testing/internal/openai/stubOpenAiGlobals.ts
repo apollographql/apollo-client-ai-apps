@@ -4,6 +4,7 @@ import type {
   OpenAiGlobals,
   UnknownObject,
 } from "../../../openai/types.js";
+import "../../../openai/globals.js";
 import { dispatchStateChange } from "./dispatchStateChange.js";
 
 export function stubOpenAiGlobals(globals?: Partial<API<any> & OpenAiGlobals>) {

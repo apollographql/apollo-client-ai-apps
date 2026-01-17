@@ -1,4 +1,5 @@
 import { SET_GLOBALS_EVENT_TYPE } from "../../../openai/types.js";
+import "../../../openai/globals.js";
 
 export function dispatchStateChange() {
   window.dispatchEvent(

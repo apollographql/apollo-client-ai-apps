@@ -1,15 +1,5 @@
 export type UnknownObject = Record<string, unknown>;
 
-declare global {
-  interface Window {
-    openai: API<any> & OpenAiGlobals;
-  }
-
-  interface WindowEventMap {
-    [SET_GLOBALS_EVENT_TYPE]: SetGlobalsEvent;
-  }
-}
-
 export type OpenAiGlobals<
   ToolInput extends UnknownObject = UnknownObject,
   ToolOutput extends UnknownObject = UnknownObject,
