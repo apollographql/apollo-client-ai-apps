@@ -79,3 +79,25 @@ jobs:
       - name: Check types
         shell: bash
         run: npm test
+
+  arethetypeswrong:
+    name: Are the types wrong
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+
+      - name: Install dependencies
+        uses: npm ci
+
+      - name: Run build
+        run: npm run build
+
+      - name: Run AreTheTypesWrong
+        id: attw
+        run: npm run attw -- --format ascii > $GITHUB_STEP_SUMMARY
