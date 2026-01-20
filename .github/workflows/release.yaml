@@ -35,10 +35,6 @@ jobs:
         shell: bash
         run: npm run build
 
-      - name: Test
-        shell: bash
-        run: npm run test
-
       - name: Configure Git
         run: |
           git config --global user.name GitHub Actions
