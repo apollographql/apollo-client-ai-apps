@@ -8,14 +8,6 @@ import type { ApplicationManifest } from "../../types/application-manifest.js";
 import { ToolCallLink } from "../link/ToolCallLink.js";
 import type { FetchResult } from "@apollo/client";
 
-// TODO: In the future if/when we support PQs again, do pqLink.concat(toolCallLink)
-// Commenting this out for now.
-//  import { sha256 } from "crypto-hash";
-// import { PersistedQueryLink } from "@apollo/client/link/persisted-queries";
-// const pqLink = new PersistedQueryLink({
-//   sha256: (queryString) => sha256(queryString),
-// });
-
 export declare namespace ApolloClient {
   // This allows us to extend the options with the "manifest" option AND make link optional (it is normally required)
   export interface Options extends Omit<BaseApolloClient.Options, "link"> {
