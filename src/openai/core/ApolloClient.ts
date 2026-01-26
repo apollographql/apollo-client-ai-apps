@@ -6,7 +6,6 @@ import { parse } from "graphql";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { ApplicationManifest } from "../../types/application-manifest.js";
 import { ToolCallLink } from "../link/ToolCallLink.js";
-import type { FetchResult } from "@apollo/client";
 
 export declare namespace ApolloClient {
   // This allows us to extend the options with the "manifest" option AND make link optional (it is normally required)
@@ -43,7 +42,7 @@ export class ApolloClient extends BaseApolloClient {
 
   async prefetchData() {
     const toolOutput = window.openai.toolOutput as {
-      prefetch?: Record<string, FetchResult<any>>;
+      prefetch?: Record<string, ApolloLink.Result<any>>;
     } | null;
 
     // Write prefetched data to the cache
