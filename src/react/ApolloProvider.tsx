@@ -26,7 +26,7 @@ export function ApolloProvider({ children, client }: ApolloProvider.Props) {
     let mounted = true;
 
     (async function prefetchData() {
-      await client.prefetchData();
+      await client.waitForInitialization();
 
       if (mounted) {
         setHasPreloaded(true);
