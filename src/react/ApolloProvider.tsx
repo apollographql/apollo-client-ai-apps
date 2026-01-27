@@ -12,7 +12,7 @@ export declare namespace ApolloProvider {
   }
 }
 
-export const ApolloProvider = ({ children, client }: ApolloProvider.Props) => {
+export function ApolloProvider({ children, client }: ApolloProvider.Props) {
   const [hasPreloaded, setHasPreloaded] = useState(false);
 
   if (__DEV__) {
@@ -41,4 +41,4 @@ export const ApolloProvider = ({ children, client }: ApolloProvider.Props) => {
   return hasPreloaded ?
       <BaseApolloProvider client={client}>{children}</BaseApolloProvider>
     : null;
-};
+}
