@@ -48,7 +48,6 @@ export class ApolloClient extends BaseApolloClient {
     // Write prefetched data to the cache
     this.manifest.operations.forEach((operation) => {
       if (
-        operation.prefetch &&
         operation.prefetchID &&
         toolOutput?.prefetch?.[operation.prefetchID]
       ) {
