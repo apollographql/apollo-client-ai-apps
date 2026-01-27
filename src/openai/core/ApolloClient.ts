@@ -7,7 +7,7 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { ApplicationManifest } from "../../types/application-manifest.js";
 import { SET_GLOBALS_EVENT_TYPE } from "../types.js";
 import { ToolCallLink } from "../link/ToolCallLink.js";
-import { aiClientSymbol } from "./constants.js";
+import { aiClientSymbol } from "../../utilities/index.js";
 
 export declare namespace ApolloClient {
   // This allows us to extend the options with the "manifest" option AND make link optional (it is normally required)

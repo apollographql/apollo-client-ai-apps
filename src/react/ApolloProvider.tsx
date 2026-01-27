@@ -3,8 +3,7 @@ import { useEffect, useState } from "react";
 import { ApolloProvider as BaseApolloProvider } from "@apollo/client/react";
 import type { ApolloClient } from "../openai/core/ApolloClient.js";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { aiClientSymbol } from "../openai/core/constants.js";
-import { invariant } from "../utilities/invariant.js";
+import { aiClientSymbol, invariant } from "../utilities/index.js";
 
 export declare namespace ApolloProvider {
   export interface Props {
