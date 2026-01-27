@@ -12,12 +12,10 @@ import {
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
 import { ApolloProvider } from "../../ApolloProvider";
-import { SET_GLOBALS_EVENT_TYPE } from "../../../types";
 import { stubOpenAiGlobals } from "../../../../testing/internal";
-import { useEffect, type ReactNode } from "react";
 
 test("returns the `ApolloClient` instance in context", async () => {
-  stubOpenAiGlobals();
+  stubOpenAiGlobals({ toolOutput: {} });
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -29,9 +27,7 @@ test("returns the `ApolloClient` instance in context", async () => {
     () => useApolloClient(),
     {
       wrapper: ({ children }) => (
-        <MockGlobalEventOnMount>
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        </MockGlobalEventOnMount>
+        <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     }
   );
@@ -43,7 +39,7 @@ test("returns the `ApolloClient` instance in context", async () => {
 // This is failing because <ApolloProvider /> runs `client.prefetchData` which
 // doesn't exist on the base client. This test documents the behavior for now.
 test.fails("throws when providing base apollo client instance", async () => {
-  stubOpenAiGlobals();
+  stubOpenAiGlobals({ toolOutput: {} });
 
   const client = new BaseApolloClient({
     cache: new InMemoryCache(),
@@ -55,11 +51,9 @@ test.fails("throws when providing base apollo client instance", async () => {
     () => useApolloClient(),
     {
       wrapper: ({ children }) => (
-        <MockGlobalEventOnMount>
-          <ApolloProvider client={client as ApolloClient}>
-            {children}
-          </ApolloProvider>
-        </MockGlobalEventOnMount>
+        <ApolloProvider client={client as ApolloClient}>
+          {children}
+        </ApolloProvider>
       ),
     }
   );
@@ -67,15 +61,3 @@ test.fails("throws when providing base apollo client instance", async () => {
   await expect(takeSnapshot()).resolves.toBe(client);
   await expect(takeSnapshot).not.toRerender();
 });
-
-// Use a component w/ `useEffect` to trigger the global event to ensure the
-// timing is roughly equivalent to mounting `ApolloProvider`.
-function MockGlobalEventOnMount({ children }: { children: ReactNode }) {
-  useEffect(() => {
-    window.dispatchEvent(
-      new CustomEvent(SET_GLOBALS_EVENT_TYPE, { detail: { globals: {} } })
-    );
-  }, []);
-
-  return children;
-}
