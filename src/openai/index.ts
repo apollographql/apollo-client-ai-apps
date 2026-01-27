@@ -27,5 +27,4 @@ export { useWidgetState } from "./react/hooks/useWidgetState.js";
 export { useCallTool } from "./react/hooks/useCallTool.js";
 
 export { ApolloClient } from "./core/ApolloClient.js";
-export { ApolloProvider } from "./react/ApolloProvider.js";
 export { ToolCallLink } from "./link/ToolCallLink.js";
