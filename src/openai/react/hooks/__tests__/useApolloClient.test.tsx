@@ -72,7 +72,9 @@ test.fails("throws when providing base apollo client instance", async () => {
 // timing is roughly equivalent to mounting `ApolloProvider`.
 function MockGlobalEventOnMount({ children }: { children: ReactNode }) {
   useEffect(() => {
-    window.dispatchEvent(new CustomEvent(SET_GLOBALS_EVENT_TYPE));
+    window.dispatchEvent(
+      new CustomEvent(SET_GLOBALS_EVENT_TYPE, { detail: { globals: {} } })
+    );
   }, []);
 
   return children;
