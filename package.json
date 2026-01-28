@@ -14,8 +14,18 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "mcp": {
+        "types": "./dist/index.mcp.d.ts",
+        "default": "./dist/index.mcp.js"
+      },
+      "openai": {
+        "types": "./dist/index.openai.d.ts",
+        "default": "./dist/index.openai.js"
+      },
+      "default": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     },
     "./mcp": {
       "types": "./dist/mcp/index.d.ts",
