@@ -6,13 +6,20 @@
 export function cacheAsync<TArgs extends any[], TReturn>(
   fn: (...args: TArgs) => Promise<TReturn>
 ) {
-  let promise: Promise<TReturn>;
+  let promise: Promise<TReturn> | undefined;
 
-  return (...args: TArgs): Promise<TReturn> => {
-    if (promise) {
-      return promise;
+  return Object.assign(
+    (...args: TArgs): Promise<TReturn> => {
+      if (promise) {
+        return promise;
+      }
+
+      return (promise = fn(...args));
+    },
+    {
+      reset: () => {
+        promise = undefined;
+      },
     }
-
-    return (promise = fn(...args));
-  };
+  );
 }
