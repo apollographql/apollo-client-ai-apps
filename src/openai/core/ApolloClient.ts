@@ -108,8 +108,10 @@ async function waitForToolOutput(): Promise<{
     window.addEventListener(
       SET_GLOBALS_EVENT_TYPE,
       (event) => {
-        resolve(event.detail.globals.toolOutput ?? null);
-        controller.abort();
+        if ("toolOutput" in event.detail.globals) {
+          resolve(event.detail.globals.toolOutput ?? null);
+          controller.abort();
+        }
       },
       {
         passive: true,
