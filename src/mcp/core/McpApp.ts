@@ -3,6 +3,8 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { ApplicationManifest } from "../../types/application-manifest";
 import type { ApolloMcpServerApps } from "../../core/types";
 import type { FormattedExecutionResult } from "graphql";
+import type { DocumentNode, OperationVariables } from "@apollo/client";
+import { print } from "@apollo/client/utilities";
 
 interface State {
   toolResult: Parameters<App["ontoolresult"]>[0] | undefined;
@@ -11,6 +13,10 @@ interface State {
 
 type CallServerToolParams = Parameters<App["callServerTool"]>[0];
 type CallServerToolOptions = Parameters<App["callServerTool"]>[1];
+
+type ExecuteQueryCallToolResult = Omit<CallToolResult, "structuredContent"> & {
+  structuredContent: FormattedExecutionResult;
+};
 
 export class McpApp {
   private app: App;
@@ -43,6 +49,21 @@ export class McpApp {
 
       throw error;
     }
+  }
+
+  async executeQuery({
+    query,
+    variables,
+  }: {
+    query: DocumentNode;
+    variables: OperationVariables | undefined;
+  }) {
+    const result = (await this.app.callServerTool({
+      name: "execute",
+      arguments: { query: print(query), variables },
+    })) as ExecuteQueryCallToolResult;
+
+    return result.structuredContent;
   }
 
   callServerTool(
