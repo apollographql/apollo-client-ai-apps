@@ -121,7 +121,7 @@ function getTypeName(type: TypeNode): string {
   return (t as NamedTypeNode).name.value;
 }
 
-export const ApplicationManifestPlugin = (): Plugin => {
+export const ApplicationManifestPlugin = () => {
   const cache = new Map();
   let packageJson: any = null;
   let config: any = null;
