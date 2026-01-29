@@ -1,10 +1,16 @@
 import { App, PostMessageTransport } from "@modelcontextprotocol/ext-apps";
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { ApplicationManifest } from "../../types/application-manifest";
+import type { ApolloMcpServerApps } from "../../core/types";
+import type { FormattedExecutionResult } from "graphql";
 
 interface State {
   toolResult: Parameters<App["ontoolresult"]>[0] | undefined;
   toolInput: Parameters<App["ontoolinput"]>[0] | undefined;
 }
+
+type CallServerToolParams = Parameters<App["callServerTool"]>[0];
+type CallServerToolOptions = Parameters<App["callServerTool"]>[1];
 
 export class McpApp {
   private app: App;
@@ -16,7 +22,7 @@ export class McpApp {
     this.app = new App({ name: manifest.name, version: "1.0.0" });
     this.registerListeners();
 
-    this.callServerTool = this.app.callServerTool.bind(this.app);
+    this.callServerTool = this.app.callServerTool.bind(this.app) as any;
   }
 
   get toolResult() {
@@ -39,7 +45,22 @@ export class McpApp {
     }
   }
 
-  callServerTool: App["callServerTool"];
+  callServerTool(
+    params: CallServerToolParams & { name: "execute" },
+    options?: CallServerToolOptions
+  ): Promise<
+    Omit<CallToolResult, "structuredContent"> & {
+      structuredContent: FormattedExecutionResult;
+    }
+  >;
+
+  callServerTool(
+    ...args: Parameters<App["callServerTool"]>
+  ): Promise<ApolloMcpServerApps.CallToolResult>;
+
+  callServerTool(...args: Parameters<App["callServerTool"]>): Promise<any> {
+    throw new Error("Should be overri");
+  }
 
   onChange<Key extends keyof State>(name: Key, cb: App[`on${Lowercase<Key>}`]) {
     let listeners = this.handlers.get(name);

@@ -1,9 +1,11 @@
+import type { ApolloMcpServerApps } from "../core/types";
+
 export type UnknownObject = Record<string, unknown>;
 
 export type OpenAiGlobals<
   ToolInput extends UnknownObject = UnknownObject,
-  ToolOutput extends UnknownObject = UnknownObject,
-  ToolResponseMetadata extends UnknownObject = UnknownObject,
+  ToolOutput = ApolloMcpServerApps.StructuredContent,
+  ToolResponseMetadata = ApolloMcpServerApps.Meta,
   WidgetState extends UnknownObject = UnknownObject,
 > = {
   theme: Theme;

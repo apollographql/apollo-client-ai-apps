@@ -8,6 +8,7 @@ import type { ApplicationManifest } from "../../types/application-manifest.js";
 import { ToolCallLink } from "../link/ToolCallLink.js";
 import { aiClientSymbol, cacheAsync } from "../../utilities/index.js";
 import { McpApp } from "./McpApp.js";
+import type { ApolloMcpServerApps } from "../../core/types.js";
 
 export declare namespace ApolloClient {
   // This allows us to extend the options with the "manifest" option AND make link optional (it is normally required)
@@ -53,68 +54,63 @@ export class ApolloClient extends BaseApolloClient {
   waitForInitialization = cacheAsync(async () => {
     await this.app.connect();
 
-    const waitForToolOutput = async (): Promise<{
-      prefetch?: Record<string, ApolloLink.Result<any>>;
-    } | null> => {
-      if (this.app.toolResult) {
-        return Promise.resolve(this.app.toolResult);
-      }
+    const waitForToolResult =
+      async (): Promise<ApolloMcpServerApps.CallToolResult> => {
+        if (this.app.toolResult) {
+          return Promise.resolve(
+            this.app.toolResult as unknown as ApolloMcpServerApps.CallToolResult
+          );
+        }
 
-      return new Promise((resolve) => {
-        const unsubscribe = this.app.onChange(
-          "toolResult",
-          ({ structuredContent }) => {
-            resolve(structuredContent ?? null);
+        return new Promise((resolve) => {
+          const unsubscribe = this.app.onChange("toolResult", (result) => {
+            resolve(result as unknown as ApolloMcpServerApps.CallToolResult);
             unsubscribe();
-          }
-        );
-      });
-    };
+          });
+        });
+      };
 
-    const toolOutput = await waitForToolOutput();
+    const toolResult = await waitForToolResult();
 
-    if (!toolOutput) {
+    if (!toolResult) {
       return;
     }
 
-    // Write prefetched data to the cache
+    const { _meta: meta, structuredContent } = toolResult;
+
     this.manifest.operations.forEach((operation) => {
       if (
         operation.prefetchID &&
-        toolOutput?.prefetch?.[operation.prefetchID]
+        structuredContent.prefetch?.[operation.prefetchID]
       ) {
         this.writeQuery({
           query: parse(operation.body),
-          data: toolOutput.prefetch[operation.prefetchID].data,
+          data: structuredContent.prefetch[operation.prefetchID].data,
         });
       }
 
-      // If this operation has the tool that matches up with the tool that was executed, write the tool result to the cache
-      // if (
-      //   operation.tools?.find(
-      //     (tool) =>
-      //       `${this.manifest.name}--${tool.name}` ===
-      //       window.openai.toolResponseMetadata?.toolName
-      //   )
-      // ) {
-      //   // We need to include the variables that were used as part of the tool call so that we get a proper cache entry
-      //   // However, we only want to include toolInput's that were graphql operation (ignore extraInputs)
-      //   const variables = Object.keys(window.openai.toolInput).reduce(
-      //     (obj, key) =>
-      //       operation.variables?.[key] ?
-      //         { ...obj, [key]: window.openai.toolInput[key] }
-      //       : obj,
-      //     {}
-      //   );
-      //
-      //   if (window.openai.toolOutput) {
-      //     this.writeQuery({
-      //       query: parse(operation.body),
-      //       data: (window.openai.toolOutput.result as any).data,
-      //       variables,
-      //     });
-      //   }
-      // }
+      if (
+        operation.tools.find(
+          (tool) => `${this.manifest.name}--${tool.name}` === meta.toolName
+        )
+      ) {
+        const variables =
+          this.app.toolInput ?
+            Object.keys(this.app.toolInput.arguments ?? {}).reduce(
+              (obj, key) =>
+                operation.variables?.[key] ?
+                  { ...obj, [key]: this.app.toolInput?.arguments?.[key] }
+                : obj,
+              {}
+            )
+          : {};
+
+        this.writeQuery({
+          query: parse(operation.body),
+          data: structuredContent.result.data,
+          variables,
+        });
+      }
     });
   });
 }

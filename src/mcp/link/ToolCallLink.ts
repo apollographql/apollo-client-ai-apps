@@ -50,6 +50,6 @@ export class ToolCallLink extends ApolloLink {
         name: "execute",
         arguments: { query, variables },
       })
-    ).pipe(map((result) => ({ data: result.structuredContent?.data ?? null })));
+    ).pipe(map((result) => result.structuredContent));
   }
 }

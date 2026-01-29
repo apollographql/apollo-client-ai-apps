@@ -8,6 +8,7 @@ import type { ApplicationManifest } from "../../types/application-manifest.js";
 import { SET_GLOBALS_EVENT_TYPE } from "../types.js";
 import { ToolCallLink } from "../link/ToolCallLink.js";
 import { aiClientSymbol, cacheAsync } from "../../utilities/index.js";
+import type { ApolloMcpServerApps } from "../../core/types.js";
 
 export declare namespace ApolloClient {
   // This allows us to extend the options with the "manifest" option AND make link optional (it is normally required)
@@ -57,10 +58,7 @@ export class ApolloClient extends BaseApolloClient {
 
     // Write prefetched data to the cache
     this.manifest.operations.forEach((operation) => {
-      if (
-        operation.prefetchID &&
-        toolOutput?.prefetch?.[operation.prefetchID]
-      ) {
+      if (operation.prefetchID && toolOutput.prefetch?.[operation.prefetchID]) {
         this.writeQuery({
           query: parse(operation.body),
           data: toolOutput.prefetch[operation.prefetchID].data,
@@ -95,9 +93,7 @@ export class ApolloClient extends BaseApolloClient {
   });
 }
 
-async function waitForToolOutput(): Promise<{
-  prefetch?: Record<string, ApolloLink.Result<any>>;
-} | null> {
+async function waitForToolOutput(): Promise<ApolloMcpServerApps.StructuredContent | null> {
   if (window.openai?.toolOutput !== undefined) {
     return window.openai.toolOutput;
   }
