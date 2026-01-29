@@ -13,7 +13,6 @@ export type {
 } from "./types.js";
 export { SET_GLOBALS_EVENT_TYPE, SetGlobalsEvent } from "./types.js";
 
-export { ToolUseProvider } from "./react/context/ToolUseContext.js";
 export { useOpenAiGlobal } from "./react/hooks/useOpenAiGlobal.js";
 export { useToolName } from "./react/hooks/useToolName.js";
 export { useToolInput } from "./react/hooks/useToolInput.js";

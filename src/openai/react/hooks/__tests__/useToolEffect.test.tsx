@@ -1,7 +1,7 @@
 import { expect, test, vi } from "vitest";
 import { useToolEffect } from "../useToolEffect.js";
 import { renderHook } from "@testing-library/react";
-import { ToolUseProvider } from "../../context/ToolUseContext.js";
+import { ToolUseProvider } from "../../../../react/ToolUseContext.js";
 
 test("Should trigger effect when tool name matches toolResponseMetadata", async () => {
   vi.stubGlobal("openai", {
@@ -9,7 +9,7 @@ test("Should trigger effect when tool name matches toolResponseMetadata", async 
   });
   const navigate = vi.fn();
   const wrapper = ({ children }: { children: any }) => (
-    <ToolUseProvider appName="my-app">{children}</ToolUseProvider>
+    <ToolUseProvider>{children}</ToolUseProvider>
   );
 
   renderHook(() => useToolEffect("my-tool", () => navigate(), [navigate]), {
@@ -25,7 +25,7 @@ test("Should trigger effect when one of multiple tool name matches toolResponseM
   });
   const navigate = vi.fn();
   const wrapper = ({ children }: { children: any }) => (
-    <ToolUseProvider appName="my-app">{children}</ToolUseProvider>
+    <ToolUseProvider>{children}</ToolUseProvider>
   );
 
   renderHook(
@@ -45,7 +45,7 @@ test("Should not trigger effect when tool name does not match toolResponseMetada
   });
   const navigate = vi.fn();
   const wrapper = ({ children }: { children: any }) => (
-    <ToolUseProvider appName="my-app">{children}</ToolUseProvider>
+    <ToolUseProvider>{children}</ToolUseProvider>
   );
 
   renderHook(() => useToolEffect("my-tool", () => navigate(), [navigate]), {

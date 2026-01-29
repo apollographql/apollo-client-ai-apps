@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useToolName } from "./useToolName.js";
 import { useToolInput } from "./useToolInput.js";
-import { useToolUseState } from "../context/ToolUseContext.js";
+import { useToolUseState } from "../../../react/ToolUseContext.js";
 
 export const useToolEffect = (
   toolName: string | string[],
