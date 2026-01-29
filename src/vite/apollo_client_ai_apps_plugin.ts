@@ -1,4 +1,4 @@
-import type { Plugin } from "vite";
+import { defaultClientConditions, type Plugin } from "vite";
 import { invariant } from "@apollo/client/utilities/invariant";
 import { ApplicationManifestPlugin } from "./application_manifest_plugin.js";
 import { AbsoluteAssetImportsPlugin } from "./absolute_asset_imports_plugin.js";
@@ -49,7 +49,7 @@ export function BaseApolloClientAiAppsPlugin(
       return {
         resolve: {
           extensions,
-          conditions: [target],
+          conditions: [target, ...defaultClientConditions],
         },
       };
     },
