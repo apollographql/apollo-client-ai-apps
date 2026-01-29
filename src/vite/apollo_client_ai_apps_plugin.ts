@@ -9,7 +9,7 @@ export declare namespace ApolloClientAiAppsPlugin {
 
 export function ApolloClientAiAppsPlugin(
   options: ApolloClientAiAppsPlugin.Options
-) {
+): Plugin[] {
   return [
     BaseApolloClientAiAppsPlugin(options),
     ApplicationManifestPlugin(),
@@ -25,7 +25,7 @@ export declare namespace BaseApolloClientAiAppsPlugin {
 
 export function BaseApolloClientAiAppsPlugin(
   options: BaseApolloClientAiAppsPlugin.Options
-) {
+): Plugin {
   const { target } = options;
 
   invariant(
