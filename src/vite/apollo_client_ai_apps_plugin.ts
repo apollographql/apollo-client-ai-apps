@@ -1,3 +1,4 @@
+import { invariant } from "@apollo/client/utilities/invariant";
 import type { Plugin } from "vite";
 
 export interface ApolloAppsPluginOptions {
@@ -6,6 +7,11 @@ export interface ApolloAppsPluginOptions {
 
 export function ApolloClientAiApps(options: ApolloAppsPluginOptions) {
   const { target } = options;
+
+  invariant(
+    target === "openai" || target === "mcp",
+    "The `target` option must be one of 'openai' or 'mcp'"
+  );
 
   return {
     name: "apollo-client-ai-apps",
