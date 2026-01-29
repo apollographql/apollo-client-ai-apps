@@ -1,11 +1,6 @@
 import { ApolloLink, Observable } from "@apollo/client";
 import { from } from "rxjs";
-import {
-  fallbackHttpConfig,
-  selectHttpOptionsAndBody,
-} from "@apollo/client/link/http";
 import type { ApolloClient as McpApolloClient } from "../core/ApolloClient";
-import { invariant } from "../../utilities/index.js";
 
 /**
  * A terminating link that sends a GraphQL request through an agent tool call.
