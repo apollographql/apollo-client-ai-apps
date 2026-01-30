@@ -17,9 +17,7 @@ export const useToolEffect = (
   const toolNames = Array.isArray(toolName) ? toolName : [toolName];
 
   useEffect(() => {
-    const matches = toolNames.some(
-      (name) => fullToolName === `${ctx.appName}--${name}`
-    );
+    const matches = toolNames.some((name) => fullToolName === name);
 
     if (!ctx.hasNavigated && matches) {
       effect(toolInput);

@@ -71,9 +71,7 @@ export class ApolloClient extends BaseApolloClient {
       // If this operation has the tool that matches up with the tool that was executed, write the tool result to the cache
       if (
         operation.tools?.find(
-          (tool) =>
-            `${this.manifest.name}--${tool.name}` ===
-            window.openai.toolResponseMetadata?.toolName
+          (tool) => tool.name === window.openai.toolResponseMetadata?.toolName
         )
       ) {
         // We need to include the variables that were used as part of the tool call so that we get a proper cache entry

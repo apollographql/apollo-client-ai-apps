@@ -5,7 +5,7 @@ import { ToolUseProvider } from "../../context/ToolUseContext.js";
 
 test("Should trigger effect when tool name matches toolResponseMetadata", async () => {
   vi.stubGlobal("openai", {
-    toolResponseMetadata: { toolName: "my-app--my-tool" },
+    toolResponseMetadata: { toolName: "my-tool" },
   });
   const navigate = vi.fn();
   const wrapper = ({ children }: { children: any }) => (
@@ -21,7 +21,7 @@ test("Should trigger effect when tool name matches toolResponseMetadata", async 
 
 test("Should trigger effect when one of multiple tool name matches toolResponseMetadata", async () => {
   vi.stubGlobal("openai", {
-    toolResponseMetadata: { toolName: "my-app--my-tool" },
+    toolResponseMetadata: { toolName: "my-tool" },
   });
   const navigate = vi.fn();
   const wrapper = ({ children }: { children: any }) => (
@@ -41,7 +41,7 @@ test("Should trigger effect when one of multiple tool name matches toolResponseM
 
 test("Should not trigger effect when tool name does not match toolResponseMetadata", async () => {
   vi.stubGlobal("openai", {
-    toolResponseMetadata: { toolName: "my-app--my-other-tool" },
+    toolResponseMetadata: { toolName: "my-other-tool" },
   });
   const navigate = vi.fn();
   const wrapper = ({ children }: { children: any }) => (
@@ -57,7 +57,7 @@ test("Should not trigger effect when tool name does not match toolResponseMetada
 
 test("Should throw an error when used outside of a ToolUseProvider", async () => {
   vi.stubGlobal("openai", {
-    toolResponseMetadata: { toolName: "my-app--my-other-tool" },
+    toolResponseMetadata: { toolName: "my-other-tool" },
   });
   const navigate = vi.fn();
 

@@ -11,7 +11,7 @@ describe("Client Basics", () => {
       toolInput: {},
       toolOutput: {},
       toolResponseMetadata: {
-        toolName: "the-store--Get Product",
+        toolName: "Get Product",
       },
       callTool: vi.fn(async (name: string, args: Record<string, unknown>) => {
         return {
@@ -123,7 +123,7 @@ describe("prefetchData", () => {
         },
       },
       toolResponseMetadata: {
-        toolName: "the-store--Get Product",
+        toolName: "Get Product",
       },
     });
 
@@ -210,7 +210,7 @@ describe("prefetchData", () => {
         },
       },
       toolResponseMetadata: {
-        toolName: "the-store--Get Product",
+        toolName: "Get Product",
       },
     });
 
@@ -306,7 +306,7 @@ describe("prefetchData", () => {
         },
       },
       toolResponseMetadata: {
-        toolName: "the-store--Get Product",
+        toolName: "Get Product",
       },
     });
 
@@ -412,7 +412,7 @@ describe("prefetchData", () => {
         },
       },
       toolResponseMetadata: {
-        toolName: "the-store--Get Product",
+        toolName: "Get Product",
       },
     });
 
@@ -482,7 +482,7 @@ describe("custom links", () => {
       toolInput: {},
       toolOutput: {},
       toolResponseMetadata: {
-        toolName: "the-store--Get Product",
+        toolName: "Get Product",
       },
       callTool: vi.fn(async (name: string, args: Record<string, unknown>) => {
         return {
