@@ -1,3 +1,3 @@
 export * from "./index.js";
-export { ApolloClient } from "./core/ApolloClient.openai.js";
+export { ApolloClient } from "./openai/core/ApolloClient.js";
 export { ToolCallLink } from "./openai/link/ToolCallLink.js";
