@@ -80,7 +80,7 @@ export class ApolloMcpApp {
   ): Promise<ApolloMcpServerApps.CallToolResult>;
 
   callServerTool(...args: Parameters<App["callServerTool"]>): Promise<any> {
-    throw new Error("Should be overri");
+    throw new Error("Should be overriden in constructor");
   }
 
   onChange<Key extends keyof State>(name: Key, cb: App[`on${Lowercase<Key>}`]) {
