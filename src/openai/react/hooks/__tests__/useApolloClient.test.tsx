@@ -13,6 +13,7 @@ import {
 } from "@testing-library/react-render-stream";
 import { ApolloProvider } from "../../../../react/ApolloProvider.js";
 import { stubOpenAiGlobals } from "../../../../testing/internal";
+import { ErrorBoundary } from "react-error-boundary";
 
 test("returns the `ApolloClient` instance in context", async () => {
   stubOpenAiGlobals();
@@ -51,9 +52,11 @@ test.fails("throws when providing base apollo client instance", async () => {
     () => useApolloClient(),
     {
       wrapper: ({ children }) => (
-        <ApolloProvider client={client as ApolloClient}>
-          {children}
-        </ApolloProvider>
+        <ErrorBoundary fallback={<div />}>
+          <ApolloProvider client={client as ApolloClient}>
+            {children}
+          </ApolloProvider>
+        </ErrorBoundary>
       ),
     }
   );
