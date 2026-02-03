@@ -115,10 +115,10 @@ function getDirectiveArgument(
 
 function getTypeName(type: TypeNode): string {
   let t = type;
-  while (t.kind === "NonNullType" || t.kind === "ListType") {
-    t = (t as NonNullTypeNode | ListTypeNode).type;
+  while (t.kind === Kind.NON_NULL_TYPE || t.kind === Kind.LIST_TYPE) {
+    t = t.type;
   }
-  return (t as NamedTypeNode).name.value;
+  return t.name.value;
 }
 
 export const ApplicationManifestPlugin = () => {
