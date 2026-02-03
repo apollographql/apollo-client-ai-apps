@@ -4,7 +4,7 @@ import type { ApplicationManifest } from "../../types/application-manifest";
 import type { FormattedExecutionResult } from "graphql";
 import type { DocumentNode, OperationVariables } from "@apollo/client";
 import { print } from "@apollo/client/utilities";
-import { cacheAsync } from "../../utilities";
+import { cacheAsync, promiseWithResolvers } from "../../utilities";
 import type { ApolloMcpServerApps } from "../../core/types";
 
 type ExecuteQueryCallToolResult = Omit<CallToolResult, "structuredContent"> & {
@@ -31,20 +31,23 @@ export class McpAppManager {
   }
 
   waitForInitialization = cacheAsync(async () => {
-    let toolResult!: ApolloMcpServerApps.CallToolResult;
-    let toolInput!: Parameters<App["ontoolinput"]>[0];
+    let toolResult = promiseWithResolvers<ApolloMcpServerApps.CallToolResult>();
+    let toolInput = promiseWithResolvers<Parameters<App["ontoolinput"]>[0]>();
 
     this.app.ontoolresult = (params) => {
-      toolResult = params as unknown as ApolloMcpServerApps.CallToolResult;
+      toolResult.resolve(
+        params as unknown as ApolloMcpServerApps.CallToolResult
+      );
     };
 
     this.app.ontoolinput = (params) => {
-      toolInput = params;
+      toolInput.resolve(params);
     };
 
     await this.connect();
 
-    const { structuredContent, _meta } = toolResult;
+    const { structuredContent, _meta } = await toolResult.promise;
+    const { arguments: variables } = await toolInput.promise;
 
     this._toolName = _meta.toolName;
     this._toolMetadata = _meta;
@@ -52,7 +55,7 @@ export class McpAppManager {
     return {
       ...structuredContent,
       toolName: _meta.toolName,
-      variables: toolInput.arguments as OperationVariables | undefined,
+      variables: variables as OperationVariables | undefined,
     };
   });
 
