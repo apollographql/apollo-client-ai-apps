@@ -81,13 +81,11 @@ export class ApolloClient extends BaseApolloClient {
           {}
         );
 
-        if (window.openai.toolOutput) {
-          this.writeQuery({
-            query: parse(operation.body),
-            data: (window.openai.toolOutput.result as any).data,
-            variables,
-          });
-        }
+        this.writeQuery({
+          query: parse(operation.body),
+          data: toolOutput.result.data,
+          variables,
+        });
       }
     });
   });
