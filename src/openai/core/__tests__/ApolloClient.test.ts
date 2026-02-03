@@ -163,7 +163,7 @@ describe("prefetchData", () => {
       cache: new InMemoryCache(),
       manifest,
     });
-    await client.prefetchData();
+    await client.waitForInitialization();
 
     expect(client.extract()).toMatchInlineSnapshot(`
       {
@@ -245,7 +245,7 @@ describe("prefetchData", () => {
       cache: new InMemoryCache(),
       manifest: manifest as ApplicationManifest,
     });
-    await client.prefetchData();
+    await client.waitForInitialization();
 
     expect(client.extract()).toMatchInlineSnapshot(`
       {
@@ -355,7 +355,7 @@ describe("prefetchData", () => {
       cache: new InMemoryCache(),
       manifest: manifest as ApplicationManifest,
     });
-    await client.prefetchData();
+    await client.waitForInitialization();
 
     expect(client.extract()).toMatchInlineSnapshot(`
       {
@@ -452,7 +452,7 @@ describe("prefetchData", () => {
       cache: new InMemoryCache(),
       manifest,
     });
-    await client.prefetchData();
+    await client.waitForInitialization();
 
     expect(client.extract()).toMatchInlineSnapshot(`
       {
