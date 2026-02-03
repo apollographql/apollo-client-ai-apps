@@ -25,7 +25,7 @@ export declare namespace ApolloClient {
 
 export class ApolloClient extends BaseApolloClient {
   manifest: ApplicationManifest;
-  readonly appManager: McpAppManager;
+  private readonly appManager: McpAppManager;
 
   /**
    * @internal

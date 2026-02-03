@@ -29,7 +29,7 @@ export class ToolCallLink extends ApolloLink {
     const client = operation.client as McpApolloClient;
 
     return from(
-      client.appManager.executeQuery({
+      client["appManager"].executeQuery({
         query: operation.query,
         variables: operation.variables,
       })
