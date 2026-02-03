@@ -4,6 +4,7 @@ import type { FormattedExecutionResult } from "graphql";
 export namespace ApolloMcpServerApps {
   export interface Meta {
     toolName: string;
+    [x: string]: unknown;
   }
 
   export interface StructuredContent {
