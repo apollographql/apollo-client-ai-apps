@@ -11,7 +11,7 @@ import {
   disableActEnvironment,
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
-import { ApolloProvider } from "../../ApolloProvider";
+import { ApolloProvider } from "../../../../react/ApolloProvider.js";
 import { stubOpenAiGlobals } from "../../../../testing/internal";
 
 test("returns the `ApolloClient` instance in context", async () => {
