@@ -1,10 +1,16 @@
-import { ApolloLink } from "@apollo/client";
-import { ApolloClient as BaseApolloClient } from "@apollo/client";
-import { DocumentTransform } from "@apollo/client";
+import type { OperationVariables } from "@apollo/client";
+import {
+  ApolloLink,
+  ApolloClient as BaseApolloClient,
+  DocumentTransform,
+} from "@apollo/client";
 import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
 import { parse } from "graphql";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type { ApplicationManifest } from "../../types/application-manifest.js";
+import type {
+  ApplicationManifest,
+  ManifestOperation,
+} from "../../types/application-manifest.js";
 import { ToolCallLink } from "../link/ToolCallLink.js";
 import { aiClientSymbol, cacheAsync } from "../../utilities/index.js";
 import { McpAppManager } from "./McpAppManager.js";
@@ -51,12 +57,8 @@ export class ApolloClient extends BaseApolloClient {
   }
 
   waitForInitialization = cacheAsync(async () => {
-    const {
-      prefetch,
-      result,
-      toolName,
-      variables: toolVariables,
-    } = await this.appManager.waitForInitialization();
+    const { prefetch, result, toolName, variables } =
+      await this.appManager.waitForInitialization();
 
     this.manifest.operations.forEach((operation) => {
       if (operation.prefetchID && prefetch?.[operation.prefetchID]) {
@@ -67,25 +69,33 @@ export class ApolloClient extends BaseApolloClient {
       }
 
       if (operation.tools.find((tool) => tool.name === toolName)) {
-        const variables =
-          toolVariables ?
-            Object.keys(toolVariables).reduce(
-              (obj, key) =>
-                operation.variables?.[key] ?
-                  { ...obj, [key]: toolVariables[key] }
-                : obj,
-              {}
-            )
-          : {};
-
         this.writeQuery({
           query: parse(operation.body),
           data: result.data,
-          variables,
+          variables: getVariablesFromTool(operation, variables),
         });
       }
     });
   });
+}
+
+function getVariablesFromTool(
+  operation: ManifestOperation,
+  toolVariables: OperationVariables | undefined
+): OperationVariables {
+  if (!operation.variables || !toolVariables) {
+    return {};
+  }
+
+  const variableNames = new Set(Object.keys(operation.variables));
+
+  return Object.keys(toolVariables).reduce((obj, key) => {
+    if (variableNames.has(key)) {
+      obj[key] = toolVariables[key];
+    }
+
+    return obj;
+  }, {} as OperationVariables);
 }
 
 function validateTerminatingLink(link: ApolloLink) {
