@@ -4,11 +4,8 @@ import type { ApplicationManifest } from "../../types/application-manifest";
 import type { FormattedExecutionResult } from "graphql";
 import type { DocumentNode, OperationVariables } from "@apollo/client";
 import { print } from "@apollo/client/utilities";
-
-interface State {
-  toolResult: Parameters<App["ontoolresult"]>[0] | undefined;
-  toolInput: Parameters<App["ontoolinput"]>[0] | undefined;
-}
+import { cacheAsync } from "../../utilities";
+import type { ApolloMcpServerApps } from "../../core/types";
 
 type ExecuteQueryCallToolResult = Omit<CallToolResult, "structuredContent"> & {
   structuredContent: FormattedExecutionResult;
@@ -16,34 +13,32 @@ type ExecuteQueryCallToolResult = Omit<CallToolResult, "structuredContent"> & {
 
 export class McpAppManager {
   readonly app: App;
-  private state: State = { toolResult: undefined, toolInput: undefined };
-  private handlers = new Map<keyof State, Set<(...args: any[]) => any>>();
 
   constructor(manifest: ApplicationManifest) {
     // TODO: Determine how we want to provide this version long-term.
     this.app = new App({ name: manifest.name, version: "1.0.0" });
-    this.registerListeners();
   }
 
-  get toolResult() {
-    return this.state.toolResult;
-  }
+  waitForInitialization = cacheAsync(async () => {
+    let toolResult!: ApolloMcpServerApps.CallToolResult;
+    let toolInput!: Parameters<App["ontoolinput"]>[0];
 
-  get toolInput() {
-    return this.state.toolInput;
-  }
+    this.app.ontoolresult = (params) => {
+      toolResult = params as unknown as ApolloMcpServerApps.CallToolResult;
+    };
 
-  connect() {
-    try {
-      return this.app.connect(
-        new PostMessageTransport(window.parent, window.parent)
-      );
-    } catch (e) {
-      const error = e instanceof Error ? e : new Error("Failed to connect");
+    this.app.ontoolinput = (params) => {
+      toolInput = params;
+    };
 
-      throw error;
-    }
-  }
+    await this.connect();
+
+    return {
+      toolName: toolResult._meta.toolName,
+      result: toolResult.structuredContent,
+      variables: toolInput.arguments,
+    };
+  });
 
   async executeQuery({
     query,
@@ -60,38 +55,15 @@ export class McpAppManager {
     return result.structuredContent;
   }
 
-  onChange<Key extends keyof State>(name: Key, cb: App[`on${Lowercase<Key>}`]) {
-    let listeners = this.handlers.get(name);
+  private connect() {
+    try {
+      return this.app.connect(
+        new PostMessageTransport(window.parent, window.parent)
+      );
+    } catch (e) {
+      const error = e instanceof Error ? e : new Error("Failed to connect");
 
-    if (!listeners) {
-      this.handlers.set(name, (listeners = new Set()));
+      throw error;
     }
-
-    listeners.add(cb);
-
-    return () => {
-      listeners.delete(cb);
-    };
-  }
-
-  private registerListeners() {
-    this.app.ontoolresult = (params) => {
-      console.log("onToolResult", params);
-      this.set("toolResult", params);
-    };
-
-    this.app.ontoolinput = (params) => {
-      console.log("onToolInput", params);
-      this.set("toolInput", params);
-    };
-  }
-
-  private set<Key extends keyof State>(key: Key, value: State[Key]) {
-    this.state[key] = value;
-    this.notify(key);
-  }
-
-  private notify(key: keyof State) {
-    this.handlers.get(key)?.forEach((listener) => listener(this.state[key]));
   }
 }

@@ -8,7 +8,6 @@ import type { ApplicationManifest } from "../../types/application-manifest.js";
 import { ToolCallLink } from "../link/ToolCallLink.js";
 import { aiClientSymbol, cacheAsync } from "../../utilities/index.js";
 import { McpAppManager } from "./McpAppManager.js";
-import type { ApolloMcpServerApps } from "../../core/types.js";
 
 export declare namespace ApolloClient {
   // This allows us to extend the options with the "manifest" option AND make link optional (it is normally required)
@@ -52,58 +51,27 @@ export class ApolloClient extends BaseApolloClient {
   }
 
   waitForInitialization = cacheAsync(async () => {
-    await this.appManager.connect();
-
-    const waitForToolResult =
-      async (): Promise<ApolloMcpServerApps.CallToolResult> => {
-        if (this.appManager.toolResult) {
-          return Promise.resolve(
-            this.appManager
-              .toolResult as unknown as ApolloMcpServerApps.CallToolResult
-          );
-        }
-
-        return new Promise((resolve) => {
-          const unsubscribe = this.appManager.onChange(
-            "toolResult",
-            (result) => {
-              resolve(result as unknown as ApolloMcpServerApps.CallToolResult);
-              unsubscribe();
-            }
-          );
-        });
-      };
-
-    const toolResult = await waitForToolResult();
-
-    if (!toolResult) {
-      return;
-    }
-
-    const { _meta: meta, structuredContent } = toolResult;
+    const {
+      result,
+      toolName,
+      variables: toolVariables,
+    } = await this.appManager.waitForInitialization();
 
     this.manifest.operations.forEach((operation) => {
-      if (
-        operation.prefetchID &&
-        structuredContent.prefetch?.[operation.prefetchID]
-      ) {
+      if (operation.prefetchID && result.prefetch?.[operation.prefetchID]) {
         this.writeQuery({
           query: parse(operation.body),
-          data: structuredContent.prefetch[operation.prefetchID].data,
+          data: result.prefetch[operation.prefetchID].data,
         });
       }
 
-      if (
-        operation.tools.find(
-          (tool) => `${this.manifest.name}--${tool.name}` === meta.toolName
-        )
-      ) {
+      if (operation.tools.find((tool) => tool.name === toolName)) {
         const variables =
-          this.appManager.toolInput ?
-            Object.keys(this.appManager.toolInput.arguments ?? {}).reduce(
+          toolVariables ?
+            Object.keys(toolVariables ?? {}).reduce(
               (obj, key) =>
                 operation.variables?.[key] ?
-                  { ...obj, [key]: this.appManager.toolInput?.arguments?.[key] }
+                  { ...obj, [key]: toolVariables[key] }
                 : obj,
               {}
             )
@@ -111,7 +79,7 @@ export class ApolloClient extends BaseApolloClient {
 
         this.writeQuery({
           query: parse(operation.body),
-          data: structuredContent.result.data,
+          data: result.result.data,
           variables,
         });
       }
