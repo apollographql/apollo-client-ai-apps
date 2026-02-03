@@ -4,9 +4,6 @@ import { gqlPluckFromCodeStringSync } from "@graphql-tools/graphql-tag-pluck";
 import { createHash } from "crypto";
 import type {
   ArgumentNode,
-  ListTypeNode,
-  NamedTypeNode,
-  NonNullTypeNode,
   TypeNode,
   ValueNode,
   DocumentNode,
