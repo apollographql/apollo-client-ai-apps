@@ -52,23 +52,24 @@ export class ApolloClient extends BaseApolloClient {
 
   waitForInitialization = cacheAsync(async () => {
     const {
+      prefetch,
       result,
       toolName,
       variables: toolVariables,
     } = await this.appManager.waitForInitialization();
 
     this.manifest.operations.forEach((operation) => {
-      if (operation.prefetchID && result.prefetch?.[operation.prefetchID]) {
+      if (operation.prefetchID && prefetch?.[operation.prefetchID]) {
         this.writeQuery({
           query: parse(operation.body),
-          data: result.prefetch[operation.prefetchID].data,
+          data: prefetch[operation.prefetchID].data,
         });
       }
 
       if (operation.tools.find((tool) => tool.name === toolName)) {
         const variables =
           toolVariables ?
-            Object.keys(toolVariables ?? {}).reduce(
+            Object.keys(toolVariables).reduce(
               (obj, key) =>
                 operation.variables?.[key] ?
                   { ...obj, [key]: toolVariables[key] }
@@ -79,7 +80,7 @@ export class ApolloClient extends BaseApolloClient {
 
         this.writeQuery({
           query: parse(operation.body),
-          data: result.result.data,
+          data: result.data,
           variables,
         });
       }

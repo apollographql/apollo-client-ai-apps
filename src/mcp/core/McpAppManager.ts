@@ -33,10 +33,12 @@ export class McpAppManager {
 
     await this.connect();
 
+    const { structuredContent, _meta } = toolResult;
+
     return {
-      toolName: toolResult._meta.toolName,
-      result: toolResult.structuredContent,
-      variables: toolInput.arguments,
+      ...structuredContent,
+      toolName: _meta.toolName,
+      variables: toolInput.arguments as OperationVariables | undefined,
     };
   });
 
