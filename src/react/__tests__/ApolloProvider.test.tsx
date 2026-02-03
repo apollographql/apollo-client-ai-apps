@@ -22,6 +22,9 @@ test("writes data to the cache when immediately available", async () => {
   };
   stubOpenAiGlobals({
     toolOutput: {
+      result: {
+        data: null,
+      },
       prefetch: {
         __anonymous: { data },
       },
