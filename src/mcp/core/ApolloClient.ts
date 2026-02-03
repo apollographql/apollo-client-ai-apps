@@ -7,7 +7,7 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { ApplicationManifest } from "../../types/application-manifest.js";
 import { ToolCallLink } from "../link/ToolCallLink.js";
 import { aiClientSymbol, cacheAsync } from "../../utilities/index.js";
-import { ApolloMcpApp } from "./ApolloMcpApp.js";
+import { McpAppManager } from "./McpAppManager.js";
 import type { ApolloMcpServerApps } from "../../core/types.js";
 
 export declare namespace ApolloClient {
@@ -20,7 +20,7 @@ export declare namespace ApolloClient {
 
 export class ApolloClient extends BaseApolloClient {
   manifest: ApplicationManifest;
-  readonly app: ApolloMcpApp;
+  readonly appManager: McpAppManager;
 
   /**
    * @internal
@@ -48,25 +48,29 @@ export class ApolloClient extends BaseApolloClient {
     });
 
     this.manifest = options.manifest;
-    this.app = new ApolloMcpApp(this.manifest);
+    this.appManager = new McpAppManager(this.manifest);
   }
 
   waitForInitialization = cacheAsync(async () => {
-    await this.app.connect();
+    await this.appManager.connect();
 
     const waitForToolResult =
       async (): Promise<ApolloMcpServerApps.CallToolResult> => {
-        if (this.app.toolResult) {
+        if (this.appManager.toolResult) {
           return Promise.resolve(
-            this.app.toolResult as unknown as ApolloMcpServerApps.CallToolResult
+            this.appManager
+              .toolResult as unknown as ApolloMcpServerApps.CallToolResult
           );
         }
 
         return new Promise((resolve) => {
-          const unsubscribe = this.app.onChange("toolResult", (result) => {
-            resolve(result as unknown as ApolloMcpServerApps.CallToolResult);
-            unsubscribe();
-          });
+          const unsubscribe = this.appManager.onChange(
+            "toolResult",
+            (result) => {
+              resolve(result as unknown as ApolloMcpServerApps.CallToolResult);
+              unsubscribe();
+            }
+          );
         });
       };
 
@@ -95,11 +99,11 @@ export class ApolloClient extends BaseApolloClient {
         )
       ) {
         const variables =
-          this.app.toolInput ?
-            Object.keys(this.app.toolInput.arguments ?? {}).reduce(
+          this.appManager.toolInput ?
+            Object.keys(this.appManager.toolInput.arguments ?? {}).reduce(
               (obj, key) =>
                 operation.variables?.[key] ?
-                  { ...obj, [key]: this.app.toolInput?.arguments?.[key] }
+                  { ...obj, [key]: this.appManager.toolInput?.arguments?.[key] }
                 : obj,
               {}
             )

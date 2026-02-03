@@ -6,9 +6,9 @@ export function useToolResult() {
 
   return useSyncExternalStore(
     useCallback(
-      (update) => client.app.onChange("toolResult", update),
+      (update) => client.appManager.onChange("toolResult", update),
       [client]
     ),
-    () => client.app.toolResult
+    () => client.appManager.toolResult
   );
 }

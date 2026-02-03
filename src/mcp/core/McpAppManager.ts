@@ -18,7 +18,7 @@ type ExecuteQueryCallToolResult = Omit<CallToolResult, "structuredContent"> & {
   structuredContent: FormattedExecutionResult;
 };
 
-export class ApolloMcpApp {
+export class McpAppManager {
   readonly app: App;
   private state: State = { toolResult: undefined, toolInput: undefined };
   private handlers = new Map<keyof State, Set<(...args: any[]) => any>>();
@@ -99,10 +99,12 @@ export class ApolloMcpApp {
 
   private registerListeners() {
     this.app.ontoolresult = (params) => {
+      console.log("onToolResult", params);
       this.set("toolResult", params);
     };
 
     this.app.ontoolinput = (params) => {
+      console.log("onToolInput", params);
       this.set("toolInput", params);
     };
   }
