@@ -1,42 +1,24 @@
 import type { Mock } from "vitest";
 import { expect, test, vi, describe, beforeEach } from "vitest";
+import { createServer, type InlineConfig, type ResolvedConfig } from "vite";
 import { ApplicationManifestPlugin } from "../application_manifest_plugin.js";
-import fs from "fs";
+import fs from "node:fs";
+import { vol } from "memfs";
 import * as glob from "glob";
 import path from "path";
-import type { ManifestWidgetSettings } from "../../types/application-manifest.js";
+import type {
+  ApplicationManifest,
+  ManifestWidgetSettings,
+} from "../../types/application-manifest.js";
 
 const root = process.cwd();
 
-vi.mock(import("fs"), async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    default: {
-      ...actual.default,
-      readFileSync: vi.fn(),
-      writeFileSync: vi.fn(),
-      mkdirSync: vi.fn(),
-    },
-  };
-});
-
-vi.mock(import("path"), async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    default: {
-      ...actual.default,
-      resolve: vi.fn((...args) =>
-        args.map((a, i) => (i === 0 ? a : a.replace(/^\//, ""))).join("/")
-      ),
-      dirname: vi.fn(),
-    },
-  };
-});
-
-vi.mock(import("glob"));
+vi.mock("node:fs");
+vi.mock("node:fs/promises");
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vol.reset();
 });
 
 describe("buildStart", () => {
@@ -1182,6 +1164,7 @@ describe("configureServer", () => {
 
 type FilePath = string;
 
+/** @deprecated */
 function mockReadFile(mocks: Record<FilePath, string | (() => string)>) {
   vi.spyOn(fs, "readFileSync").mockImplementation((path) => {
     const mock = mocks[path.toString()];
@@ -1196,4 +1179,33 @@ function mockReadFile(mocks: Record<FilePath, string | (() => string)>) {
 
     return mock;
   });
+}
+
+async function setupServer(config: InlineConfig | ResolvedConfig) {
+  const server = await createServer({
+    configFile: false,
+    server: {
+      port: 3333,
+    },
+    ...config,
+  });
+
+  return {
+    ...server,
+    [Symbol.asyncDispose]() {
+      return server.close();
+    },
+  };
+}
+
+function readManifestFile(
+  path = ".application-manifest.json"
+): ApplicationManifest {
+  const manifest = JSON.parse(fs.readFileSync(path, "utf-8"));
+
+  // Use a deterministic hash for tests to ensure snapshots maintain a
+  // consistent output
+  manifest.hash = "abc";
+
+  return manifest;
 }
