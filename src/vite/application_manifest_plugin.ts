@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync } from "fs";
+import fs from "node:fs";
 import { glob } from "glob";
 import { gqlPluckFromCodeStringSync } from "@graphql-tools/graphql-tag-pluck";
 import { createHash } from "crypto";
@@ -216,7 +216,7 @@ export const ApplicationManifestPlugin = () => {
   });
 
   const processFile = async (file: string) => {
-    const code = readFileSync(file, "utf-8");
+    const code = fs.readFileSync(file, "utf-8");
 
     if (!code.includes("gql")) return;
 
@@ -353,11 +353,11 @@ export const ApplicationManifestPlugin = () => {
       config.build.outDir,
       ".application-manifest.json"
     );
-    mkdirSync(path.dirname(dest), { recursive: true });
-    writeFileSync(dest, JSON.stringify(manifest));
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.writeFileSync(dest, JSON.stringify(manifest));
 
     // Always write to the dev location so that the app can bundle the manifest content
-    writeFileSync(".application-manifest.json", JSON.stringify(manifest));
+    fs.writeFileSync(".application-manifest.json", JSON.stringify(manifest));
   };
 
   return {
@@ -369,10 +369,10 @@ export const ApplicationManifestPlugin = () => {
 
     async buildStart() {
       // Read package.json on start
-      packageJson = JSON.parse(readFileSync("package.json", "utf-8"));
+      packageJson = JSON.parse(fs.readFileSync("package.json", "utf-8"));
 
       // Scan all files on startup
-      const files = await glob("src/**/*.{ts,tsx,js,jsx}");
+      const files = await glob("./src/**/*.{ts,tsx,js,jsx}", { fs });
 
       for (const file of files) {
         const fullPath = path.resolve(root, file);
@@ -389,7 +389,7 @@ export const ApplicationManifestPlugin = () => {
     configureServer(server: any) {
       server.watcher.on("change", async (file: string) => {
         if (file.endsWith("package.json")) {
-          packageJson = JSON.parse(readFileSync("package.json", "utf-8"));
+          packageJson = JSON.parse(fs.readFileSync("package.json", "utf-8"));
           await generateManifest();
         } else if (file.match(/\.(jsx?|tsx?)$/)) {
           await processFile(file);
