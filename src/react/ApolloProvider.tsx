@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { use } from "react";
 import { ApolloProvider as BaseApolloProvider } from "@apollo/client/react";
 import type { ApolloClient as BaseApolloClient } from "@apollo/client";
 import { ApolloClient as OpenAiApolloClient } from "../openai/core/ApolloClient.js";
@@ -18,8 +18,6 @@ export declare namespace ApolloProvider {
 }
 
 export function ApolloProvider({ children, client }: ApolloProvider.Props) {
-  const [initialized, setInitialized] = useState(false);
-
   if (__DEV__) {
     invariant(
       client.info === aiClientSymbol,
@@ -27,27 +25,11 @@ export function ApolloProvider({ children, client }: ApolloProvider.Props) {
     );
   }
 
-  useEffect(() => {
-    let mounted = true;
+  use(client.waitForInitialization());
 
-    async function initialize() {
-      await client.waitForInitialization();
-
-      if (mounted) {
-        setInitialized(true);
-      }
-    }
-
-    initialize();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  return initialized ?
-      <BaseApolloProvider client={client as BaseApolloClient}>
-        {children}
-      </BaseApolloProvider>
-    : null;
+  return (
+    <BaseApolloProvider client={client as BaseApolloClient}>
+      {children}
+    </BaseApolloProvider>
+  );
 }
