@@ -830,8 +830,8 @@ describe("writeBundle", () => {
 
     await expect(
       async () => await buildApp({ mode: "staging" })
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `[Error: [OperationManifest] No entry point found for mode 'staging'. Entry points other than 'development' and 'production' must be defined in package.json.]`
+    ).rejects.toThrowError(
+      `[OperationManifest] No entry point found for mode "staging". Entry points other than "development" and "production" must be defined in package.json file.`
     );
   });
 

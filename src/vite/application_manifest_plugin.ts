@@ -290,7 +290,7 @@ export const ApplicationManifestPlugin = () => {
         resource = "index.html";
       } else {
         throw new Error(
-          `No entry point found for mode '${config.mode}'. Entry points other than 'development' and 'production' must be defined in package.json.`
+          `No entry point found for mode "${config.mode}". Entry points other than "development" and "production" must be defined in package.json file.`
         );
       }
     }
