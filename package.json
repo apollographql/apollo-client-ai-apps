@@ -27,6 +27,7 @@
         "default": "./dist/index.js"
       }
     },
+    "./core/tsconfig.json": "./dist/core/tsconfig.json",
     "./mcp": {
       "mcp": {
         "types": "./dist/mcp/index.d.ts",
@@ -34,6 +35,7 @@
       },
       "default": "./dist/utilities/emptyModule.js"
     },
+    "./mcp/tsconfig.json": "./dist/mcp/tsconfig.json",
     "./react": {
       "types": "./dist/react/index.d.ts",
       "default": "./dist/react/index.js"
@@ -45,6 +47,7 @@
       },
       "default": "./dist/utilities/emptyModule.js"
     },
+    "./openai/tsconfig.json": "./dist/openai/tsconfig.json",
     "./openai/globals": {
       "openai": {
         "types": "./dist/openai/globals.d.ts",
@@ -65,9 +68,10 @@
   "scripts": {
     "dev": "node ./scripts/dev.mjs",
     "prebuild": "npm run clean",
-    "build": "npm run build:src && npm run build:vite",
+    "build": "npm run build:src && npm run build:vite && npm run copy-ts-configs",
     "build:src": "tsc --project tsconfig.src.build.json",
     "build:vite": "tsc --project tsconfig.vite.build.json",
+    "copy-ts-configs": "cp ./src/openai/tsconfig.json ./dist/openai/ && cp ./src/mcp/tsconfig.json ./dist/mcp/ && cp ./src/core/tsconfig.json ./dist/core/tsconfig.json",
     "clean": "rimraf dist",
     "test": "vitest run --coverage",
     "test:watch": "vitest --coverage",
