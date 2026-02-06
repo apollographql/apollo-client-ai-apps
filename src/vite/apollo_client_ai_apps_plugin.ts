@@ -44,7 +44,8 @@ function buildExtensions(target: BaseApolloClientAiAppsPlugin.Target) {
 export function BaseApolloClientAiAppsPlugin(
   options: BaseApolloClientAiAppsPlugin.Options
 ): Plugin {
-  const { targets, devTarget } = options;
+  const { targets: rawTargets, devTarget } = options;
+  const targets = Array.from(new Set(rawTargets));
 
   invariant(
     Array.isArray(targets) && targets.length > 0,
