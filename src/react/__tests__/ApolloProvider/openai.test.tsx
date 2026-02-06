@@ -9,7 +9,6 @@ import { print } from "@apollo/client/utilities";
 import {
   mockApplicationManifest,
   stubOpenAiGlobals,
-  wait,
 } from "../../../testing/internal/index.js";
 
 test("writes data to the cache when immediately available", async () => {
