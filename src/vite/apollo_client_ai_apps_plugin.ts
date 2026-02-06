@@ -23,7 +23,7 @@ export declare namespace BaseApolloClientAiAppsPlugin {
 
   export interface Options {
     targets: Target[];
-    devTarget?: Target;
+    devTarget?: Target | undefined;
   }
 }
 
