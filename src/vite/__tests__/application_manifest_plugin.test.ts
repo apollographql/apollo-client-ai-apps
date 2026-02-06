@@ -52,7 +52,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
     });
 
     await using server = await setupServer({
-      plugins: [ApplicationManifestPlugin()],
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
     await server.listen();
 
@@ -137,7 +137,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
     });
 
     await using server = await setupServer({
-      plugins: [ApplicationManifestPlugin()],
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
     await server.listen();
 
@@ -168,7 +168,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
     });
 
     await using server = await setupServer({
-      plugins: [ApplicationManifestPlugin()],
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
     await server.listen();
 
@@ -211,7 +211,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
     });
 
     await using server = await setupServer({
-      plugins: [ApplicationManifestPlugin()],
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
     await server.listen();
 
@@ -257,7 +257,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [ApplicationManifestPlugin()],
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -274,7 +274,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
     });
 
     await using server = await setupServer({
-      plugins: [ApplicationManifestPlugin()],
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
     await server.listen();
 
@@ -323,7 +323,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [ApplicationManifestPlugin()],
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -345,7 +345,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
 
     await using server = await setupServer({
       mode: "staging",
-      plugins: [ApplicationManifestPlugin()],
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
     await server.listen();
 
@@ -363,7 +363,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
 
     await using server = await setupServer({
       server: { https: {}, port: 5678 },
-      plugins: [ApplicationManifestPlugin()],
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
     await server.listen();
 
@@ -381,7 +381,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
 
     await using server = await setupServer({
       server: { port: 5678, host: "0.0.0.0" },
-      plugins: [ApplicationManifestPlugin()],
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
     await server.listen();
 
@@ -399,7 +399,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [ApplicationManifestPlugin()],
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -417,7 +417,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [ApplicationManifestPlugin()],
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -435,7 +435,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [ApplicationManifestPlugin()],
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -453,7 +453,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [ApplicationManifestPlugin()],
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -471,7 +471,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [ApplicationManifestPlugin()],
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -489,7 +489,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [ApplicationManifestPlugin()],
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -511,7 +511,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [ApplicationManifestPlugin()],
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -533,7 +533,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [ApplicationManifestPlugin()],
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -555,7 +555,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [ApplicationManifestPlugin()],
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -574,7 +574,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
     });
 
     await using server = await setupServer({
-      plugins: [ApplicationManifestPlugin()],
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
     await server.listen();
 
@@ -598,7 +598,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [ApplicationManifestPlugin()],
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -616,7 +616,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [ApplicationManifestPlugin()],
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -640,7 +640,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [ApplicationManifestPlugin()],
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -658,7 +658,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [ApplicationManifestPlugin()],
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -677,7 +677,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
     });
 
     await using server = await setupServer({
-      plugins: [ApplicationManifestPlugin()],
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
     await server.listen();
 
@@ -697,7 +697,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [ApplicationManifestPlugin()],
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -725,7 +725,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
     });
 
     await using server = await setupServer({
-      plugins: [ApplicationManifestPlugin()],
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
     await server.listen();
 
@@ -864,7 +864,7 @@ describe("configureServer", () => {
     });
 
     await using server = await setupServer({
-      plugins: [ApplicationManifestPlugin()],
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
     await server.listen();
 
@@ -911,7 +911,7 @@ async function buildApp(config: Omit<InlineConfig, "configFile">) {
     configFile: false,
     logLevel: "silent",
     plugins: [
-      ApplicationManifestPlugin(),
+      ApplicationManifestPlugin({ targets: ["mcp"] }),
       {
         name: "virtual-entry",
         resolveId(id) {

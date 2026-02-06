@@ -4,7 +4,12 @@ export type ApplicationManifest = {
   name: string;
   description: string;
   hash: string;
-  resource: string;
+  resource:
+    | string
+    | {
+        mcp?: string;
+        openai?: string;
+      };
   operations: ManifestOperation[];
   csp: ManifestCsp;
   widgetSettings?: ManifestWidgetSettings;

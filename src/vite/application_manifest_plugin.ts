@@ -118,7 +118,16 @@ function getTypeName(type: TypeNode): string {
   return t.name.value;
 }
 
-export const ApplicationManifestPlugin = () => {
+type Target = "openai" | "mcp";
+
+interface ApplicationManifestPluginOptions {
+  targets: Target[];
+}
+
+export const ApplicationManifestPlugin = (
+  options: ApplicationManifestPluginOptions
+) => {
+  const { targets } = options;
   const cache = new Map();
   let packageJson: any = null;
   let config!: ResolvedConfig;
@@ -267,7 +276,7 @@ export const ApplicationManifestPlugin = () => {
     });
   };
 
-  const generateManifest = async () => {
+  const generateManifest = async (command: "build" | "serve") => {
     const operations = Array.from(cache.values()).flatMap(
       (entry) => entry.operations
     );
@@ -277,13 +286,15 @@ export const ApplicationManifestPlugin = () => {
       "Found multiple operations marked as `@prefetch`. You can only mark 1 operation with `@prefetch`."
     );
 
-    let resource = "";
+    let resource: ApplicationManifest["resource"];
     if (config.command === "serve") {
+      // Dev mode: resource is a string (dev server URL)
       resource =
         packageJson.entry?.[config.mode] ??
         `http${config.server.https ? "s" : ""}://${config.server.host ?? "localhost"}:${config.server.port}`;
-    } else {
-      let entryPoint = packageJson.entry?.[config.mode];
+    } else if (targets.length === 1) {
+      // Build mode with single target: resource remains a string
+      const entryPoint = packageJson.entry?.[config.mode];
       if (entryPoint) {
         resource = entryPoint;
       } else if (config.mode === "production") {
@@ -293,6 +304,11 @@ export const ApplicationManifestPlugin = () => {
           `No entry point found for mode "${config.mode}". Entry points other than "development" and "production" must be defined in package.json file.`
         );
       }
+    } else {
+      // Build mode with multiple targets: resource is an object with per-target paths
+      resource = Object.fromEntries(
+        targets.map((target) => [target, `${target}/index.html`])
+      ) as { mcp?: string; openai?: string };
     }
 
     const manifest: ApplicationManifest = {
@@ -347,12 +363,16 @@ export const ApplicationManifestPlugin = () => {
       }
     }
 
+    // When running in dev mode, we only serve a single resource in `outDir`.
+    // When building multiple targets, `outDir` reflects the target subdir so we
+    // want to write to the parent folder.
+    const dir =
+      command === "serve" ?
+        config.build.outDir
+      : path.resolve(config.build.outDir, "../");
+
     // Always write to build directory so the MCP server picks it up
-    const dest = path.resolve(
-      root,
-      config.build.outDir,
-      ".application-manifest.json"
-    );
+    const dest = path.resolve(root, dir, ".application-manifest.json");
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.writeFileSync(dest, JSON.stringify(manifest));
 
@@ -381,7 +401,7 @@ export const ApplicationManifestPlugin = () => {
 
       // We don't want to do this here on builds cause it just gets overwritten anyways. We'll call it on writeBundle instead.
       if (config.command === "serve") {
-        await generateManifest();
+        await generateManifest(config.command);
       }
     },
 
@@ -390,16 +410,16 @@ export const ApplicationManifestPlugin = () => {
       server.watcher.on("change", async (file: string) => {
         if (file.endsWith("package.json")) {
           packageJson = JSON.parse(fs.readFileSync("package.json", "utf-8"));
-          await generateManifest();
+          await generateManifest("serve");
         } else if (file.match(/\.(jsx?|tsx?)$/)) {
           await processFile(file);
-          await generateManifest();
+          await generateManifest("serve");
         }
       });
     },
 
     async writeBundle() {
-      await generateManifest();
+      await generateManifest("build");
     },
   } satisfies Plugin;
 };
