@@ -65,6 +65,8 @@ test("writes data to the cache when immediately available", async () => {
 });
 
 test("writes to the cache as soon as toolOutput is available", async () => {
+  stubOpenAiGlobals(({ toolOutput, ...defaults }) => defaults);
+
   const query = gql`
     query GreetingQuery {
       greeting
