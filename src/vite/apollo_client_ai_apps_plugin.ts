@@ -57,11 +57,6 @@ export function BaseApolloClientAiAppsPlugin(
     `All targets must be one of: ${VALID_TARGETS.join(", ")}`
   );
 
-  invariant(
-    devTarget === undefined || targets.includes(devTarget),
-    `The \`devTarget\` ("${devTarget}") must be included in the \`targets\` array`
-  );
-
   return {
     name: "apollo-client-ai-apps",
     configEnvironment(name, { build }) {
