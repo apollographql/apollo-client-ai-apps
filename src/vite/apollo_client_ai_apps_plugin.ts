@@ -57,11 +57,6 @@ export function BaseApolloClientAiAppsPlugin(
   );
 
   invariant(
-    devTarget === undefined || isValidTarget(devTarget),
-    "The `devTarget` option must be set"
-  );
-
-  invariant(
     devTarget === undefined || targets.includes(devTarget),
     `The \`devTarget\` ("${devTarget}") must be included in the \`targets\` array`
   );
