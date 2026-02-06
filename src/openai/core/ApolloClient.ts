@@ -92,7 +92,7 @@ export class ApolloClient extends BaseApolloClient {
 }
 
 async function waitForToolOutput(): Promise<ApolloMcpServerApps.StructuredContent | null> {
-  if (window.openai?.toolOutput !== undefined) {
+  if (window.openai.toolOutput !== undefined) {
     return window.openai.toolOutput;
   }
 
