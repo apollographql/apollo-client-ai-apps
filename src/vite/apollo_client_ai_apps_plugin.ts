@@ -41,6 +41,15 @@ function buildExtensions(target: BaseApolloClientAiAppsPlugin.Target) {
   );
 }
 
+export function devTarget(
+  target: string | undefined
+): asserts target is BaseApolloClientAiAppsPlugin.Target | undefined {
+  invariant(
+    target === undefined || isValidTarget(target),
+    `devTarget '${target}' is not a valid dev target. Must be one of ${VALID_TARGETS.join(", ")}.`
+  );
+}
+
 export function BaseApolloClientAiAppsPlugin(
   options: BaseApolloClientAiAppsPlugin.Options
 ): Plugin {
