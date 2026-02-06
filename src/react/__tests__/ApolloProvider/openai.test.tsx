@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import { Suspense } from "react";
 import { ApolloProvider } from "../../ApolloProvider.js";
 import { render, waitFor } from "@testing-library/react";
 import { ApolloClient } from "../../../openai/core/ApolloClient.js";
@@ -49,15 +50,17 @@ test("writes data to the cache when immediately available", async () => {
     }),
   });
 
-  render(<ApolloProvider client={client} />);
+  render(<ApolloProvider client={client} />, {
+    wrapper: ({ children }) => <Suspense>{children}</Suspense>,
+  });
 
-  await wait(0);
-
-  expect(client.extract()).toEqual({
-    ROOT_QUERY: {
-      __typename: "Query",
-      greeting: "hello",
-    },
+  await waitFor(() => {
+    expect(client.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        greeting: "hello",
+      },
+    });
   });
 });
 
@@ -89,7 +92,9 @@ test("writes to the cache as soon as toolOutput is available", async () => {
     }),
   });
 
-  render(<ApolloProvider client={client} />);
+  render(<ApolloProvider client={client} />, {
+    wrapper: ({ children }) => <Suspense>{children}</Suspense>,
+  });
 
   await expect(
     waitFor(() => expect(client.extract()).not.toEqual({}))
@@ -109,12 +114,12 @@ test("writes to the cache as soon as toolOutput is available", async () => {
     })
   );
 
-  await wait(0);
-
-  expect(client.extract()).toEqual({
-    ROOT_QUERY: {
-      __typename: "Query",
-      greeting: "hello",
-    },
+  await waitFor(() => {
+    expect(client.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        greeting: "hello",
+      },
+    });
   });
 });
