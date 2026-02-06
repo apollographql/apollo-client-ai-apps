@@ -121,7 +121,10 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
       `,
     });
 
-    await buildApp({ mode: "production" });
+    await buildApp({
+      mode: "production",
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+    });
 
     const manifest = readManifestFile();
     expect(manifest.operations).toHaveLength(1);
@@ -800,7 +803,10 @@ describe("writeBundle", () => {
       `,
     });
 
-    await buildApp({ mode: "staging" });
+    await buildApp({
+      mode: "staging",
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+    });
 
     const manifest = readManifestFile();
     expect(manifest.resource).toBe("http://staging.awesome.com");
@@ -814,7 +820,10 @@ describe("writeBundle", () => {
       `,
     });
 
-    await buildApp({ mode: "production" });
+    await buildApp({
+      mode: "production",
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+    });
 
     const manifest = readManifestFile();
     expect(manifest.resource).toBe("index.html");
@@ -829,7 +838,11 @@ describe("writeBundle", () => {
     });
 
     await expect(
-      async () => await buildApp({ mode: "staging" })
+      async () =>
+        await buildApp({
+          mode: "staging",
+          plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+        })
     ).rejects.toThrowError(
       `[OperationManifest] No entry point found for mode "staging". Entry points other than "development" and "production" must be defined in package.json file.`
     );
@@ -843,7 +856,10 @@ describe("writeBundle", () => {
       `,
     });
 
-    await buildApp({ mode: "production" });
+    await buildApp({
+      mode: "production",
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+    });
 
     expect(vol.existsSync(".application-manifest.json")).toBe(true);
     expect(vol.existsSync("dist/.application-manifest.json")).toBe(true);
@@ -906,12 +922,23 @@ async function setupServer(config: InlineConfig) {
   };
 }
 
-async function buildApp(config: Omit<InlineConfig, "configFile">) {
+async function buildApp(
+  config: Omit<InlineConfig, "configFile" | "plugins"> & {
+    plugins: NonNullable<InlineConfig["plugins"]>;
+  }
+) {
   await build({
     configFile: false,
     logLevel: "silent",
+    ...config,
+    build: {
+      emptyOutDir: false,
+      outDir: "dist",
+      ...config.build,
+      rollupOptions: { input: "virtual:entry" },
+    },
     plugins: [
-      ApplicationManifestPlugin({ targets: ["mcp"] }),
+      ...config.plugins,
       {
         name: "virtual-entry",
         resolveId(id) {
@@ -922,12 +949,6 @@ async function buildApp(config: Omit<InlineConfig, "configFile">) {
         },
       },
     ],
-    build: {
-      rollupOptions: { input: "virtual:entry" },
-      emptyOutDir: false,
-      outDir: "dist",
-    },
-    ...config,
   });
 }
 
