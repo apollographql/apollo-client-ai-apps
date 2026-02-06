@@ -23,7 +23,7 @@ import type {
   ManifestWidgetSettings,
 } from "../types/application-manifest.js";
 import { invariant } from "../utilities/index.js";
-import type { Plugin, ResolvedConfig } from "vite";
+import type { Environment, Plugin, ResolvedConfig } from "vite";
 
 const root = process.cwd();
 
@@ -276,7 +276,7 @@ export const ApplicationManifestPlugin = (
     });
   };
 
-  const generateManifest = async (command: "build" | "serve") => {
+  const generateManifest = async (environment?: Environment) => {
     const operations = Array.from(cache.values()).flatMap(
       (entry) => entry.operations
     );
@@ -363,16 +363,17 @@ export const ApplicationManifestPlugin = (
       }
     }
 
-    // When running in dev mode, we only serve a single resource in `outDir`.
-    // When building multiple targets, `outDir` reflects the target subdir so we
-    // want to write to the parent folder.
-    const dir =
-      command === "serve" ?
-        config.build.outDir
-      : path.resolve(config.build.outDir, "../");
+    // We create mcp and openai environments in order to write to
+    // subdirectories, but we want the manifest to be in the root outDir. If we
+    // are running in a different environment, we'll put it in the configured
+    // outDir directly instead.
+    const outDir =
+      environment?.name === "mcp" || environment?.name === "openai" ?
+        path.resolve(config.build.outDir, "../")
+      : config.build.outDir;
 
     // Always write to build directory so the MCP server picks it up
-    const dest = path.resolve(root, dir, ".application-manifest.json");
+    const dest = path.resolve(root, outDir, ".application-manifest.json");
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.writeFileSync(dest, JSON.stringify(manifest));
 
@@ -401,7 +402,7 @@ export const ApplicationManifestPlugin = (
 
       // We don't want to do this here on builds cause it just gets overwritten anyways. We'll call it on writeBundle instead.
       if (config.command === "serve") {
-        await generateManifest(config.command);
+        await generateManifest(this.environment);
       }
     },
 
@@ -410,16 +411,16 @@ export const ApplicationManifestPlugin = (
       server.watcher.on("change", async (file: string) => {
         if (file.endsWith("package.json")) {
           packageJson = JSON.parse(fs.readFileSync("package.json", "utf-8"));
-          await generateManifest("serve");
+          await generateManifest();
         } else if (file.match(/\.(jsx?|tsx?)$/)) {
           await processFile(file);
-          await generateManifest("serve");
+          await generateManifest();
         }
       });
     },
 
     async writeBundle() {
-      await generateManifest("build");
+      await generateManifest(this.environment);
     },
   } satisfies Plugin;
 };
