@@ -1,15 +1,15 @@
 import { expect, test } from "vitest";
-import { ApolloProvider } from "../ApolloProvider.js";
+import { ApolloProvider } from "../../ApolloProvider.js";
 import { render, waitFor } from "@testing-library/react";
-import { ApolloClient } from "../../openai/core/ApolloClient.js";
-import { SET_GLOBALS_EVENT_TYPE } from "../../openai/types.js";
+import { ApolloClient } from "../../../openai/core/ApolloClient.js";
+import { SET_GLOBALS_EVENT_TYPE } from "../../../openai/types.js";
 import { gql, InMemoryCache } from "@apollo/client";
 import { print } from "@apollo/client/utilities";
 import {
   mockApplicationManifest,
   stubOpenAiGlobals,
   wait,
-} from "../../testing/internal/index.js";
+} from "../../../testing/internal/index.js";
 
 test("writes data to the cache when immediately available", async () => {
   const query = gql`
