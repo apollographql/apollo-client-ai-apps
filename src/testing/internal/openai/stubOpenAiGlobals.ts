@@ -7,7 +7,7 @@ import type {
 import "../../../openai/globals.js";
 import { dispatchStateChange } from "./dispatchStateChange.js";
 
-type Globals = Partial<API<any> & OpenAiGlobals>;
+type Globals = API<any> & OpenAiGlobals;
 
 const DEFAULTS = Object.freeze({
   setWidgetState: async (state: UnknownObject) => {
@@ -20,7 +20,7 @@ const DEFAULTS = Object.freeze({
 }) satisfies Partial<Globals>;
 
 export function stubOpenAiGlobals(
-  globals?: Globals | ((defaults: typeof DEFAULTS) => Partial<Globals>)
+  globals?: Partial<Globals> | ((defaults: typeof DEFAULTS) => Partial<Globals>)
 ) {
   vi.stubGlobal(
     "openai",
