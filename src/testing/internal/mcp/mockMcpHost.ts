@@ -4,7 +4,6 @@ import {
   type McpUiHostContext,
   type McpUiToolResultNotification,
   type McpUiToolInputNotification,
-  App,
 } from "@modelcontextprotocol/ext-apps";
 import type { Implementation } from "@modelcontextprotocol/sdk/types.js";
 import { promiseWithResolvers } from "../../../utilities";
