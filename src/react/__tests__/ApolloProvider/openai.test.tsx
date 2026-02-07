@@ -1,13 +1,14 @@
 import { expect, test } from "vitest";
 import { Suspense } from "react";
 import { ApolloProvider } from "../../ApolloProvider.js";
-import { render, waitFor } from "@testing-library/react";
+import { waitFor } from "@testing-library/react";
 import { ApolloClient } from "../../../openai/core/ApolloClient.js";
 import { SET_GLOBALS_EVENT_TYPE } from "../../../openai/types.js";
 import { gql, InMemoryCache } from "@apollo/client";
 import { print } from "@apollo/client/utilities";
 import {
   mockApplicationManifest,
+  renderAsync,
   stubOpenAiGlobals,
 } from "../../../testing/internal/index.js";
 
@@ -49,7 +50,7 @@ test("writes data to the cache when immediately available", async () => {
     }),
   });
 
-  render(<ApolloProvider client={client} />, {
+  await renderAsync(<ApolloProvider client={client} />, {
     wrapper: ({ children }) => <Suspense>{children}</Suspense>,
   });
 
@@ -93,7 +94,7 @@ test("writes to the cache as soon as toolOutput is available", async () => {
     }),
   });
 
-  render(<ApolloProvider client={client} />, {
+  await renderAsync(<ApolloProvider client={client} />, {
     wrapper: ({ children }) => <Suspense>{children}</Suspense>,
   });
 
