@@ -59,6 +59,10 @@ export class McpAppManager {
     };
   });
 
+  close() {
+    return this.app.close();
+  }
+
   async executeQuery({
     query,
     variables,

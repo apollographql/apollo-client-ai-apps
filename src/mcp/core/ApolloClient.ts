@@ -56,6 +56,11 @@ export class ApolloClient extends BaseApolloClient {
     this.appManager = new McpAppManager(this.manifest);
   }
 
+  stop() {
+    super.stop();
+    this.appManager.close().catch(() => {});
+  }
+
   waitForInitialization = cacheAsync(async () => {
     const { prefetch, result, toolName, variables } =
       await this.appManager.waitForInitialization();
