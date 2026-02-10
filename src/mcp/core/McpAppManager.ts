@@ -79,9 +79,9 @@ export class McpAppManager {
     return result.structuredContent;
   }
 
-  private connect() {
+  private async connect() {
     try {
-      return this.app.connect(
+      return await this.app.connect(
         new PostMessageTransport(window.parent, window.parent)
       );
     } catch (e) {
