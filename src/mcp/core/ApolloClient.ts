@@ -45,7 +45,7 @@ export class ApolloClient extends BaseApolloClient {
           [{ name: "prefetch" }, { name: "tool" }],
           document
         )!;
-      }),
+      }).concat(options.documentTransform ?? DocumentTransform.identity()),
     });
 
     this.manifest = options.manifest;
