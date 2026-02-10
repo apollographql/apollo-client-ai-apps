@@ -11,6 +11,7 @@ type ExecuteQueryCallToolResult = Omit<CallToolResult, "structuredContent"> & {
   structuredContent: FormattedExecutionResult;
 };
 
+/** @internal */
 export class McpAppManager {
   readonly app: App;
 
