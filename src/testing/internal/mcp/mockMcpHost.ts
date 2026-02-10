@@ -5,12 +5,20 @@ import {
   type McpUiToolResultNotification,
   type McpUiToolInputNotification,
 } from "@modelcontextprotocol/ext-apps";
-import type { Implementation } from "@modelcontextprotocol/sdk/types.js";
-import { promiseWithResolvers } from "../../../utilities";
+import type {
+  CallToolRequest,
+  CallToolResult,
+  Implementation,
+} from "@modelcontextprotocol/sdk/types.js";
+import { invariant, promiseWithResolvers } from "../../../utilities/index.js";
 
 export interface MockMcpHost extends Disposable {
   sendToolResult(params: McpUiToolResultNotification["params"]): Promise<void>;
   sendToolInput(params: McpUiToolInputNotification["params"]): Promise<void>;
+  mockToolCall(
+    name: string,
+    handler: (params: CallToolRequest["params"]) => CallToolResult
+  ): () => void;
   /**
    * Register an MCP App to be closed during cleanup. This prevents the App's
    * transport from interfering with subsequent tests by responding to messages
@@ -86,6 +94,10 @@ export async function mockMcpHost(
     promiseWithResolvers<void>();
 
   const cleanupFns = new Set<() => void>();
+  const toolCallHandlers = new Map<
+    string,
+    (params: CallToolRequest["params"]) => CallToolResult
+  >();
 
   const listener = (event: MessageEvent<unknown>) => {
     const data = event.data;
@@ -109,6 +121,23 @@ export async function mockMcpHost(
     // The App sends this notification after processing the initialize response
     if (data.method === "ui/notifications/initialized") {
       resolveInitialized();
+    }
+
+    if (data.method === "tools/call" && "id" in data) {
+      const { params } = data as unknown as CallToolRequest;
+
+      const handler = toolCallHandlers.get(params.name);
+
+      invariant(
+        handler,
+        `mockMcpHost: A mock tool call handler for '${params.name}' is not registered.`
+      );
+
+      window.postMessage({
+        jsonrpc: "2.0",
+        id: data.id,
+        result: handler(params),
+      });
     }
   };
 
@@ -136,6 +165,17 @@ export async function mockMcpHost(
         method: "ui/notifications/tool-input",
         params,
       });
+    },
+    mockToolCall(name, handler) {
+      if (toolCallHandlers.has(name)) {
+        console.warn(
+          `mockMcpHost: a handler is already registered for tool "${name}"`
+        );
+      }
+
+      toolCallHandlers.set(name, handler);
+
+      return () => toolCallHandlers.delete(name);
     },
     onCleanup(fn) {
       cleanupFns.add(fn);
