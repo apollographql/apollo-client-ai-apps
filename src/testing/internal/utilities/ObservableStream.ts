@@ -27,6 +27,9 @@ function formatMessage(
 }
 
 export class EventMismatchError extends Error {
+  readonly actual: ObservableEvent<any>;
+  readonly expected: ObservableEvent<any>;
+
   static is(error: unknown): error is EventMismatchError {
     return error instanceof Error && error.name === "EventMismatchError";
   }
@@ -34,6 +37,8 @@ export class EventMismatchError extends Error {
   constructor(expected: ObservableEvent<any>, actual: ObservableEvent<any>) {
     super(formatMessage(expected, actual));
     this.name = "EventMismatchError";
+    this.actual = actual;
+    this.expected = expected;
 
     Object.setPrototypeOf(this, EventMismatchError.prototype);
   }
