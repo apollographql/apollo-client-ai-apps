@@ -15,8 +15,8 @@ type ExecuteQueryCallToolResult = Omit<CallToolResult, "structuredContent"> & {
 export class McpAppManager {
   readonly app: App;
 
-  private _toolName!: string;
-  private _toolMetadata: Record<string, unknown> = {};
+  #toolName!: string;
+  #toolMetadata: Record<string, unknown> = {};
 
   constructor(manifest: ApplicationManifest) {
     // TODO: Determine how we want to provide this version long-term.
@@ -24,11 +24,11 @@ export class McpAppManager {
   }
 
   get toolName() {
-    return this._toolName;
+    return this.#toolName;
   }
 
   get toolMetadata() {
-    return this._toolMetadata;
+    return this.#toolMetadata;
   }
 
   waitForInitialization = cacheAsync(async () => {
@@ -50,8 +50,8 @@ export class McpAppManager {
     const { structuredContent, _meta } = await toolResult.promise;
     const { arguments: variables } = await toolInput.promise;
 
-    this._toolName = _meta.toolName;
-    this._toolMetadata = _meta;
+    this.#toolName = _meta.toolName;
+    this.#toolMetadata = _meta;
 
     return {
       ...structuredContent,
