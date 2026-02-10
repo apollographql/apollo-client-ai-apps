@@ -21,11 +21,8 @@ export declare namespace ApolloClient {
 export class ApolloClient extends BaseApolloClient {
   manifest: ApplicationManifest;
 
-  /**
-   * @internal
-   * @deprecated For internal use. Do not use directly.
-   */
-  readonly info = aiClientSymbol;
+  /** @internal */
+  readonly [aiClientSymbol] = true;
 
   constructor(options: ApolloClient.Options) {
     const link = options.link ?? new ToolCallLink();

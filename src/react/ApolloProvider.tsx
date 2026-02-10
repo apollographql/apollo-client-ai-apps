@@ -20,7 +20,7 @@ export declare namespace ApolloProvider {
 export function ApolloProvider({ children, client }: ApolloProvider.Props) {
   if (__DEV__) {
     invariant(
-      client.info === aiClientSymbol,
+      client[aiClientSymbol],
       'The "client" instance provided to <ApolloProvider /> is the wrong instance. You might have imported `ApolloClient` from `@apollo/client`. Please import `ApolloClient` from `@apollo/client-ai-apps` instead.'
     );
   }
