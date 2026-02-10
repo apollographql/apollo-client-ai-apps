@@ -16,7 +16,6 @@ import { aiClientSymbol, cacheAsync } from "../../utilities/index.js";
 import { McpAppManager } from "./McpAppManager.js";
 
 export declare namespace ApolloClient {
-  // This allows us to extend the options with the "manifest" option AND make link optional (it is normally required)
   export interface Options extends Omit<BaseApolloClient.Options, "link"> {
     link?: BaseApolloClient.Options["link"];
     manifest: ApplicationManifest;
