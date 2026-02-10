@@ -45,9 +45,9 @@ test("delegates query execution to MCP host", async () => {
   const observable = execute(new ToolCallLink(), { query }, { client });
   const stream = new ObservableStream(observable);
 
-  await expect(stream.takeNext()).resolves.toEqual({
+  await expect(stream).toEmitValue({
     data: { greeting: "Hello, world" },
   });
 
-  await expect(stream.takeComplete()).resolves.toBeUndefined();
+  await expect(stream).toComplete();
 });
