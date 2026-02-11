@@ -34,10 +34,6 @@
       },
       "default": "./dist/utilities/emptyModule.js"
     },
-    "./react": {
-      "types": "./dist/react/index.d.ts",
-      "default": "./dist/react/index.js"
-    },
     "./openai": {
       "openai": {
         "types": "./dist/openai/index.d.ts",
