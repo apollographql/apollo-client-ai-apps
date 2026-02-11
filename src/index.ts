@@ -8,6 +8,6 @@ export type {
   ManifestWidgetSettings,
 } from "./types/application-manifest.js";
 
-export { ApolloProvider } from "./react/index.js";
+export { ApolloProvider, ToolUseProvider } from "./react/index.js";
 export { ApolloClient } from "./core/ApolloClient.js";
 export { ToolCallLink } from "./link/ToolCallLink.js";
