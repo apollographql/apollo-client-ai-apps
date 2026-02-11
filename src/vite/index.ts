@@ -4,4 +4,4 @@ export {
   ApolloClientAiAppsPlugin,
   BaseApolloClientAiAppsPlugin,
   devTarget,
-} from "./apolloClientAiAppsPlugin.js";
+} from "./apolloClientAiApps.js";
