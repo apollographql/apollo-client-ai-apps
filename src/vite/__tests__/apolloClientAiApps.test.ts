@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import fs from "node:fs";
 import { gql, type DocumentNode } from "@apollo/client";
 import { print } from "@apollo/client/utilities";
+import { getOperationName } from "@apollo/client/utilities/internal";
 import { vol } from "memfs";
 import { apolloClientAiApps } from "../apolloClientAiApps.js";
 import { buildApp, setupServer } from "./utilities/build.js";
@@ -33,7 +34,7 @@ describe("buildStart", () => {
           prefersBorder: true,
         } satisfies ManifestWidgetSettings,
       }),
-      "src/my-component.tsx": queryDeclaration(gql`
+      "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery($name: string!)
         @tool(
           name: "hello-world"
@@ -122,9 +123,12 @@ describe("buildStart", () => {
   test("Should NOT write to dev application manifest file when using a build command", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          helloWorld
+        }
+      `),
     });
 
     await buildApp({
@@ -171,9 +175,11 @@ describe("buildStart", () => {
   test("Should capture queries when writing to manifest file", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery {
+          helloWorld
+        }
+      `),
     });
 
     await using server = await setupServer({
@@ -214,9 +220,11 @@ describe("buildStart", () => {
   test("Should capture queries as prefetch when query is marked with @prefetch directive", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @prefetch { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery @prefetch {
+          helloWorld
+        }
+      `),
     });
 
     await using server = await setupServer({
@@ -258,10 +266,18 @@ describe("buildStart", () => {
   test("Should error when multiple operations are marked with @prefetch", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @prefetch { helloWorld }\`;
-        const MY_QUERY2 = gql\`query HelloWorldQuery2 @prefetch { helloWorld }\`;
-      `,
+      "src/my-component.tsx": [
+        declareOperation(gql`
+          query HelloWorldQuery @prefetch {
+            helloWorld
+          }
+        `),
+        declareOperation(gql`
+          query HelloWorldQuery2 @prefetch {
+            helloWorld
+          }
+        `),
+      ].join("\n"),
     });
 
     await expect(async () => {
@@ -277,9 +293,12 @@ describe("buildStart", () => {
   test("Should capture mutations when writing to manifest file", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`mutation HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        mutation HelloWorldQuery
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          helloWorld
+        }
+      `),
     });
 
     await using server = await setupServer({
@@ -325,9 +344,12 @@ describe("buildStart", () => {
   test("Should throw error when a subscription operation type is discovered", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`subscription HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        subscription HelloWorldQuery
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          helloWorld
+        }
+      `),
     });
 
     await expect(async () => {
@@ -347,9 +369,12 @@ describe("buildStart", () => {
           staging: "http://staging.awesome.com",
         },
       }),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          helloWorld
+        }
+      `),
     });
 
     await using server = await setupServer({
@@ -365,9 +390,12 @@ describe("buildStart", () => {
   test("Should use https when enabled in server config", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          helloWorld
+        }
+      `),
     });
 
     await using server = await setupServer({
@@ -383,9 +411,12 @@ describe("buildStart", () => {
   test("Should use custom host when specified in server config", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          helloWorld
+        }
+      `),
     });
 
     await using server = await setupServer({
@@ -401,9 +432,11 @@ describe("buildStart", () => {
   test("Should error when tool name is not provided", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery @tool {
+          helloWorld
+        }
+      `),
     });
 
     await expect(async () => {
@@ -419,9 +452,11 @@ describe("buildStart", () => {
   test("Should error when tool description is not provided", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world") { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery @tool(name: "hello-world") {
+          helloWorld
+        }
+      `),
     });
 
     await expect(async () => {
@@ -437,9 +472,12 @@ describe("buildStart", () => {
   test("Should error when tool name contains spaces", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello world", description: "A tool") { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "hello world", description: "A tool") {
+          helloWorld
+        }
+      `),
     });
 
     await expect(async () => {
@@ -455,9 +493,11 @@ describe("buildStart", () => {
   test("Should error when tool name is not a string", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: true) { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery @tool(name: true) {
+          helloWorld
+        }
+      `),
     });
 
     await expect(async () => {
@@ -473,9 +513,11 @@ describe("buildStart", () => {
   test("Should error when tool description is not a string", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: false) { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery @tool(name: "hello-world", description: false) {
+          helloWorld
+        }
+      `),
     });
 
     await expect(async () => {
@@ -491,9 +533,12 @@ describe("buildStart", () => {
   test("Should error when extraInputs is not an array", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: "hello", extraInputs: false ) { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "hello-world", description: "hello", extraInputs: false) {
+          helloWorld
+        }
+      `),
     });
 
     await expect(async () => {
@@ -513,9 +558,11 @@ describe("buildStart", () => {
           prefersBorder: "test",
         },
       }),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test") { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery @tool(name: "test", description: "Test") {
+          helloWorld
+        }
+      `),
     });
 
     await expect(async () => {
@@ -535,9 +582,11 @@ describe("buildStart", () => {
           description: true,
         },
       }),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test") { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery @tool(name: "test", description: "Test") {
+          helloWorld
+        }
+      `),
     });
 
     await expect(async () => {
@@ -557,9 +606,11 @@ describe("buildStart", () => {
           domain: true,
         },
       }),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test") { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery @tool(name: "test", description: "Test") {
+          helloWorld
+        }
+      `),
     });
 
     await expect(async () => {
@@ -577,9 +628,11 @@ describe("buildStart", () => {
       "package.json": JSON.stringify({
         widgetSettings: {},
       }),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test") { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery @tool(name: "test", description: "Test") {
+          helloWorld
+        }
+      `),
     });
 
     await using server = await setupServer({
@@ -600,9 +653,11 @@ describe("buildStart", () => {
           },
         },
       }),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test") { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery @tool(name: "test", description: "Test") {
+          helloWorld
+        }
+      `),
     });
 
     await expect(async () => {
@@ -618,9 +673,16 @@ describe("buildStart", () => {
   test("Should error when labels.toolInvocation.invoking in @tool is not a string", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test", labels: { toolInvocation: { invoking: true } }) { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(
+          name: "test"
+          description: "Test"
+          labels: { toolInvocation: { invoking: true } }
+        ) {
+          helloWorld
+        }
+      `),
     });
 
     await expect(async () => {
@@ -642,9 +704,11 @@ describe("buildStart", () => {
           },
         },
       }),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test") { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery @tool(name: "test", description: "Test") {
+          helloWorld
+        }
+      `),
     });
 
     await expect(async () => {
@@ -660,9 +724,16 @@ describe("buildStart", () => {
   test("Should error when labels.toolInvocation.invoked in @tool is not a string", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test", labels: { toolInvocation: { invoked: true } }) { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(
+          name: "test"
+          description: "Test"
+          labels: { toolInvocation: { invoked: true } }
+        ) {
+          helloWorld
+        }
+      `),
     });
 
     await expect(async () => {
@@ -680,9 +751,12 @@ describe("buildStart", () => {
       "package.json": JSON.stringify({
         labels: {},
       }),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test", labels: {}) { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "test", description: "Test", labels: {}) {
+          helloWorld
+        }
+      `),
     });
 
     await using server = await setupServer({
@@ -697,11 +771,16 @@ describe("buildStart", () => {
   test("Should error when an unknown type is discovered", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: "hello", extraInputs: [{
-          name: 3.1
-        }] ) { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(
+          name: "hello-world"
+          description: "hello"
+          extraInputs: [{ name: 3.1 }]
+        ) {
+          helloWorld
+        }
+      `),
     });
 
     await expect(async () => {
@@ -804,9 +883,12 @@ describe("writeBundle", () => {
           staging: "http://staging.awesome.com",
         },
       }),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          helloWorld
+        }
+      `),
     });
 
     await buildApp({
@@ -821,9 +903,12 @@ describe("writeBundle", () => {
   test("Should use index.html when in build production and not provided in package.json", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          helloWorld
+        }
+      `),
     });
 
     await buildApp({
@@ -838,9 +923,12 @@ describe("writeBundle", () => {
   test("Should throw an error when in build mode and using a mode that is not production and not provided in package.json", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          helloWorld
+        }
+      `),
     });
 
     await expect(
@@ -857,9 +945,12 @@ describe("writeBundle", () => {
   test("Should always write to both locations when running in build mode", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          helloWorld
+        }
+      `),
     });
 
     await buildApp({
@@ -876,13 +967,22 @@ describe("configureServer", () => {
   test("Should write to manifest file when package.json or file is updated", async () => {
     vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "src/my-component.tsx": `
-        const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(name: "hello-world", description: "This is an awesome tool!", extraInputs: [{
-          name: "doStuff",
-          type: "boolean",
-          description: "Should we do stuff?"
-        }]) { helloWorld(name: $name) }\`;
-      `,
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery($name: string!)
+        @tool(
+          name: "hello-world"
+          description: "This is an awesome tool!"
+          extraInputs: [
+            {
+              name: "doStuff"
+              type: "boolean"
+              description: "Should we do stuff?"
+            }
+          ]
+        ) {
+          helloWorld(name: $name)
+        }
+      `),
     });
 
     await using server = await setupServer({
@@ -895,9 +995,12 @@ describe("configureServer", () => {
 
     vol.writeFileSync(
       "src/my-component.tsx",
-      `
-        const MY_QUERY = gql\`query UpdatedQuery($name: string!) @tool(name: "updated-tool", description: "Updated tool!") { updatedWorld(name: $name) }\`;
-      `
+      declareOperation(gql`
+        query UpdatedQuery($name: string!)
+        @tool(name: "updated-tool", description: "Updated tool!") {
+          updatedWorld(name: $name)
+        }
+      `)
     );
 
     server.watcher.emit("change", process.cwd() + "/src/my-component.tsx");
@@ -1050,8 +1153,10 @@ window.$RefreshSig$ = () => (type) => type;</script></head></html>`;
   });
 });
 
-function queryDeclaration(query: DocumentNode) {
-  return `const MY_QUERY = gql\`\n${print(query)}\n\``;
+function declareOperation(operation: DocumentNode) {
+  const name = getOperationName(operation, "MY_OPERATION");
+  const varName = name.replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase();
+  return `const ${varName} = gql\`\n${print(operation)}\n\``;
 }
 
 function readManifestFile(
