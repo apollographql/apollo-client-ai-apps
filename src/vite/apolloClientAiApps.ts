@@ -4,21 +4,7 @@ import { ApplicationManifestPlugin } from "./application_manifest_plugin.js";
 import { AbsoluteAssetImportsPlugin } from "./absolute_asset_imports_plugin.js";
 import path from "node:path";
 
-export declare namespace ApolloClientAiAppsPlugin {
-  export interface Options extends BaseApolloClientAiAppsPlugin.Options {}
-}
-
-export function ApolloClientAiAppsPlugin(
-  options: ApolloClientAiAppsPlugin.Options
-): Plugin[] {
-  return [
-    BaseApolloClientAiAppsPlugin(options),
-    ApplicationManifestPlugin(options),
-    AbsoluteAssetImportsPlugin(),
-  ];
-}
-
-export declare namespace BaseApolloClientAiAppsPlugin {
+export declare namespace apolloClientAiApps {
   export type Target = "openai" | "mcp";
 
   export interface Options {
@@ -27,15 +13,23 @@ export declare namespace BaseApolloClientAiAppsPlugin {
   }
 }
 
-const VALID_TARGETS: BaseApolloClientAiAppsPlugin.Target[] = ["openai", "mcp"];
-
-function isValidTarget(
-  target: unknown
-): target is BaseApolloClientAiAppsPlugin.Target {
-  return VALID_TARGETS.includes(target as BaseApolloClientAiAppsPlugin.Target);
+export function apolloClientAiApps(
+  options: apolloClientAiApps.Options
+): Plugin[] {
+  return [
+    baseApolloClientAiApps(options),
+    ApplicationManifestPlugin(options),
+    AbsoluteAssetImportsPlugin(),
+  ];
 }
 
-function buildExtensions(target: BaseApolloClientAiAppsPlugin.Target) {
+const VALID_TARGETS: apolloClientAiApps.Target[] = ["openai", "mcp"];
+
+function isValidTarget(target: unknown): target is apolloClientAiApps.Target {
+  return VALID_TARGETS.includes(target as apolloClientAiApps.Target);
+}
+
+function buildExtensions(target: apolloClientAiApps.Target) {
   return [".mjs", ".js", ".mts", ".ts", ".jsx", ".tsx", ".json"].flatMap(
     (ext) => [`.${target}${ext}`, ext]
   );
@@ -50,8 +44,8 @@ export function devTarget(target: string | undefined) {
   return target;
 }
 
-export function BaseApolloClientAiAppsPlugin(
-  options: BaseApolloClientAiAppsPlugin.Options
+export function baseApolloClientAiApps(
+  options: apolloClientAiApps.Options
 ): Plugin {
   const { targets: rawTargets, devTarget } = options;
   const targets = Array.from(new Set(rawTargets));
@@ -67,7 +61,7 @@ export function BaseApolloClientAiAppsPlugin(
   );
 
   return {
-    name: "apollo-client-ai-apps",
+    name: "@apollo/client-ai-apps:targets",
     configEnvironment(name, { build }) {
       return {
         build: {
