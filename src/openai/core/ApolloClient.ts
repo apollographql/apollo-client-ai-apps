@@ -69,15 +69,13 @@ export class ApolloClient extends BaseApolloClient {
           (tool) => tool.name === window.openai.toolResponseMetadata?.toolName
         )
       ) {
-        const variables = getVariablesForOperationFromToolInput(
-          operation,
-          window.openai.toolInput
-        );
-
         this.writeQuery({
           query: parse(operation.body),
           data: toolOutput.result.data,
-          variables,
+          variables: getVariablesForOperationFromToolInput(
+            operation,
+            window.openai.toolInput
+          ),
         });
       }
     });
