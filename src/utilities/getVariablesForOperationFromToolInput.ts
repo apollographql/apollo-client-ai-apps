@@ -1,5 +1,5 @@
 import type { OperationVariables } from "@apollo/client";
-import type { ManifestOperation } from "../index.mcp";
+import type { ManifestOperation } from "../types/application-manifest.js";
 
 // We need to get the variables used as part of the tool call that resulted in
 // rendering this app so that we can properly write to the cache, however we
