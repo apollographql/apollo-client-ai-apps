@@ -1,0 +1,93 @@
+import { App, PostMessageTransport } from "@modelcontextprotocol/ext-apps";
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import type { ApplicationManifest } from "../../types/application-manifest";
+import type { FormattedExecutionResult } from "graphql";
+import type { DocumentNode, OperationVariables } from "@apollo/client";
+import { print } from "@apollo/client/utilities";
+import { cacheAsync, promiseWithResolvers } from "../../utilities";
+import type { ApolloMcpServerApps } from "../../core/types";
+
+type ExecuteQueryCallToolResult = Omit<CallToolResult, "structuredContent"> & {
+  structuredContent: FormattedExecutionResult;
+};
+
+/** @internal */
+export class McpAppManager {
+  readonly app: App;
+
+  #toolName!: string;
+  #toolMetadata: Record<string, unknown> = {};
+
+  constructor(manifest: ApplicationManifest) {
+    // TODO: Determine how we want to provide this version long-term.
+    this.app = new App({ name: manifest.name, version: "1.0.0" });
+  }
+
+  get toolName() {
+    return this.#toolName;
+  }
+
+  get toolMetadata() {
+    return this.#toolMetadata;
+  }
+
+  waitForInitialization = cacheAsync(async () => {
+    let toolResult = promiseWithResolvers<ApolloMcpServerApps.CallToolResult>();
+    let toolInput = promiseWithResolvers<Parameters<App["ontoolinput"]>[0]>();
+
+    this.app.ontoolresult = (params) => {
+      toolResult.resolve(
+        params as unknown as ApolloMcpServerApps.CallToolResult
+      );
+    };
+
+    this.app.ontoolinput = (params) => {
+      toolInput.resolve(params);
+    };
+
+    await this.connect();
+
+    const { structuredContent, _meta } = await toolResult.promise;
+    const { arguments: args } = await toolInput.promise;
+
+    this.#toolName = _meta.toolName;
+    this.#toolMetadata = _meta;
+
+    return {
+      ...structuredContent,
+      toolName: _meta.toolName,
+      args,
+    };
+  });
+
+  close() {
+    return this.app.close();
+  }
+
+  async executeQuery({
+    query,
+    variables,
+  }: {
+    query: DocumentNode;
+    variables: OperationVariables | undefined;
+  }) {
+    const result = (await this.app.callServerTool({
+      name: "execute",
+      arguments: { query: print(query), variables },
+    })) as ExecuteQueryCallToolResult;
+
+    return result.structuredContent;
+  }
+
+  private async connect() {
+    try {
+      return await this.app.connect(
+        new PostMessageTransport(window.parent, window.parent)
+      );
+    } catch (e) {
+      const error = e instanceof Error ? e : new Error("Failed to connect");
+
+      throw error;
+    }
+  }
+}

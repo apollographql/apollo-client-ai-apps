@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "customConditions": ["openai"],
+    "types": ["@apollo/client-ai-apps/openai/globals"],
+    "moduleSuffixes": [".openai", ""]
+  }
+}

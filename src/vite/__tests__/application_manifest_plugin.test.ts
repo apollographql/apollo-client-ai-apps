@@ -1,47 +1,24 @@
-import type { Mock } from "vitest";
 import { expect, test, vi, describe, beforeEach } from "vitest";
+import { build, createServer, type InlineConfig } from "vite";
 import { ApplicationManifestPlugin } from "../application_manifest_plugin.js";
-import fs from "fs";
-import * as glob from "glob";
-import path from "path";
-import type { ManifestWidgetSettings } from "../../types/application-manifest.js";
+import fs from "node:fs";
+import { vol } from "memfs";
+import type {
+  ApplicationManifest,
+  ManifestWidgetSettings,
+} from "../../types/application-manifest.js";
 
-const root = process.cwd();
-
-vi.mock(import("fs"), async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    default: {
-      ...actual.default,
-      readFileSync: vi.fn(),
-      writeFileSync: vi.fn(),
-      mkdirSync: vi.fn(),
-    },
-  };
-});
-
-vi.mock(import("path"), async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    default: {
-      ...actual.default,
-      resolve: vi.fn((...args) =>
-        args.map((a, i) => (i === 0 ? a : a.replace(/^\//, ""))).join("/")
-      ),
-      dirname: vi.fn(),
-    },
-  };
-});
-
-vi.mock(import("glob"));
+vi.mock("node:fs");
+vi.mock("node:fs/promises");
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vol.reset();
 });
 
 describe("buildStart", () => {
   test("Should write to dev application manifest file when using a serve command", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({
         labels: {
           toolInvocation: {
@@ -55,7 +32,7 @@ describe("buildStart", () => {
           prefersBorder: true,
         } satisfies ManifestWidgetSettings,
       }),
-      [`${root}/my-component.tsx`]: `
+      "src/my-component.tsx": `
 const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
   name: "hello-world",
   description: "This is an awesome tool!",
@@ -71,30 +48,16 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
     }
   }
 ) { helloWorld(name: $name) }\`;
-      `,
+`.trimStart(),
     });
 
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(fs, "writeFileSync");
-
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({
-      command: "serve",
-      server: {},
-      build: { outDir: "/dist" },
+    await using server = await setupServer({
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
-    await plugin.buildStart();
-    let [file, content] = (fs.writeFileSync as unknown as Mock).mock.calls[0];
+    await server.listen();
 
-    // Ignore the hash so we can do a snapshot that doesn't constantly change
-    let contentObj = JSON.parse(content);
-    contentObj.hash = "abc";
-
-    expect(fs.writeFileSync).toHaveBeenCalledTimes(2);
-    expect(file).toBe(root + "/dist/.application-manifest.json");
-    expect(contentObj).toMatchInlineSnapshot(`
+    const manifest = readManifestFile();
+    expect(manifest).toMatchInlineSnapshot(`
       {
         "csp": {
           "connectDomains": [],
@@ -139,7 +102,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
             },
           },
         ],
-        "resource": "http://localhost:undefined",
+        "resource": "http://localhost:3333",
         "version": "1",
         "widgetSettings": {
           "description": "Test",
@@ -151,53 +114,38 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
   });
 
   test("Should NOT write to dev application manifest file when using a build command", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "build", server: {} });
-    await plugin.buildStart();
+    await buildApp({
+      mode: "production",
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+    });
 
-    expect(fs.writeFileSync).not.toHaveBeenCalled();
+    const manifest = readManifestFile();
+    expect(manifest.operations).toHaveLength(1);
+    expect(manifest.operations[0].name).toBe("HelloWorldQuery");
   });
 
   test("Should not process files that do not contain gql tags", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      [`${root}/my-component.tsx`]: `
+      "src/my-component.tsx": `
         const MY_QUERY = \`query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({
-      command: "serve",
-      server: {},
-      build: { outDir: "/dist" },
+    await using server = await setupServer({
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
-    await plugin.buildStart();
-    let [file, content] = (fs.writeFileSync as unknown as Mock).mock.calls[0];
+    await server.listen();
 
-    // Ignore the hash so we can do a snapshot that doesn't constantly change
-    let contentObj = JSON.parse(content);
-    contentObj.hash = "abc";
-
-    expect(fs.writeFileSync).toHaveBeenCalledTimes(2);
-    expect(file).toBe(root + "/dist/.application-manifest.json");
-    expect(contentObj).toMatchInlineSnapshot(`
+    const manifest = readManifestFile();
+    expect(manifest).toMatchInlineSnapshot(`
       {
         "csp": {
           "connectDomains": [],
@@ -208,40 +156,27 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
         "format": "apollo-ai-app-manifest",
         "hash": "abc",
         "operations": [],
-        "resource": "http://localhost:undefined",
+        "resource": "http://localhost:3333",
         "version": "1",
       }
     `);
   });
 
   test("Should capture queries when writing to manifest file", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      [`${root}/my-component.tsx`]: `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({
-      command: "serve",
-      server: {},
-      build: { outDir: "/dist" },
+    await using server = await setupServer({
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
-    await plugin.buildStart();
-    let [file, content] = (fs.writeFileSync as unknown as Mock).mock.calls[0];
+    await server.listen();
 
-    // Ignore the hash so we can do a snapshot that doesn't constantly change
-    let contentObj = JSON.parse(content);
-    contentObj.hash = "abc";
-
-    expect(fs.writeFileSync).toHaveBeenCalledTimes(2);
-    expect(file).toBe(root + "/dist/.application-manifest.json");
-    expect(contentObj).toMatchInlineSnapshot(`
+    const manifest = readManifestFile();
+    expect(manifest).toMatchInlineSnapshot(`
       {
         "csp": {
           "connectDomains": [],
@@ -264,40 +199,27 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
             "variables": {},
           },
         ],
-        "resource": "http://localhost:undefined",
+        "resource": "http://localhost:3333",
         "version": "1",
       }
     `);
   });
 
   test("Should capture queries as prefetch when query is marked with @prefetch directive", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      [`${root}/my-component.tsx`]: `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @prefetch { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({
-      command: "serve",
-      server: {},
-      build: { outDir: "/dist" },
+    await using server = await setupServer({
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
-    await plugin.buildStart();
-    let [file, content] = (fs.writeFileSync as unknown as Mock).mock.calls[0];
+    await server.listen();
 
-    // Ignore the hash so we can do a snapshot that doesn't constantly change
-    let contentObj = JSON.parse(content);
-    contentObj.hash = "abc";
-
-    expect(fs.writeFileSync).toHaveBeenCalledTimes(2);
-    expect(file).toBe(root + "/dist/.application-manifest.json");
-    expect(contentObj).toMatchInlineSnapshot(`
+    const manifest = readManifestFile();
+    expect(manifest).toMatchInlineSnapshot(`
       {
         "csp": {
           "connectDomains": [],
@@ -321,63 +243,46 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
             "variables": {},
           },
         ],
-        "resource": "http://localhost:undefined",
+        "resource": "http://localhost:3333",
         "version": "1",
       }
     `);
   });
 
   test("Should error when multiple operations are marked with @prefetch", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @prefetch { helloWorld }\`;
         const MY_QUERY2 = gql\`query HelloWorldQuery2 @prefetch { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
-    await expect(
-      async () => await plugin.buildStart()
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
       `[Error: Found multiple operations marked as \`@prefetch\`. You can only mark 1 operation with \`@prefetch\`.]`
     );
   });
 
   test("Should capture mutations when writing to manifest file", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      [`${root}/my-component.tsx`]: `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`mutation HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({
-      command: "serve",
-      server: {},
-      build: { outDir: "/dist" },
+    await using server = await setupServer({
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
-    await plugin.buildStart();
-    let [file, content] = (fs.writeFileSync as unknown as Mock).mock.calls[0];
+    await server.listen();
 
-    // Ignore the hash so we can do a snapshot that doesn't constantly change
-    let contentObj = JSON.parse(content);
-    contentObj.hash = "abc";
-
-    expect(fs.writeFileSync).toHaveBeenCalledTimes(2);
-    expect(file).toBe(root + "/dist/.application-manifest.json");
-    expect(contentObj).toMatchInlineSnapshot(`
+    const manifest = readManifestFile();
+    expect(manifest).toMatchInlineSnapshot(`
       {
         "csp": {
           "connectDomains": [],
@@ -405,363 +310,283 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
             "variables": {},
           },
         ],
-        "resource": "http://localhost:undefined",
+        "resource": "http://localhost:3333",
         "version": "1",
       }
     `);
   });
 
   test("Should throw error when a subscription operation type is discovered", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`subscription HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
-
-    await expect(
-      async () => await plugin.buildStart()
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
       `[Error: Found an unsupported operation type. Only Query and Mutation are supported.]`
     );
   });
 
   test("Should use custom entry point when in serve mode and provided in package.json", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({
         entry: {
           staging: "http://staging.awesome.com",
         },
       }),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({
-      command: "serve",
+    await using server = await setupServer({
       mode: "staging",
-      server: {},
-      build: { outDir: "/dist" },
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
-    await plugin.buildStart();
+    await server.listen();
 
-    let [, content] = (fs.writeFileSync as unknown as Mock).mock.calls[0];
-    let contentObj = JSON.parse(content);
-
-    expect(contentObj.resource).toBe("http://staging.awesome.com");
+    const manifest = readManifestFile();
+    expect(manifest.resource).toBe("http://staging.awesome.com");
   });
 
   test("Should use https when enabled in server config", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({
-      command: "serve",
-      server: { https: {}, port: "5678" },
-      build: { outDir: "/dist" },
+    await using server = await setupServer({
+      server: { https: {}, port: 5678 },
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
-    await plugin.buildStart();
+    await server.listen();
 
-    let [, content] = (fs.writeFileSync as unknown as Mock).mock.calls[0];
-    let contentObj = JSON.parse(content);
-
-    expect(contentObj.resource).toBe("https://localhost:5678");
+    const manifest = readManifestFile();
+    expect(manifest.resource).toBe("https://localhost:5678");
   });
 
   test("Should use custom host when specified in server config", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({
-      command: "serve",
-      server: { port: "5678", host: "awesome.com" },
-      build: { outDir: "/dist" },
+    await using server = await setupServer({
+      server: { port: 5678, host: "0.0.0.0" },
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
-    await plugin.buildStart();
+    await server.listen();
 
-    let [, content] = (fs.writeFileSync as unknown as Mock).mock.calls[0];
-    let contentObj = JSON.parse(content);
-
-    expect(contentObj.resource).toBe("http://awesome.com:5678");
+    const manifest = readManifestFile();
+    expect(manifest.resource).toBe("http://0.0.0.0:5678");
   });
 
   test("Should error when tool name is not provided", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
-
-    await expect(
-      async () => await plugin.buildStart()
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
       `[Error: 'name' argument must be supplied for @tool]`
     );
   });
 
   test("Should error when tool description is not provided", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world") { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
-
-    await expect(
-      async () => await plugin.buildStart()
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
       `[Error: 'description' argument must be supplied for @tool]`
     );
   });
 
   test("Should error when tool name contains spaces", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello world", description: "A tool") { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
-
-    await expect(
-      async () => await plugin.buildStart()
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
       `[Error: Tool with name "hello world" contains spaces which is not allowed.]`
     );
   });
 
   test("Should error when tool name is not a string", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: true) { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
-
-    await expect(
-      async () => await plugin.buildStart()
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
       `[Error: Expected argument 'name' to be of type 'StringValue' but found 'BooleanValue' instead.]`
     );
   });
 
   test("Should error when tool description is not a string", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: false) { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
-
-    await expect(
-      async () => await plugin.buildStart()
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
       `[Error: Expected argument 'description' to be of type 'StringValue' but found 'BooleanValue' instead.]`
     );
   });
 
   test("Should error when extraInputs is not an array", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: "hello", extraInputs: false ) { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
-
-    await expect(
-      async () => await plugin.buildStart()
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
       `[Error: Expected argument 'extraInputs' to be of type 'ListValue' but found 'BooleanValue' instead.]`
     );
   });
 
   test("Should error when widgetSettings.prefersBorder is not a boolean", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({
         widgetSettings: {
           prefersBorder: "test",
         },
       }),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test") { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
-
-    await expect(
-      async () => await plugin.buildStart()
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
       `[Error: Expected 'widgetSettings.prefersBorder' to be of type 'boolean' but found 'string' instead.]`
     );
   });
 
   test("Should error when widgetSettings.description is not a string", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({
         widgetSettings: {
           description: true,
         },
       }),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test") { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
-
-    await expect(
-      async () => await plugin.buildStart()
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
       `[Error: Expected 'widgetSettings.description' to be of type 'string' but found 'boolean' instead.]`
     );
   });
 
   test("Should error when widgetSettings.domain is not a string", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({
         widgetSettings: {
           domain: true,
         },
       }),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test") { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
-
-    await expect(
-      async () => await plugin.buildStart()
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
       `[Error: Expected 'widgetSettings.domain' to be of type 'string' but found 'boolean' instead.]`
     );
   });
 
   test("Should allow empty widgetSettings value", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({
         widgetSettings: {},
       }),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test") { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {}, build: {} });
+    await using server = await setupServer({
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+    });
+    await server.listen();
 
-    await expect(plugin.buildStart()).resolves.toBeUndefined();
+    const manifest = readManifestFile();
+    expect(manifest.operations).toHaveLength(1);
   });
 
   test("Should error when labels.toolInvocation.invoking in package.json is not a string", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({
         labels: {
           toolInvocation: {
@@ -769,51 +594,41 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
           },
         },
       }),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test") { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
-
-    await expect(
-      async () => await plugin.buildStart()
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
       `[Error: Expected 'labels.toolInvocation.invoking' to be of type 'string' but found 'boolean' instead.]`
     );
   });
 
   test("Should error when labels.toolInvocation.invoking in @tool is not a string", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test", labels: { toolInvocation: { invoking: true } }) { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
-
-    await expect(
-      async () => await plugin.buildStart()
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
       `[Error: Expected 'labels.toolInvocation.invoking' to be of type 'string' but found 'boolean' instead.]`
     );
   });
 
   test("Should error when labels.toolInvocation.invoked in package.json is not a string", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({
         labels: {
           toolInvocation: {
@@ -821,99 +636,82 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
           },
         },
       }),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test") { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
-
-    await expect(
-      async () => await plugin.buildStart()
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
       `[Error: Expected 'labels.toolInvocation.invoked' to be of type 'string' but found 'boolean' instead.]`
     );
   });
 
   test("Should error when labels.toolInvocation.invoked in @tool is not a string", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test", labels: { toolInvocation: { invoked: true } }) { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
-
-    await expect(
-      async () => await plugin.buildStart()
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
       `[Error: Expected 'labels.toolInvocation.invoked' to be of type 'string' but found 'boolean' instead.]`
     );
   });
 
   test("Should allow empty labels value", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({
         labels: {},
       }),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "test", description: "Test", labels: {}) { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {}, build: {} });
+    await using server = await setupServer({
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+    });
+    await server.listen();
 
-    await expect(plugin.buildStart()).resolves.toBeUndefined();
+    const manifest = readManifestFile();
+    expect(manifest.operations).toHaveLength(1);
   });
 
   test("Should error when an unknown type is discovered", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: "hello", extraInputs: [{
           name: 3.1
         }] ) { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({ command: "serve", server: {} });
-
-    await expect(
-      async () => await plugin.buildStart()
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
       `[Error: Error when parsing directive values: unexpected type 'FloatValue']`
     );
   });
 
   test("Should order operations and fragments when generating normalized operation", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      [`${root}/my-component.tsx`]: `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`
           fragment A on User { firstName }
           fragment B on User { lastName }
@@ -928,27 +726,14 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
           }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({
-      command: "serve",
-      server: {},
-      build: { outDir: "/dist" },
+    await using server = await setupServer({
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
-    await plugin.buildStart();
-    let [file, content] = (fs.writeFileSync as unknown as Mock).mock.calls[0];
+    await server.listen();
 
-    // Ignore the hash so we can do a snapshot that doesn't constantly change
-    let contentObj = JSON.parse(content);
-    contentObj.hash = "abc";
-
-    expect(fs.writeFileSync).toHaveBeenCalledTimes(2);
-    expect(file).toBe(`${root}/dist/.application-manifest.json`);
-    expect(contentObj).toMatchInlineSnapshot(`
+    const manifest = readManifestFile();
+    expect(manifest).toMatchInlineSnapshot(`
       {
         "csp": {
           "connectDomains": [],
@@ -998,7 +783,7 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
             "variables": {},
           },
         ],
-        "resource": "http://localhost:undefined",
+        "resource": "http://localhost:3333",
         "version": "1",
       }
     `);
@@ -1007,132 +792,85 @@ const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
 
 describe("writeBundle", () => {
   test("Should use custom entry point when in build mode and provided in package.json", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({
         entry: {
           staging: "http://staging.awesome.com",
         },
       }),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(path, "dirname").mockImplementation(() => "/dist");
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({
-      command: "build",
+    await buildApp({
       mode: "staging",
-      server: {},
-      build: { outDir: "/dist/" },
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
-    await plugin.buildStart();
-    await plugin.writeBundle();
 
-    let [, content] = (fs.writeFileSync as unknown as Mock).mock.calls[0];
-    let contentObj = JSON.parse(content);
-
-    expect(contentObj.resource).toBe("http://staging.awesome.com");
+    const manifest = readManifestFile();
+    expect(manifest.resource).toBe("http://staging.awesome.com");
   });
 
   test("Should use index.html when in build production and not provided in package.json", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(path, "dirname").mockImplementation(() => "/dist");
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({
-      command: "build",
+    await buildApp({
       mode: "production",
-      server: {},
-      build: { outDir: "/dist/" },
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
-    await plugin.buildStart();
-    await plugin.writeBundle();
 
-    let [, content] = (fs.writeFileSync as unknown as Mock).mock.calls[0];
-    let contentObj = JSON.parse(content);
-
-    expect(contentObj.resource).toBe("index.html");
+    const manifest = readManifestFile();
+    expect(manifest.resource).toBe("index.html");
   });
 
   test("Should throw an error when in build mode and using a mode that is not production and not provided in package.json", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(path, "dirname").mockImplementation(() => "/dist");
-    vi.spyOn(fs, "writeFileSync");
-
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({
-      command: "build",
-      mode: "staging",
-      server: {},
-      build: { outDir: "/dist/" },
-    });
-    await plugin.buildStart();
 
     await expect(
-      async () => await plugin.writeBundle()
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `[Error: No entry point found for mode "staging". Entry points other than "development" and "production" must be defined in package.json file.]`
+      async () =>
+        await buildApp({
+          mode: "staging",
+          plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
+        })
+    ).rejects.toThrowError(
+      `[OperationManifest] No entry point found for mode "staging". Entry points other than "development" and "production" must be defined in package.json file.`
     );
   });
 
   test("Should always write to both locations when running in build mode", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(path, "dirname").mockImplementation(() => "/dist");
-    vi.spyOn(fs, "writeFileSync");
 
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({
-      command: "build",
+    await buildApp({
       mode: "production",
-      server: {},
-      build: { outDir: "/dist/" },
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
-    await plugin.buildStart();
-    await plugin.writeBundle();
 
-    expect(fs.writeFileSync).toBeCalledTimes(2);
+    expect(vol.existsSync(".application-manifest.json")).toBe(true);
+    expect(vol.existsSync("dist/.application-manifest.json")).toBe(true);
   });
 });
 
 describe("configureServer", () => {
   test("Should write to manifest file when package.json or file is updated", async () => {
-    mockReadFile({
+    vol.fromJSON({
       "package.json": JSON.stringify({}),
-      "my-component.tsx": `
+      "src/my-component.tsx": `
         const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(name: "hello-world", description: "This is an awesome tool!", extraInputs: [{
           name: "doStuff",
           type: "boolean",
@@ -1140,60 +878,88 @@ describe("configureServer", () => {
         }]) { helloWorld(name: $name) }\`;
       `,
     });
-    vi.spyOn(glob, "glob").mockImplementation(() =>
-      Promise.resolve(["my-component.tsx"])
-    );
-    vi.spyOn(path, "resolve").mockImplementation((_, file) => file);
-    vi.spyOn(fs, "writeFileSync");
 
-    let _callbacks: Function[] = [];
-
-    const server = {
-      watcher: {
-        init: () => {
-          _callbacks = [];
-        },
-        on: (_event: string, callback: Function) => {
-          _callbacks.push(callback);
-        },
-        trigger: async (file: string) => {
-          for (const callback of _callbacks) {
-            await callback(file);
-          }
-        },
-      },
-    };
-    server.watcher.init();
-
-    const plugin = ApplicationManifestPlugin();
-    plugin.configResolved({
-      command: "serve",
-      server: {},
-      build: { outDir: "/dist" },
+    await using server = await setupServer({
+      plugins: [ApplicationManifestPlugin({ targets: ["mcp"] })],
     });
-    await plugin.buildStart();
-    plugin.configureServer(server);
-    await server.watcher.trigger("package.json");
-    await server.watcher.trigger("my-component.tsx");
+    await server.listen();
 
-    expect(fs.writeFileSync).toBeCalledTimes(6);
+    const manifestBefore = readManifestFile();
+    expect(manifestBefore.operations).toHaveLength(1);
+
+    vol.writeFileSync(
+      "src/my-component.tsx",
+      `
+        const MY_QUERY = gql\`query UpdatedQuery($name: string!) @tool(name: "updated-tool", description: "Updated tool!") { updatedWorld(name: $name) }\`;
+      `
+    );
+
+    server.watcher.emit("change", process.cwd() + "/src/my-component.tsx");
+
+    // Allow async handlers to complete
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const manifestAfter = readManifestFile();
+    expect(manifestAfter.operations).toHaveLength(1);
+    expect(manifestAfter.operations[0].name).toBe("UpdatedQuery");
   });
 });
 
-type FilePath = string;
-
-function mockReadFile(mocks: Record<FilePath, string | (() => string)>) {
-  vi.spyOn(fs, "readFileSync").mockImplementation((path) => {
-    const mock = mocks[path.toString()];
-
-    if (!mock) {
-      throw new Error(`No matched mock for path '${path}'`);
-    }
-
-    if (typeof mock === "function") {
-      return mock();
-    }
-
-    return mock;
+async function setupServer(config: InlineConfig) {
+  const server = await createServer({
+    configFile: false,
+    server: {
+      port: 3333,
+    },
+    ...config,
   });
+
+  return {
+    ...server,
+    [Symbol.asyncDispose]() {
+      return server.close();
+    },
+  };
+}
+
+async function buildApp(
+  config: Omit<InlineConfig, "configFile" | "plugins"> & {
+    plugins: NonNullable<InlineConfig["plugins"]>;
+  }
+) {
+  await build({
+    configFile: false,
+    logLevel: "silent",
+    ...config,
+    build: {
+      emptyOutDir: false,
+      outDir: "dist",
+      ...config.build,
+      rollupOptions: { input: "virtual:entry" },
+    },
+    plugins: [
+      ...config.plugins,
+      {
+        name: "virtual-entry",
+        resolveId(id) {
+          if (id === "virtual:entry") return id;
+        },
+        load(id) {
+          if (id === "virtual:entry") return "export default {};";
+        },
+      },
+    ],
+  });
+}
+
+function readManifestFile(
+  path = ".application-manifest.json"
+): ApplicationManifest {
+  const manifest = JSON.parse(fs.readFileSync(path, "utf-8"));
+
+  // Use a deterministic hash for tests to ensure snapshots maintain a
+  // consistent output
+  manifest.hash = "abc";
+
+  return manifest;
 }
