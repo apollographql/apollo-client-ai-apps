@@ -24,6 +24,7 @@ import type {
   ApplicationManifest,
   ManifestExtraInput,
   ManifestLabels,
+  ManifestOperation,
   ManifestTool,
   ManifestWidgetSettings,
 } from "../types/application-manifest";
@@ -61,12 +62,18 @@ export function devTarget(target: string | undefined) {
   return target;
 }
 
+interface FileCache {
+  file: string;
+  hash: string;
+  operations: ManifestOperation[];
+}
+
 export function apolloClientAiApps(
   options: apolloClientAiApps.Options
 ): Plugin {
   const { targets: rawTargets, devTarget } = options;
   const targets = Array.from(new Set(rawTargets));
-  const cache = new Map();
+  const cache = new Map<string, FileCache>();
   let packageJson!: any;
   let config!: ResolvedConfig;
 
@@ -91,7 +98,7 @@ export function apolloClientAiApps(
     if (!code.includes("gql")) return;
 
     const fileHash = createHash("md5").update(code).digest("hex");
-    if (cache.get("file")?.hash === fileHash) return;
+    if (cache.get(file)?.hash === fileHash) return;
     const sources = gqlPluckFromCodeStringSync(file, code, {
       modules: [
         { name: "graphql-tag", identifier: "gql" },
@@ -103,7 +110,7 @@ export function apolloClientAiApps(
       location: source.locationOffset,
     }));
 
-    const operations = [];
+    const operations: ManifestOperation[] = [];
     for (const source of sources) {
       const type = (
         source.node.definitions.find(
@@ -127,7 +134,7 @@ export function apolloClientAiApps(
           "Found an unsupported operation type. Only Query and Mutation are supported."
         );
       }
-      operations.push(result.data);
+      operations.push(result.data as ManifestOperation);
     }
 
     cache.set(file, {
