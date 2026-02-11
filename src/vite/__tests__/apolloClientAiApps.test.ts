@@ -944,7 +944,7 @@ describe("entry points", () => {
           plugins: [apolloClientAiApps({ targets: ["mcp"] })],
         })
     ).rejects.toThrowError(
-      `[OperationManifest] No entry point found for mode "staging". Entry points other than "development" and "production" must be defined in package.json file.`
+      `[@apollo/client-ai-apps/vite] No entry point found for mode "staging". Entry points other than "development" and "production" must be defined in package.json file.`
     );
   });
 
