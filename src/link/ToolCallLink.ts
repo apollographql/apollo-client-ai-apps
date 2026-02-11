@@ -5,7 +5,7 @@ import { ApolloLink } from "@apollo/client";
  * When providing a custom link chain to `ApolloClient`, `ApolloClient` will
  * validate that the terminating link is an instance of this link.
  *
- * @example Provding a custom link chain
+ * @example Providing a custom link chain
  *
  * ```ts
  * import { ApolloLink } from "@apollo/client";
