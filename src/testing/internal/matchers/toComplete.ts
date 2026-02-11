@@ -34,7 +34,7 @@ expect.extend({
         return {
           pass: false,
           message: () =>
-            this.utils.matcherHint("toComplete", "stream", "") +
+            hint +
             "\n\n" +
             this.utils.printDiffOrStringify(error.actual, error.expected),
         };
