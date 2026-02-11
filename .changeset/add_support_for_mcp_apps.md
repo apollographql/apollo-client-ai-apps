@@ -8,14 +8,14 @@ This change introduces compatibility with the [MCP Apps specification](https://g
 
 ## Vite plugin
 
-A new `ApolloClientAiAppsPlugin` combines existing plugins (`ApplicationManifestPlugin` and `AbsoluteAssetImportsPlugin`) into a single plugin. It requires a `targets` option specifying which platforms to build for, and an optional `devTarget` for development mode when using multiple targets.
+A new `apolloClientAiApps` combines existing plugins (`ApplicationManifestPlugin` and `AbsoluteAssetImportsPlugin`) into a single plugin. It requires a `targets` option specifying which platforms to build for, and an optional `devTarget` for development mode when using multiple targets.
 
 ```ts
-import { ApolloClientAiAppsPlugin } from "@apollo/client-ai-apps/vite";
+import { apolloClientAiApps } from "@apollo/client-ai-apps/vite";
 
 export default defineConfig({
   plugins: [
-    ApolloClientAiAppsPlugin({
+    apolloClientAiApps({
       targets: ["openai", "mcp"],
       devTarget: "openai",
     }),
