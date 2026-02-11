@@ -62,7 +62,7 @@ export class ApolloClient extends BaseApolloClient {
   }
 
   waitForInitialization = cacheAsync(async () => {
-    const { prefetch, result, toolName, variables } =
+    const { prefetch, result, toolName, args } =
       await this.appManager.waitForInitialization();
 
     this.manifest.operations.forEach((operation) => {
@@ -77,10 +77,7 @@ export class ApolloClient extends BaseApolloClient {
         this.writeQuery({
           query: parse(operation.body),
           data: result.data,
-          variables: getVariablesForOperationFromToolInput(
-            operation,
-            variables
-          ),
+          variables: getVariablesForOperationFromToolInput(operation, args),
         });
       }
     });

@@ -48,7 +48,7 @@ export class McpAppManager {
     await this.connect();
 
     const { structuredContent, _meta } = await toolResult.promise;
-    const { arguments: variables } = await toolInput.promise;
+    const { arguments: args } = await toolInput.promise;
 
     this.#toolName = _meta.toolName;
     this.#toolMetadata = _meta;
@@ -56,7 +56,7 @@ export class McpAppManager {
     return {
       ...structuredContent,
       toolName: _meta.toolName,
-      variables: variables as OperationVariables | undefined,
+      args,
     };
   });
 
