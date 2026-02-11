@@ -1,7 +1,11 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./tsconfig.base.json",
-  "include": ["./src/vite", "./src/types/application-manifest.ts"],
+  "include": [
+    "./src/vite",
+    "./src/utilities/",
+    "./src/types/application-manifest.ts"
+  ],
   "exclude": [
     "./src/**/*.test.ts",
     "./src/**/*.test.tsx",

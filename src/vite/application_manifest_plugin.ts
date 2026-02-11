@@ -1,12 +1,9 @@
-import { readFileSync, writeFileSync, mkdirSync } from "fs";
+import fs from "node:fs";
 import { glob } from "glob";
 import { gqlPluckFromCodeStringSync } from "@graphql-tools/graphql-tag-pluck";
 import { createHash } from "crypto";
 import type {
   ArgumentNode,
-  ListTypeNode,
-  NamedTypeNode,
-  NonNullTypeNode,
   TypeNode,
   ValueNode,
   DocumentNode,
@@ -25,6 +22,8 @@ import type {
   ManifestTool,
   ManifestWidgetSettings,
 } from "../types/application-manifest.js";
+import { invariant } from "../utilities/index.js";
+import type { Environment, Plugin, ResolvedConfig } from "vite";
 
 const root = process.cwd();
 
@@ -113,16 +112,25 @@ function getDirectiveArgument(
 
 function getTypeName(type: TypeNode): string {
   let t = type;
-  while (t.kind === "NonNullType" || t.kind === "ListType") {
-    t = (t as NonNullTypeNode | ListTypeNode).type;
+  while (t.kind === Kind.NON_NULL_TYPE || t.kind === Kind.LIST_TYPE) {
+    t = t.type;
   }
-  return (t as NamedTypeNode).name.value;
+  return t.name.value;
 }
 
-export const ApplicationManifestPlugin = () => {
+type Target = "openai" | "mcp";
+
+interface ApplicationManifestPluginOptions {
+  targets: Target[];
+}
+
+export const ApplicationManifestPlugin = (
+  options: ApplicationManifestPluginOptions
+) => {
+  const { targets } = options;
   const cache = new Map();
   let packageJson: any = null;
-  let config: any = null;
+  let config!: ResolvedConfig;
 
   const clientCache = new InMemoryCache();
   const client = new ApolloClient({
@@ -217,7 +225,7 @@ export const ApplicationManifestPlugin = () => {
   });
 
   const processFile = async (file: string) => {
-    const code = readFileSync(file, "utf-8");
+    const code = fs.readFileSync(file, "utf-8");
 
     if (!code.includes("gql")) return;
 
@@ -268,7 +276,7 @@ export const ApplicationManifestPlugin = () => {
     });
   };
 
-  const generateManifest = async () => {
+  const generateManifest = async (environment?: Environment) => {
     const operations = Array.from(cache.values()).flatMap(
       (entry) => entry.operations
     );
@@ -278,13 +286,15 @@ export const ApplicationManifestPlugin = () => {
       "Found multiple operations marked as `@prefetch`. You can only mark 1 operation with `@prefetch`."
     );
 
-    let resource = "";
+    let resource: ApplicationManifest["resource"];
     if (config.command === "serve") {
+      // Dev mode: resource is a string (dev server URL)
       resource =
         packageJson.entry?.[config.mode] ??
         `http${config.server.https ? "s" : ""}://${config.server.host ?? "localhost"}:${config.server.port}`;
-    } else {
-      let entryPoint = packageJson.entry?.[config.mode];
+    } else if (targets.length === 1) {
+      // Build mode with single target: resource remains a string
+      const entryPoint = packageJson.entry?.[config.mode];
       if (entryPoint) {
         resource = entryPoint;
       } else if (config.mode === "production") {
@@ -294,6 +304,11 @@ export const ApplicationManifestPlugin = () => {
           `No entry point found for mode "${config.mode}". Entry points other than "development" and "production" must be defined in package.json file.`
         );
       }
+    } else {
+      // Build mode with multiple targets: resource is an object with per-target paths
+      resource = Object.fromEntries(
+        targets.map((target) => [target, `${target}/index.html`])
+      ) as { mcp?: string; openai?: string };
     }
 
     const manifest: ApplicationManifest = {
@@ -348,32 +363,37 @@ export const ApplicationManifestPlugin = () => {
       }
     }
 
+    // We create mcp and openai environments in order to write to
+    // subdirectories, but we want the manifest to be in the root outDir. If we
+    // are running in a different environment, we'll put it in the configured
+    // outDir directly instead.
+    const outDir =
+      environment?.name === "mcp" || environment?.name === "openai" ?
+        path.resolve(config.build.outDir, "../")
+      : config.build.outDir;
+
     // Always write to build directory so the MCP server picks it up
-    const dest = path.resolve(
-      root,
-      config.build.outDir,
-      ".application-manifest.json"
-    );
-    mkdirSync(path.dirname(dest), { recursive: true });
-    writeFileSync(dest, JSON.stringify(manifest));
+    const dest = path.resolve(root, outDir, ".application-manifest.json");
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.writeFileSync(dest, JSON.stringify(manifest));
 
     // Always write to the dev location so that the app can bundle the manifest content
-    writeFileSync(".application-manifest.json", JSON.stringify(manifest));
+    fs.writeFileSync(".application-manifest.json", JSON.stringify(manifest));
   };
 
   return {
     name: "OperationManifest",
 
-    async configResolved(resolvedConfig: any) {
+    async configResolved(resolvedConfig) {
       config = resolvedConfig;
     },
 
     async buildStart() {
       // Read package.json on start
-      packageJson = JSON.parse(readFileSync("package.json", "utf-8"));
+      packageJson = JSON.parse(fs.readFileSync("package.json", "utf-8"));
 
       // Scan all files on startup
-      const files = await glob("src/**/*.{ts,tsx,js,jsx}");
+      const files = await glob("./src/**/*.{ts,tsx,js,jsx}", { fs });
 
       for (const file of files) {
         const fullPath = path.resolve(root, file);
@@ -382,7 +402,7 @@ export const ApplicationManifestPlugin = () => {
 
       // We don't want to do this here on builds cause it just gets overwritten anyways. We'll call it on writeBundle instead.
       if (config.command === "serve") {
-        await generateManifest();
+        await generateManifest(this.environment);
       }
     },
 
@@ -390,7 +410,7 @@ export const ApplicationManifestPlugin = () => {
     configureServer(server: any) {
       server.watcher.on("change", async (file: string) => {
         if (file.endsWith("package.json")) {
-          packageJson = JSON.parse(readFileSync("package.json", "utf-8"));
+          packageJson = JSON.parse(fs.readFileSync("package.json", "utf-8"));
           await generateManifest();
         } else if (file.match(/\.(jsx?|tsx?)$/)) {
           await processFile(file);
@@ -400,9 +420,9 @@ export const ApplicationManifestPlugin = () => {
     },
 
     async writeBundle() {
-      await generateManifest();
+      await generateManifest(this.environment);
     },
-  };
+  } satisfies Plugin;
 };
 
 // Sort the definitions in this document so that operations come before fragments,
@@ -493,12 +513,6 @@ function removeClientDirective(doc: DocumentNode) {
     [{ name: "prefetch" }, { name: "tool" }],
     doc
   )!;
-}
-
-function invariant(condition: any, message: string): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
 }
 
 // possible values of `typeof`
