@@ -1,7 +1,6 @@
 import { defaultClientConditions, type Plugin } from "vite";
 import { invariant } from "@apollo/client/utilities/invariant";
 import { ApplicationManifestPlugin } from "./application_manifest_plugin.js";
-import { AbsoluteAssetImportsPlugin } from "./absolute_asset_imports_plugin.js";
 import path from "node:path";
 
 export declare namespace apolloClientAiApps {
@@ -16,11 +15,7 @@ export declare namespace apolloClientAiApps {
 export function apolloClientAiApps(
   options: apolloClientAiApps.Options
 ): Plugin[] {
-  return [
-    baseApolloClientAiApps(options),
-    ApplicationManifestPlugin(options),
-    AbsoluteAssetImportsPlugin(),
-  ];
+  return [baseApolloClientAiApps(options), ApplicationManifestPlugin(options)];
 }
 
 const VALID_TARGETS: apolloClientAiApps.Target[] = ["openai", "mcp"];
@@ -61,8 +56,10 @@ export function baseApolloClientAiApps(
   );
 
   return {
-    name: "@apollo/client-ai-apps:targets",
+    name: "@apollo/client-ai-apps/vite",
     configEnvironment(name, { build }) {
+      if (!targets.includes(name as any)) return;
+
       return {
         build: {
           outDir: path.join(build?.outDir ?? "dist", name),
@@ -110,6 +107,24 @@ export function baseApolloClientAiApps(
           },
         },
       };
+    },
+    transformIndexHtml(html, ctx) {
+      if (!ctx.server) return html;
+
+      let baseUrl = (
+        ctx.server.config?.server?.origin ??
+        ctx.server.resolvedUrls?.local[0] ??
+        ""
+      ).replace(/\/$/, "");
+      baseUrl = baseUrl.replace(/\/$/, "");
+
+      return (
+        html
+          // import "/@vite/..." or "/@react-refresh"
+          .replace(/(from\s+["'])\/([^"']+)/g, `$1${baseUrl}/$2`)
+          // src="/src/..."
+          .replace(/(src=["'])\/([^"']+)/gi, `$1${baseUrl}/$2`)
+      );
     },
   } satisfies Plugin;
 }
