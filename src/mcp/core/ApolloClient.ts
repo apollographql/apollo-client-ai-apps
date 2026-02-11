@@ -12,7 +12,11 @@ import type {
   ManifestOperation,
 } from "../../types/application-manifest.js";
 import { ToolCallLink } from "../link/ToolCallLink.js";
-import { aiClientSymbol, cacheAsync } from "../../utilities/index.js";
+import {
+  aiClientSymbol,
+  cacheAsync,
+  getVariablesForOperationFromToolInput,
+} from "../../utilities/index.js";
 import { McpAppManager } from "./McpAppManager.js";
 
 export declare namespace ApolloClient {
@@ -73,30 +77,14 @@ export class ApolloClient extends BaseApolloClient {
         this.writeQuery({
           query: parse(operation.body),
           data: result.data,
-          variables: getVariablesFromTool(operation, variables),
+          variables: getVariablesForOperationFromToolInput(
+            operation,
+            variables
+          ),
         });
       }
     });
   });
-}
-
-function getVariablesFromTool(
-  operation: ManifestOperation,
-  toolVariables: OperationVariables | undefined
-): OperationVariables {
-  if (!operation.variables || !toolVariables) {
-    return {};
-  }
-
-  const variableNames = new Set(Object.keys(operation.variables));
-
-  return Object.keys(toolVariables).reduce((obj, key) => {
-    if (variableNames.has(key)) {
-      obj[key] = toolVariables[key];
-    }
-
-    return obj;
-  }, {} as OperationVariables);
 }
 
 function validateTerminatingLink(link: ApolloLink) {

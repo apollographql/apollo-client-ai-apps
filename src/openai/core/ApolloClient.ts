@@ -7,7 +7,11 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { ApplicationManifest } from "../../types/application-manifest.js";
 import { SET_GLOBALS_EVENT_TYPE } from "../types.js";
 import { ToolCallLink } from "../link/ToolCallLink.js";
-import { aiClientSymbol, cacheAsync } from "../../utilities/index.js";
+import {
+  aiClientSymbol,
+  cacheAsync,
+  getVariablesForOperationFromToolInput,
+} from "../../utilities/index.js";
 import type { ApolloMcpServerApps } from "../../core/types.js";
 
 export declare namespace ApolloClient {
@@ -52,7 +56,6 @@ export class ApolloClient extends BaseApolloClient {
       return;
     }
 
-    // Write prefetched data to the cache
     this.manifest.operations.forEach((operation) => {
       if (operation.prefetchID && toolOutput.prefetch?.[operation.prefetchID]) {
         this.writeQuery({
@@ -61,20 +64,14 @@ export class ApolloClient extends BaseApolloClient {
         });
       }
 
-      // If this operation has the tool that matches up with the tool that was executed, write the tool result to the cache
       if (
         operation.tools?.find(
           (tool) => tool.name === window.openai.toolResponseMetadata?.toolName
         )
       ) {
-        // We need to include the variables that were used as part of the tool call so that we get a proper cache entry
-        // However, we only want to include toolInput's that were graphql operation (ignore extraInputs)
-        const variables = Object.keys(window.openai.toolInput).reduce(
-          (obj, key) =>
-            operation.variables?.[key] ?
-              { ...obj, [key]: window.openai.toolInput[key] }
-            : obj,
-          {}
+        const variables = getVariablesForOperationFromToolInput(
+          operation,
+          window.openai.toolInput
         );
 
         this.writeQuery({
