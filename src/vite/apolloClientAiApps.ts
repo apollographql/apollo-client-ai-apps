@@ -280,7 +280,7 @@ export function apolloClientAiApps(
         },
       };
     },
-    configureServer(server: any) {
+    configureServer(server) {
       server.watcher.on("change", async (file: string) => {
         if (file.endsWith("package.json")) {
           packageJson = JSON.parse(fs.readFileSync("package.json", "utf-8"));
