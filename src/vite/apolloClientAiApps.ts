@@ -120,8 +120,6 @@ export function baseApolloClientAiApps(
 
       return (
         html
-          // import "/@vite/..." or "/@react-refresh"
-          .replace(/(from\s+["'])\/([^"']+)/g, `$1${baseUrl}/$2`)
           // src="/src/..."
           .replace(/(src=["'])\/([^"']+)/gi, `$1${baseUrl}/$2`)
       );
