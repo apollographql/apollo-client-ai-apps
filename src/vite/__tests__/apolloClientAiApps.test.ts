@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import fs from "node:fs";
+import { gql, type DocumentNode } from "@apollo/client";
+import { print } from "@apollo/client/utilities";
 import { vol } from "memfs";
 import { apolloClientAiApps } from "../apolloClientAiApps.js";
 import { buildApp, setupServer } from "./utilities/build.js";
@@ -31,23 +33,28 @@ describe("buildStart", () => {
           prefersBorder: true,
         } satisfies ManifestWidgetSettings,
       }),
-      "src/my-component.tsx": `
-const MY_QUERY = gql\`query HelloWorldQuery($name: string!) @tool(
-  name: "hello-world",
-  description: "This is an awesome tool!",
-  extraInputs: [{
-    name: "doStuff",
-    type: "boolean",
-    description: "Should we do stuff?"
-  }],
-  labels: {
-    toolInvocation: {
-      invoking: "Testing tool...",
-      invoked: "Tested tool!"
-    }
-  }
-) { helloWorld(name: $name) }\`;
-`.trimStart(),
+      "src/my-component.tsx": queryDeclaration(gql`
+        query HelloWorldQuery($name: string!)
+        @tool(
+          name: "hello-world"
+          description: "This is an awesome tool!"
+          extraInputs: [
+            {
+              name: "doStuff"
+              type: "boolean"
+              description: "Should we do stuff?"
+            }
+          ]
+          labels: {
+            toolInvocation: {
+              invoking: "Testing tool..."
+              invoked: "Tested tool!"
+            }
+          }
+        ) {
+          helloWorld(name: $name)
+        }
+      `),
     });
 
     await using server = await setupServer({
@@ -1042,6 +1049,10 @@ window.$RefreshSig$ = () => (type) => type;</script></head></html>`;
   `);
   });
 });
+
+function queryDeclaration(query: DocumentNode) {
+  return `const MY_QUERY = gql\`\n${print(query)}\n\``;
+}
 
 function readManifestFile(
   path = ".application-manifest.json"
