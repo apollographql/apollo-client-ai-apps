@@ -21,7 +21,7 @@ beforeEach(() => {
 describe("operations", () => {
   test("writes to dev application manifest file when using a serve command", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({
+      "package.json": mockPackageJson({
         labels: {
           toolInvocation: {
             invoking: "Testing global...",
@@ -66,6 +66,7 @@ describe("operations", () => {
     const manifest = readManifestFile();
     expect(manifest).toMatchInlineSnapshot(`
       {
+        "appVersion": "1.0.0",
         "csp": {
           "connectDomains": [],
           "frameDomains": [],
@@ -122,7 +123,7 @@ describe("operations", () => {
 
   test("does not write to dev application manifest file when using a build command", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery
         @tool(name: "hello-world", description: "This is an awesome tool!") {
@@ -143,7 +144,7 @@ describe("operations", () => {
 
   test("does not process files that do not contain gql tags", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": `
         const MY_QUERY = \`query HelloWorldQuery @tool(name: "hello-world", description: "This is an awesome tool!") { helloWorld }\`;
       `,
@@ -157,6 +158,7 @@ describe("operations", () => {
     const manifest = readManifestFile();
     expect(manifest).toMatchInlineSnapshot(`
       {
+        "appVersion": "1.0.0",
         "csp": {
           "connectDomains": [],
           "frameDomains": [],
@@ -174,7 +176,7 @@ describe("operations", () => {
 
   test("captures queries in manifest file", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery {
           helloWorld
@@ -190,6 +192,7 @@ describe("operations", () => {
     const manifest = readManifestFile();
     expect(manifest).toMatchInlineSnapshot(`
       {
+        "appVersion": "1.0.0",
         "csp": {
           "connectDomains": [],
           "frameDomains": [],
@@ -219,7 +222,7 @@ describe("operations", () => {
 
   test("captures mutations in manifest file", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
         mutation HelloWorldQuery
         @tool(name: "hello-world", description: "This is an awesome tool!") {
@@ -236,6 +239,7 @@ describe("operations", () => {
     const manifest = readManifestFile();
     expect(manifest).toMatchInlineSnapshot(`
       {
+        "appVersion": "1.0.0",
         "csp": {
           "connectDomains": [],
           "frameDomains": [],
@@ -270,7 +274,7 @@ describe("operations", () => {
 
   test("errors when a subscription operation type is discovered", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
         subscription HelloWorldQuery
         @tool(name: "hello-world", description: "This is an awesome tool!") {
@@ -291,7 +295,7 @@ describe("operations", () => {
 
   test("orders operations and fragments when generating normalized operation", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": `
         const MY_QUERY = gql\`
           fragment A on User { firstName }
@@ -316,6 +320,7 @@ describe("operations", () => {
     const manifest = readManifestFile();
     expect(manifest).toMatchInlineSnapshot(`
       {
+        "appVersion": "1.0.0",
         "csp": {
           "connectDomains": [],
           "frameDomains": [],
@@ -374,7 +379,7 @@ describe("operations", () => {
 describe("@prefetch", () => {
   test("captures queries as prefetch when marked with @prefetch directive", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery @prefetch {
           helloWorld
@@ -390,6 +395,7 @@ describe("@prefetch", () => {
     const manifest = readManifestFile();
     expect(manifest).toMatchInlineSnapshot(`
       {
+        "appVersion": "1.0.0",
         "csp": {
           "connectDomains": [],
           "frameDomains": [],
@@ -420,7 +426,7 @@ describe("@prefetch", () => {
 
   test("errors when multiple operations are marked with @prefetch", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": [
         declareOperation(gql`
           query HelloWorldQuery @prefetch {
@@ -449,7 +455,7 @@ describe("@prefetch", () => {
 describe("@tool validation", () => {
   test("errors when tool name is not provided", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery @tool {
           helloWorld
@@ -469,7 +475,7 @@ describe("@tool validation", () => {
 
   test("errors when tool description is not provided", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery @tool(name: "hello-world") {
           helloWorld
@@ -489,7 +495,7 @@ describe("@tool validation", () => {
 
   test("errors when tool name contains spaces", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery
         @tool(name: "hello world", description: "A tool") {
@@ -510,7 +516,7 @@ describe("@tool validation", () => {
 
   test("errors when tool name is not a string", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery @tool(name: true) {
           helloWorld
@@ -530,7 +536,7 @@ describe("@tool validation", () => {
 
   test("errors when tool description is not a string", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery @tool(name: "hello-world", description: false) {
           helloWorld
@@ -550,7 +556,7 @@ describe("@tool validation", () => {
 
   test("errors when extraInputs is not an array", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery
         @tool(name: "hello-world", description: "hello", extraInputs: false) {
@@ -571,7 +577,7 @@ describe("@tool validation", () => {
 
   test("errors when an unknown type is discovered", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery
         @tool(
@@ -598,7 +604,7 @@ describe("@tool validation", () => {
 describe("config validation", () => {
   test("errors when widgetSettings.prefersBorder is not a boolean", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({
+      "package.json": mockPackageJson({
         widgetSettings: {
           prefersBorder: "test",
         },
@@ -622,7 +628,7 @@ describe("config validation", () => {
 
   test("errors when widgetSettings.description is not a string", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({
+      "package.json": mockPackageJson({
         widgetSettings: {
           description: true,
         },
@@ -646,7 +652,7 @@ describe("config validation", () => {
 
   test("errors when widgetSettings.domain is not a string", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({
+      "package.json": mockPackageJson({
         widgetSettings: {
           domain: true,
         },
@@ -670,7 +676,7 @@ describe("config validation", () => {
 
   test("allows empty widgetSettings value", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({
+      "package.json": mockPackageJson({
         widgetSettings: {},
       }),
       "src/my-component.tsx": declareOperation(gql`
@@ -691,7 +697,7 @@ describe("config validation", () => {
 
   test("errors when labels.toolInvocation.invoking in package.json is not a string", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({
+      "package.json": mockPackageJson({
         labels: {
           toolInvocation: {
             invoking: true,
@@ -717,7 +723,7 @@ describe("config validation", () => {
 
   test("errors when labels.toolInvocation.invoking in @tool is not a string", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery
         @tool(
@@ -742,7 +748,7 @@ describe("config validation", () => {
 
   test("errors when labels.toolInvocation.invoked in package.json is not a string", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({
+      "package.json": mockPackageJson({
         labels: {
           toolInvocation: {
             invoked: true,
@@ -768,7 +774,7 @@ describe("config validation", () => {
 
   test("errors when labels.toolInvocation.invoked in @tool is not a string", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery
         @tool(
@@ -793,9 +799,7 @@ describe("config validation", () => {
 
   test("allows empty labels value", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({
-        labels: {},
-      }),
+      "package.json": mockPackageJson({ labels: {} }),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery
         @tool(name: "test", description: "Test", labels: {}) {
@@ -817,7 +821,7 @@ describe("config validation", () => {
 describe("entry points", () => {
   test("uses custom entry point when in serve mode and provided in package.json", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({
+      "package.json": mockPackageJson({
         entry: {
           staging: "http://staging.awesome.com",
         },
@@ -842,7 +846,7 @@ describe("entry points", () => {
 
   test("uses https when enabled in server config", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery
         @tool(name: "hello-world", description: "This is an awesome tool!") {
@@ -863,7 +867,7 @@ describe("entry points", () => {
 
   test("uses custom host when specified in server config", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery
         @tool(name: "hello-world", description: "This is an awesome tool!") {
@@ -884,7 +888,7 @@ describe("entry points", () => {
 
   test("uses custom entry point when in build mode and provided in package.json", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({
+      "package.json": mockPackageJson({
         entry: {
           staging: "http://staging.awesome.com",
         },
@@ -908,7 +912,7 @@ describe("entry points", () => {
 
   test("uses index.html when in build production and not provided in package.json", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery
         @tool(name: "hello-world", description: "This is an awesome tool!") {
@@ -928,7 +932,7 @@ describe("entry points", () => {
 
   test("errors when in build mode and using a mode that is not production and not provided in package.json", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery
         @tool(name: "hello-world", description: "This is an awesome tool!") {
@@ -950,7 +954,7 @@ describe("entry points", () => {
 
   test("writes to both locations when running in build mode", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery
         @tool(name: "hello-world", description: "This is an awesome tool!") {
@@ -972,7 +976,7 @@ describe("entry points", () => {
 describe("file watching", () => {
   test("updates manifest file when a source file is changed", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery($name: string!)
         @tool(
@@ -1023,7 +1027,7 @@ describe("file watching", () => {
 describe("html transforms", () => {
   test("replaces root relative scripts with full url when origin is provided", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
     });
 
     await using server = await setupServer({
@@ -1047,7 +1051,7 @@ describe("html transforms", () => {
 
   test("replaces root relative scripts with full url when origin is not provided", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
     });
 
     await using server = await setupServer({
@@ -1075,7 +1079,7 @@ window.$RefreshSig$ = () => (type) => type;</script></head></html>`;
 
   test("replaces root relative imports with full url when origin is provided", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
     });
 
     await using server = await setupServer({
@@ -1101,7 +1105,7 @@ window.$RefreshSig$ = () => (type) => type;</script></head></html>`;
 
   test("replaces root relative imports with full url when origin is not provided", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
     });
 
     await using server = await setupServer({
@@ -1126,7 +1130,7 @@ window.$RefreshSig$ = () => (type) => type;</script></head></html>`;
 
   test("does not prepend absolute urls when running a build instead of a local server", async () => {
     vol.fromJSON({
-      "package.json": JSON.stringify({}),
+      "package.json": mockPackageJson(),
       "index.html": `<html><head></head><body><script type="module" src="/src/main.ts"></script></body></html>`,
       "src/main.ts": "export default {};",
     });
@@ -1163,6 +1167,10 @@ function declareOperation(operation: DocumentNode) {
   const name = getOperationName(operation, "MY_OPERATION");
   const varName = name.replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase();
   return `const ${varName} = gql\`\n${print(operation)}\n\``;
+}
+
+function mockPackageJson(config?: Record<string, unknown>) {
+  return JSON.stringify({ version: "1.0.0", ...config });
 }
 
 function readManifestFile(

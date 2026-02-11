@@ -182,6 +182,7 @@ export function apolloClientAiApps(
     const manifest: ApplicationManifest = {
       format: "apollo-ai-app-manifest",
       version: "1",
+      appVersion: packageJson.version,
       name: packageJson.name,
       description: packageJson.description,
       hash: createHash("sha256").update(Date.now().toString()).digest("hex"),

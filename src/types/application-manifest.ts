@@ -1,6 +1,7 @@
 export type ApplicationManifest = {
   format: "apollo-ai-app-manifest";
   version: "1";
+  appVersion: string;
   name: string;
   description: string;
   hash: string;
