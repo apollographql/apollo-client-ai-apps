@@ -2,14 +2,7 @@ import fs from "node:fs";
 import { glob } from "glob";
 import { gqlPluckFromCodeStringSync } from "@graphql-tools/graphql-tag-pluck";
 import { createHash } from "crypto";
-import type {
-  ArgumentNode,
-  TypeNode,
-  ValueNode,
-  DocumentNode,
-  OperationDefinitionNode,
-  DirectiveNode,
-} from "graphql";
+import type { DocumentNode, OperationDefinitionNode } from "graphql";
 import { Kind, parse, print } from "graphql";
 import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
 import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
@@ -24,99 +17,13 @@ import type {
 } from "../types/application-manifest.js";
 import { invariant } from "../utilities/index.js";
 import type { Environment, Plugin, ResolvedConfig } from "vite";
+import {
+  getArgumentValue,
+  getDirectiveArgument,
+  getTypeName,
+} from "./utilities/graphql.js";
 
 const root = process.cwd();
-
-function getRawValue(node: ValueNode): unknown {
-  switch (node.kind) {
-    case Kind.STRING:
-    case Kind.BOOLEAN:
-      return node.value;
-    case Kind.LIST:
-      return node.values.map(getRawValue);
-    case Kind.OBJECT:
-      return node.fields.reduce<Record<string, any>>((acc, field) => {
-        acc[field.name.value] = getRawValue(field.value);
-        return acc;
-      }, {});
-    default:
-      throw new Error(
-        `Error when parsing directive values: unexpected type '${node.kind}'`
-      );
-  }
-}
-
-function getArgumentValue(
-  argument: ArgumentNode,
-  expectedType: Kind.STRING
-): string;
-
-function getArgumentValue(
-  argument: ArgumentNode,
-  expectedType: Kind.BOOLEAN
-): boolean;
-
-function getArgumentValue(
-  argument: ArgumentNode,
-  expectedType: Kind.LIST
-): unknown[];
-
-function getArgumentValue(
-  argument: ArgumentNode,
-  expectedType: Kind.OBJECT
-): Record<string, unknown>;
-
-function getArgumentValue(argument: ArgumentNode, expectedType: Kind) {
-  const argumentType = argument.value.kind;
-
-  invariant(
-    argumentType === expectedType,
-    `Expected argument '${argument.name.value}' to be of type '${expectedType}' but found '${argumentType}' instead.`
-  );
-
-  return getRawValue(argument.value);
-}
-
-interface GetArgumentNodeOptions {
-  required?: boolean;
-}
-
-function getDirectiveArgument(
-  argumentName: string,
-  directive: DirectiveNode,
-  opts: GetArgumentNodeOptions & { required: true }
-): ArgumentNode;
-
-function getDirectiveArgument(
-  argumentName: string,
-  directive: DirectiveNode,
-  opts?: GetArgumentNodeOptions
-): ArgumentNode | undefined;
-
-function getDirectiveArgument(
-  argumentName: string,
-  directive: DirectiveNode,
-  { required = false }: { required?: boolean } = {}
-) {
-  const argument = directive.arguments?.find(
-    (directiveArgument) => directiveArgument.name.value === argumentName
-  );
-
-  invariant(
-    argument || !required,
-    `'${argumentName}' argument must be supplied for @tool`
-  );
-
-  return argument;
-}
-
-function getTypeName(type: TypeNode): string {
-  let t = type;
-  while (t.kind === Kind.NON_NULL_TYPE || t.kind === Kind.LIST_TYPE) {
-    t = t.type;
-  }
-  return t.name.value;
-}
 
 type Target = "openai" | "mcp";
 
