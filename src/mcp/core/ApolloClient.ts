@@ -1,4 +1,3 @@
-import type { OperationVariables } from "@apollo/client";
 import {
   ApolloLink,
   ApolloClient as BaseApolloClient,
@@ -7,10 +6,7 @@ import {
 import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
 import { parse } from "graphql";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type {
-  ApplicationManifest,
-  ManifestOperation,
-} from "../../types/application-manifest.js";
+import type { ApplicationManifest } from "../../types/application-manifest.js";
 import { ToolCallLink } from "../link/ToolCallLink.js";
 import {
   aiClientSymbol,
