@@ -4,10 +4,16 @@ export declare namespace ApolloAiAppsConfig {
   export type Mode = "development" | "production" | (string & {});
 
   export interface Config {
-    /** The name of the app */
+    /**
+     * The name of the app. If not provided, the `name` from your package.json
+     * is used.
+     */
     name?: string;
 
-    /** A short description of the app */
+    /**
+     * A short description of the app. If not provided, the `description` from
+     * your package.json is used.
+     */
     description?: string;
 
     /**
@@ -22,8 +28,8 @@ export declare namespace ApolloAiAppsConfig {
     entry?: EntryPoint;
 
     /**
-     * Specify the version of the app. If not provided, the version from your
-     * package.json is used.
+     * Specifies the version of the app. If not provided, the `version` from
+     * your package.json is used.
      */
     version?: string;
 
