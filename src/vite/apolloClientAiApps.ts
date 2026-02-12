@@ -184,8 +184,6 @@ export function apolloClientAiApps(
           devTarget!
         ) ??
         `http${config.server.https ? "s" : ""}://${config.server.host ?? "localhost"}:${config.server.port}`;
-    } else if (targets.length === 1) {
-      resource = getBuildResourceForTarget(targets[0]);
     } else {
       resource = Object.fromEntries(
         targets.map((target) => [target, getBuildResourceForTarget(target)])

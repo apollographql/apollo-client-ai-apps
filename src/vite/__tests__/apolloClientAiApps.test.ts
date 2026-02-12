@@ -934,7 +934,7 @@ describe("entry points", () => {
     });
 
     const manifest = readManifestFile();
-    expect(manifest.resource).toBe("http://staging.awesome.com");
+    expect(manifest.resource).toEqual({ mcp: "http://staging.awesome.com" });
   });
 
   test("uses custom entry point for target when in build mode with multiple targets", async () => {
@@ -1017,7 +1017,9 @@ describe("entry points", () => {
     });
 
     const manifest = readManifestFile();
-    expect(manifest.resource).toBe("http://staging-mcp.awesome.com");
+    expect(manifest.resource).toEqual({
+      mcp: "http://staging-mcp.awesome.com",
+    });
   });
 
   test("uses [target]/index.html when in build production and not provided in package.json with single target", async () => {
@@ -1037,7 +1039,7 @@ describe("entry points", () => {
     });
 
     const manifest = readManifestFile();
-    expect(manifest.resource).toBe("mcp/index.html");
+    expect(manifest.resource).toEqual({ mcp: "mcp/index.html" });
   });
 
   test("uses [target]/index.html when in build production with multiple targets", async () => {
