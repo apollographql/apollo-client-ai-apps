@@ -27,6 +27,10 @@
         "default": "./dist/index.js"
       }
     },
+    "./config": {
+      "types": "./dist/config/index.d.ts",
+      "default": "./dist/config/index.js"
+    },
     "./mcp": {
       "mcp": {
         "types": "./dist/mcp/index.d.ts",
