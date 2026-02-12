@@ -174,7 +174,7 @@ export function apolloClientAiApps(
       if (entryPoint) {
         resource = entryPoint;
       } else if (config.mode === "production") {
-        resource = "index.html";
+        resource = `${targets[0]}/index.html`;
       } else {
         throw new Error(
           `No entry point found for mode "${config.mode}". Entry points other than "development" and "production" must be defined in package.json file.`

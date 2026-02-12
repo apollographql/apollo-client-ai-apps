@@ -1020,7 +1020,7 @@ describe("entry points", () => {
     expect(manifest.resource).toBe("http://staging-mcp.awesome.com");
   });
 
-  test("uses index.html when in build production and not provided in package.json", async () => {
+  test("uses [target]/index.html when in build production and not provided in package.json with single target", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
@@ -1037,7 +1037,7 @@ describe("entry points", () => {
     });
 
     const manifest = readManifestFile();
-    expect(manifest.resource).toBe("index.html");
+    expect(manifest.resource).toBe("mcp/index.html");
   });
 
   test("uses [target]/index.html when in build production with multiple targets", async () => {
