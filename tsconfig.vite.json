@@ -16,6 +16,7 @@
     "rootDir": "src",
     "outDir": "dist",
     "lib": ["esnext"],
-    "composite": true
+    "composite": true,
+    "noUnusedLocals": false
   }
 }
