@@ -5,10 +5,10 @@ export declare namespace ApolloAiAppsConfig {
 
   export interface Config {
     /** The name of the app */
-    name: string;
+    name?: string;
 
     /** A short description of the app */
-    description: string;
+    description?: string;
 
     /**
      * Specifies the entrypoint to the application for a given mode. When a
