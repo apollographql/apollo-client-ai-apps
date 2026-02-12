@@ -6,6 +6,7 @@ export function mockApplicationManifest(
   return {
     format: "apollo-ai-app-manifest",
     version: "1",
+    appVersion: "1.0.0",
     name: "the-store",
     description:
       "An online store selling a variety of high quality products across many different categories.",

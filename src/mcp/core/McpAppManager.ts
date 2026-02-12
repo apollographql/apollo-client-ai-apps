@@ -19,8 +19,7 @@ export class McpAppManager {
   #toolMetadata: Record<string, unknown> = {};
 
   constructor(manifest: ApplicationManifest) {
-    // TODO: Determine how we want to provide this version long-term.
-    this.app = new App({ name: manifest.name, version: "1.0.0" });
+    this.app = new App({ name: manifest.name, version: manifest.appVersion });
   }
 
   get toolName() {

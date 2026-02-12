@@ -4,6 +4,7 @@ import type { ApplicationManifest } from "../../../types/application-manifest.js
 import { parse } from "graphql";
 import { ApolloLink, HttpLink, InMemoryCache } from "@apollo/client";
 import { ToolCallLink } from "../../link/ToolCallLink.js";
+import { mockApplicationManifest } from "../../../testing/internal/index.js";
 
 describe("Client Basics", () => {
   test("Should execute tool call when client.query is called", async () => {
@@ -32,41 +33,11 @@ describe("Client Basics", () => {
       }),
     });
 
-    const manifest = {
-      format: "apollo-ai-app-manifest",
-      version: "1",
-      name: "the-store",
-      description:
-        "An online store selling a variety of high quality products across many different categories.",
-      hash: "f6a24922f6ad6ed8c2aa57baf3b8242ae5f38a09a6df3f2693077732434c4256",
-      operations: [
-        {
-          id: "c43af26552874026c3fb346148c5795896aa2f3a872410a0a2621cffee25291c",
-          name: "Product",
-          type: "query",
-          body: "query Product($id: ID!) {\n  product(id: $id) {\n    id\n    title\n    rating\n    price\n    description\n    images\n    __typename\n  }\n}",
-          variables: { id: "ID" },
-          prefetch: false,
-          tools: [
-            {
-              name: "Get Product",
-              description: "Shows the details page for a specific product.",
-            },
-          ],
-        },
-      ],
-      resource: "index.html",
-      csp: {
-        connectDomains: [],
-        resourceDomains: [],
-        frameDomains: [],
-        redirectDomains: [],
-      },
-    } satisfies ApplicationManifest;
+    const manifest = mockApplicationManifest();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      manifest,
+      manifest: mockApplicationManifest(),
     });
 
     const variables = { id: "1" };
@@ -127,41 +98,9 @@ describe("prefetchData", () => {
       },
     });
 
-    const manifest = {
-      format: "apollo-ai-app-manifest",
-      version: "1",
-      name: "the-store",
-      description:
-        "An online store selling a variety of high quality products across many different categories.",
-      hash: "f6a24922f6ad6ed8c2aa57baf3b8242ae5f38a09a6df3f2693077732434c4256",
-      operations: [
-        {
-          id: "c43af26552874026c3fb346148c5795896aa2f3a872410a0a2621cffee25291c",
-          name: "Product",
-          type: "query",
-          body: "query Product($id: ID!) {\n  product(id: $id) {\n    id\n    title\n    rating\n    price\n    description\n    images\n    __typename\n  }\n}",
-          variables: { id: "ID" },
-          prefetch: false,
-          tools: [
-            {
-              name: "Get Product",
-              description: "Shows the details page for a specific product.",
-            },
-          ],
-        },
-      ],
-      resource: "index.html",
-      csp: {
-        connectDomains: [],
-        resourceDomains: [],
-        frameDomains: [],
-        redirectDomains: [],
-      },
-    } satisfies ApplicationManifest;
-
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      manifest,
+      manifest: mockApplicationManifest(),
     });
     await client.waitForInitialization();
 
@@ -416,41 +355,9 @@ describe("prefetchData", () => {
       },
     });
 
-    const manifest = {
-      format: "apollo-ai-app-manifest",
-      version: "1",
-      name: "the-store",
-      description:
-        "An online store selling a variety of high quality products across many different categories.",
-      hash: "f6a24922f6ad6ed8c2aa57baf3b8242ae5f38a09a6df3f2693077732434c4256",
-      operations: [
-        {
-          id: "c43af26552874026c3fb346148c5795896aa2f3a872410a0a2621cffee25291c",
-          name: "Product",
-          type: "query",
-          body: "query Product($id: ID!) {\n  product(id: $id) {\n    id\n    title\n    rating\n    price\n    description\n    images\n    __typename\n  }\n}",
-          variables: { id: "ID" },
-          prefetch: false,
-          tools: [
-            {
-              name: "Get Product",
-              description: "Shows the details page for a specific product.",
-            },
-          ],
-        },
-      ],
-      resource: "index.html",
-      csp: {
-        connectDomains: [],
-        resourceDomains: [],
-        frameDomains: [],
-        redirectDomains: [],
-      },
-    } satisfies ApplicationManifest;
-
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      manifest,
+      manifest: mockApplicationManifest(),
     });
     await client.waitForInitialization();
 
@@ -503,7 +410,7 @@ describe("custom links", () => {
       }),
     });
 
-    const manifest = createManifest();
+    const manifest = mockApplicationManifest();
     const linkHandler = vi.fn<ApolloLink.RequestHandler>((operation, forward) =>
       forward(operation)
     );
@@ -539,7 +446,7 @@ describe("custom links", () => {
   });
 
   test("enforces ToolCallLink as terminating link", async () => {
-    const manifest = createManifest();
+    const manifest = mockApplicationManifest();
     const expectedError = new Error(
       "The terminating link must be a `ToolCallLink`. If you are using a `split` link, ensure the `right` branch uses a `ToolCallLink` as the terminating link."
     );
@@ -607,40 +514,3 @@ describe("custom links", () => {
     }).not.toThrow();
   });
 });
-
-function createManifest(
-  overrides?: Partial<ApplicationManifest>
-): ApplicationManifest {
-  return {
-    format: "apollo-ai-app-manifest",
-    version: "1",
-    name: "the-store",
-    description:
-      "An online store selling a variety of high quality products across many different categories.",
-    hash: "f6a24922f6ad6ed8c2aa57baf3b8242ae5f38a09a6df3f2693077732434c4256",
-    operations: [
-      {
-        id: "c43af26552874026c3fb346148c5795896aa2f3a872410a0a2621cffee25291c",
-        name: "Product",
-        type: "query",
-        body: "query Product($id: ID!) {\n  product(id: $id) {\n    id\n    title\n    rating\n    price\n    description\n    images\n    __typename\n  }\n}",
-        variables: { id: "ID" },
-        prefetch: false,
-        tools: [
-          {
-            name: "Get Product",
-            description: "Shows the details page for a specific product.",
-          },
-        ],
-      },
-    ],
-    resource: "index.html",
-    csp: {
-      resourceDomains: [],
-      connectDomains: [],
-      frameDomains: [],
-      redirectDomains: [],
-    },
-    ...overrides,
-  };
-}
