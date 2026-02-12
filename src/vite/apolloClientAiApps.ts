@@ -164,7 +164,8 @@ export function apolloClientAiApps(
       // Build mode with single target: resource remains a string
       const entryPoint = packageJson.entry?.[config.mode];
       if (entryPoint) {
-        resource = entryPoint;
+        resource =
+          typeof entryPoint === "string" ? entryPoint : entryPoint[targets[0]];
       } else if (config.mode === "production") {
         resource = "index.html";
       } else {
@@ -175,7 +176,19 @@ export function apolloClientAiApps(
     } else {
       // Build mode with multiple targets: resource is an object with per-target paths
       resource = Object.fromEntries(
-        targets.map((target) => [target, `${target}/index.html`])
+        targets.map((target) => {
+          const entryPoint = packageJson.entry?.[config.mode];
+
+          if (entryPoint) {
+            if (typeof entryPoint === "string") {
+              return [target, entryPoint];
+            } else if (typeof entryPoint === "object" && target in entryPoint) {
+              return [target, entryPoint[target]];
+            }
+          }
+
+          return [target, `${target}/index.html`];
+        })
       ) as { mcp?: string; openai?: string };
     }
 

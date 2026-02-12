@@ -910,6 +910,89 @@ describe("entry points", () => {
     expect(manifest.resource).toBe("http://staging.awesome.com");
   });
 
+  test("uses custom entry point for target when in build mode with multiple targets", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson({
+        entry: {
+          staging: {
+            mcp: "http://staging-mcp.awesome.com",
+            openai: "http://staging-openai.awesome.com",
+          },
+        },
+      }),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          helloWorld
+        }
+      `),
+    });
+
+    await buildApp({
+      mode: "staging",
+      plugins: [apolloClientAiApps({ targets: ["mcp", "openai"] })],
+    });
+
+    const manifest = readManifestFile();
+    expect(manifest.resource).toEqual({
+      mcp: "http://staging-mcp.awesome.com",
+      openai: "http://staging-openai.awesome.com",
+    });
+  });
+
+  test("uses custom entry point for all targets when in build mode with multiple targets", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson({
+        entry: {
+          staging: "http://staging.awesome.com",
+        },
+      }),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          helloWorld
+        }
+      `),
+    });
+
+    await buildApp({
+      mode: "staging",
+      plugins: [apolloClientAiApps({ targets: ["mcp", "openai"] })],
+    });
+
+    const manifest = readManifestFile();
+    expect(manifest.resource).toEqual({
+      mcp: "http://staging.awesome.com",
+      openai: "http://staging.awesome.com",
+    });
+  });
+
+  test("uses custom entry point for target when in build mode with single target", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson({
+        entry: {
+          staging: {
+            mcp: "http://staging-mcp.awesome.com",
+          },
+        },
+      }),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          helloWorld
+        }
+      `),
+    });
+
+    await buildApp({
+      mode: "staging",
+      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+    });
+
+    const manifest = readManifestFile();
+    expect(manifest.resource).toBe("http://staging-mcp.awesome.com");
+  });
+
   test("uses index.html when in build production and not provided in package.json", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson(),
@@ -928,6 +1011,29 @@ describe("entry points", () => {
 
     const manifest = readManifestFile();
     expect(manifest.resource).toBe("index.html");
+  });
+
+  test("uses [target]/index.html when in build production with multiple targets", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          helloWorld
+        }
+      `),
+    });
+
+    await buildApp({
+      mode: "production",
+      plugins: [apolloClientAiApps({ targets: ["mcp", "openai"] })],
+    });
+
+    const manifest = readManifestFile();
+    expect(manifest.resource).toEqual({
+      mcp: "mcp/index.html",
+      openai: "openai/index.html",
+    });
   });
 
   test("errors when in build mode and using a mode that is not production and not provided in package.json", async () => {
@@ -966,6 +1072,26 @@ describe("entry points", () => {
     await buildApp({
       mode: "production",
       plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+    });
+
+    expect(vol.existsSync(".application-manifest.json")).toBe(true);
+    expect(vol.existsSync("dist/.application-manifest.json")).toBe(true);
+  });
+
+  test("writes to both locations when running in build mode with multiple targets", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          helloWorld
+        }
+      `),
+    });
+
+    await buildApp({
+      mode: "production",
+      plugins: [apolloClientAiApps({ targets: ["mcp", "openai"] })],
     });
 
     expect(vol.existsSync(".application-manifest.json")).toBe(true);
