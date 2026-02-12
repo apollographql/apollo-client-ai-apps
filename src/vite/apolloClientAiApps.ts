@@ -29,9 +29,10 @@ import type {
   ManifestWidgetSettings,
 } from "../types/application-manifest";
 import { invariant } from "../utilities/invariant.js";
+import type { ApolloAiAppsConfig } from "../config/index.js";
 
 export declare namespace apolloClientAiApps {
-  export type Target = "openai" | "mcp";
+  export type Target = ApolloAiAppsConfig.AppTarget;
 
   export interface Options {
     targets: Target[];
@@ -74,6 +75,7 @@ export function apolloClientAiApps(
   const targets = Array.from(new Set(options.targets));
   const { devTarget = targets.length === 1 ? targets[0] : undefined } = options;
   const cache = new Map<string, FileCache>();
+
   let packageJson!: any;
   let config!: ResolvedConfig;
 
@@ -453,14 +455,9 @@ const processQueryLink = new ApolloLink((operation) => {
   });
 });
 
-interface LabelConfig {
-  toolInvocation?: {
-    invoking?: string;
-    invoked?: string;
-  };
-}
-
-function getLabelsFromConfig(config: LabelConfig): ManifestLabels | undefined {
+function getLabelsFromConfig(
+  config: ApolloAiAppsConfig.Labels
+): ManifestLabels | undefined {
   if (!("toolInvocation" in config)) {
     return;
   }

@@ -3,6 +3,7 @@
   "extends": "./tsconfig.base.json",
   "include": [
     "./src/vite",
+    "./src/config",
     "./src/utilities/",
     "./src/types/application-manifest.ts"
   ],
