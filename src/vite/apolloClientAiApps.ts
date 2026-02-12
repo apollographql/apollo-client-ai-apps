@@ -154,6 +154,26 @@ export function apolloClientAiApps(
       "Found multiple operations marked as `@prefetch`. You can only mark 1 operation with `@prefetch`."
     );
 
+    function getBuildResourceForTarget(target: apolloClientAiApps.Target) {
+      const entryPoint = getResourceConfigFromPackageJson(
+        packageJson,
+        config.mode,
+        target
+      );
+
+      if (entryPoint) {
+        return entryPoint;
+      }
+
+      if (config.mode === "production") {
+        return `${target}/index.html`;
+      }
+
+      throw new Error(
+        `No entry point found for mode "${config.mode}". Entry points other than "development" and "production" must be defined in package.json file.`
+      );
+    }
+
     let resource: ApplicationManifest["resource"];
     if (config.command === "serve") {
       // Dev mode: resource is a string (dev server URL)
@@ -165,41 +185,10 @@ export function apolloClientAiApps(
         ) ??
         `http${config.server.https ? "s" : ""}://${config.server.host ?? "localhost"}:${config.server.port}`;
     } else if (targets.length === 1) {
-      // Build mode with single target: resource remains a string
-      const entryPoint = getResourceConfigFromPackageJson(
-        packageJson,
-        config.mode,
-        targets[0]
-      );
-      if (entryPoint) {
-        resource = entryPoint;
-      } else if (config.mode === "production") {
-        resource = `${targets[0]}/index.html`;
-      } else {
-        throw new Error(
-          `No entry point found for mode "${config.mode}". Entry points other than "development" and "production" must be defined in package.json file.`
-        );
-      }
+      resource = getBuildResourceForTarget(targets[0]);
     } else {
-      // Build mode with multiple targets: resource is an object with per-target paths
       resource = Object.fromEntries(
-        targets.map((target) => {
-          const entryPoint = getResourceConfigFromPackageJson(
-            packageJson,
-            config.mode,
-            target
-          );
-
-          if (entryPoint) {
-            return [target, entryPoint];
-          } else if (config.mode === "production") {
-            return [target, `${target}/index.html`];
-          } else {
-            throw new Error(
-              `No entry point found for mode "${config.mode}". Entry points other than "development" and "production" must be defined in package.json file.`
-            );
-          }
-        })
+        targets.map((target) => [target, getBuildResourceForTarget(target)])
       ) as { mcp?: string; openai?: string };
     }
 
