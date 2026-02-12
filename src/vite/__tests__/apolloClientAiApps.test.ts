@@ -844,6 +844,33 @@ describe("entry points", () => {
     expect(manifest.resource).toBe("http://staging.awesome.com");
   });
 
+  test("uses custom entry point for devTarget when in serve mode and provided in package.json", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson({
+        entry: {
+          staging: {
+            mcp: "http://staging.awesome.com",
+          },
+        },
+      }),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          helloWorld
+        }
+      `),
+    });
+
+    await using server = await setupServer({
+      mode: "staging",
+      plugins: [apolloClientAiApps({ targets: ["mcp"], devTarget: "mcp" })],
+    });
+    await server.listen();
+
+    const manifest = readManifestFile();
+    expect(manifest.resource).toBe("http://staging.awesome.com");
+  });
+
   test("uses https when enabled in server config", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson(),

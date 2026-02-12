@@ -71,8 +71,8 @@ interface FileCache {
 export function apolloClientAiApps(
   options: apolloClientAiApps.Options
 ): Plugin {
-  const { devTarget } = options;
   const targets = Array.from(new Set(options.targets));
+  const { devTarget = targets.length === 1 ? targets[0] : undefined } = options;
   const cache = new Map<string, FileCache>();
   let packageJson!: any;
   let config!: ResolvedConfig;
@@ -156,9 +156,12 @@ export function apolloClientAiApps(
 
     let resource: ApplicationManifest["resource"];
     if (config.command === "serve") {
+      const entryPoint = packageJson.entry?.[config.mode];
       // Dev mode: resource is a string (dev server URL)
       resource =
-        packageJson.entry?.[config.mode] ??
+        (typeof entryPoint === "object" ?
+          entryPoint[devTarget!]
+        : entryPoint) ??
         `http${config.server.https ? "s" : ""}://${config.server.host ?? "localhost"}:${config.server.port}`;
     } else if (targets.length === 1) {
       // Build mode with single target: resource remains a string
