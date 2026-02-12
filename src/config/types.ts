@@ -65,8 +65,8 @@ export declare namespace ApolloAiAppsConfig {
 
   export interface WidgetSettings {
     prefersBorder?: boolean;
-    description?: boolean;
-    domain?: boolean;
+    description?: string;
+    domain?: string;
   }
 
   export interface Labels {
