@@ -71,8 +71,8 @@ interface FileCache {
 export function apolloClientAiApps(
   options: apolloClientAiApps.Options
 ): Plugin {
-  const { targets: rawTargets, devTarget } = options;
-  const targets = Array.from(new Set(rawTargets));
+  const { devTarget } = options;
+  const targets = Array.from(new Set(options.targets));
   const cache = new Map<string, FileCache>();
   let packageJson!: any;
   let config!: ResolvedConfig;
