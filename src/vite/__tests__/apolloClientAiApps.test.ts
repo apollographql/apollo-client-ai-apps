@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { describe, expect, test } from "vitest";
 import fs from "node:fs";
 import { gql, type DocumentNode } from "@apollo/client";
 import { print } from "@apollo/client/utilities";
@@ -10,13 +10,6 @@ import type {
   ApplicationManifest,
   ManifestWidgetSettings,
 } from "../../types/application-manifest.js";
-
-vi.mock("node:fs");
-vi.mock("node:fs/promises");
-
-beforeEach(() => {
-  vol.reset();
-});
 
 describe("operations", () => {
   test("writes to dev application manifest file when using a serve command", async () => {
