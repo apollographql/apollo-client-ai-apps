@@ -156,19 +156,23 @@ export function apolloClientAiApps(
 
     let resource: ApplicationManifest["resource"];
     if (config.command === "serve") {
-      const entryPoint = packageJson.entry?.[config.mode];
       // Dev mode: resource is a string (dev server URL)
       resource =
-        (typeof entryPoint === "object" ?
-          entryPoint[devTarget!]
-        : entryPoint) ??
+        getResourceConfigFromPackageJson(
+          packageJson,
+          config.mode,
+          devTarget!
+        ) ??
         `http${config.server.https ? "s" : ""}://${config.server.host ?? "localhost"}:${config.server.port}`;
     } else if (targets.length === 1) {
       // Build mode with single target: resource remains a string
-      const entryPoint = packageJson.entry?.[config.mode];
+      const entryPoint = getResourceConfigFromPackageJson(
+        packageJson,
+        config.mode,
+        targets[0]
+      );
       if (entryPoint) {
-        resource =
-          typeof entryPoint === "string" ? entryPoint : entryPoint[targets[0]];
+        resource = entryPoint;
       } else if (config.mode === "production") {
         resource = "index.html";
       } else {
@@ -180,17 +184,21 @@ export function apolloClientAiApps(
       // Build mode with multiple targets: resource is an object with per-target paths
       resource = Object.fromEntries(
         targets.map((target) => {
-          const entryPoint = packageJson.entry?.[config.mode];
+          const entryPoint = getResourceConfigFromPackageJson(
+            packageJson,
+            config.mode,
+            target
+          );
 
           if (entryPoint) {
-            if (typeof entryPoint === "string") {
-              return [target, entryPoint];
-            } else if (typeof entryPoint === "object" && target in entryPoint) {
-              return [target, entryPoint[target]];
-            }
+            return [target, entryPoint];
+          } else if (config.mode === "production") {
+            return [target, `${target}/index.html`];
+          } else {
+            throw new Error(
+              `No entry point found for mode "${config.mode}". Entry points other than "development" and "production" must be defined in package.json file.`
+            );
           }
-
-          return [target, `${target}/index.html`];
         })
       ) as { mcp?: string; openai?: string };
     }
@@ -583,4 +591,24 @@ export function sortTopLevelDefinitions(query: DocumentNode): DocumentNode {
 
 function isNonEmptyObject(obj: object) {
   return Object.keys(obj).length > 0;
+}
+
+// TODO: Once we move to cosmicconfig, use the config type from that
+interface PackageJson {
+  entry?: Record<string, string | Record<apolloClientAiApps.Target, string>>;
+  [x: string]: unknown;
+}
+
+function getResourceConfigFromPackageJson(
+  packageJson: PackageJson,
+  mode: string,
+  target: apolloClientAiApps.Target
+) {
+  if (!packageJson.entry || !packageJson.entry[mode]) {
+    return;
+  }
+
+  const config = packageJson.entry[mode];
+
+  return typeof config === "string" ? config : config[target];
 }
