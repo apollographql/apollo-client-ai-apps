@@ -178,7 +178,7 @@ export function apolloClientAiApps(
     if (config.command === "serve") {
       // Dev mode: resource is a string (dev server URL)
       resource =
-        getResourceFromConfig(packageJson, config.mode, devTarget!) ??
+        getResourceFromConfig(appsConfig, config.mode, devTarget!) ??
         `http${config.server.https ? "s" : ""}://${config.server.host ?? "localhost"}:${config.server.port}`;
     } else {
       resource = Object.fromEntries(
