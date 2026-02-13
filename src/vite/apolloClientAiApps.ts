@@ -26,7 +26,6 @@ import type {
   ManifestLabels,
   ManifestOperation,
   ManifestTool,
-  ManifestWidgetSettings,
 } from "../types/application-manifest";
 import { invariant } from "../utilities/invariant.js";
 import { explorer } from "./utilities/config.js";
@@ -207,29 +206,8 @@ export function apolloClientAiApps(
       },
     };
 
-    if (
-      appsConfig.widgetSettings &&
-      isNonEmptyObject(appsConfig.widgetSettings)
-    ) {
-      function validateWidgetSetting(
-        key: keyof ManifestWidgetSettings,
-        type: "string" | "boolean"
-      ) {
-        if (key in widgetSettings) {
-          invariant(
-            typeof widgetSettings[key] === type,
-            `Expected 'widgetSettings.${key}' to be of type '${type}' but found '${typeof widgetSettings[key]}' instead.`
-          );
-        }
-      }
-
-      const widgetSettings = appsConfig.widgetSettings;
-
-      validateWidgetSetting("prefersBorder", "boolean");
-      validateWidgetSetting("description", "string");
-      validateWidgetSetting("domain", "string");
-
-      manifest.widgetSettings = widgetSettings;
+    if (isNonEmptyObject(appsConfig.widgetSettings)) {
+      manifest.widgetSettings = appsConfig.widgetSettings;
     }
 
     if (appsConfig.labels) {
@@ -573,8 +551,10 @@ export function sortTopLevelDefinitions(query: DocumentNode): DocumentNode {
   };
 }
 
-function isNonEmptyObject(obj: object) {
-  return Object.keys(obj).length > 0;
+function isNonEmptyObject<T extends object>(
+  obj: T | null | undefined
+): obj is T {
+  return !!obj && Object.keys(obj).length > 0;
 }
 
 async function getAppsConfig(): Promise<ApolloClientAiAppsConfig.Config> {
