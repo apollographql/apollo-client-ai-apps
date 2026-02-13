@@ -3,6 +3,7 @@
   "extends": "./tsconfig.base.json",
   "include": [
     "./src/vite",
+    "./src/config",
     "./src/utilities/",
     "./src/types/application-manifest.ts"
   ],
@@ -15,6 +16,7 @@
     "rootDir": "src",
     "outDir": "dist",
     "lib": ["esnext"],
-    "composite": true
+    "composite": true,
+    "noUnusedLocals": false
   }
 }

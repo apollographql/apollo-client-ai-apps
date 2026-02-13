@@ -10,29 +10,29 @@ import type {
   ApplicationManifest,
   ManifestWidgetSettings,
 } from "../../types/application-manifest.js";
-
-vi.mock("node:fs");
-vi.mock("node:fs/promises");
+import { explorer } from "../utilities/config.js";
 
 beforeEach(() => {
-  vol.reset();
+  explorer.clearCaches();
 });
 
 describe("operations", () => {
   test("writes to dev application manifest file when using a serve command", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        labels: {
-          toolInvocation: {
-            invoking: "Testing global...",
-            invoked: "Tested global!",
+        "apollo-client-ai-apps": {
+          labels: {
+            toolInvocation: {
+              invoking: "Testing global...",
+              invoked: "Tested global!",
+            },
           },
+          widgetSettings: {
+            description: "Test",
+            domain: "https://example.com",
+            prefersBorder: true,
+          } satisfies ManifestWidgetSettings,
         },
-        widgetSettings: {
-          description: "Test",
-          domain: "https://example.com",
-          prefersBorder: true,
-        } satisfies ManifestWidgetSettings,
       }),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery($name: string!)
@@ -605,8 +605,10 @@ describe("config validation", () => {
   test("errors when widgetSettings.prefersBorder is not a boolean", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        widgetSettings: {
-          prefersBorder: "test",
+        "apollo-client-ai-apps": {
+          widgetSettings: {
+            prefersBorder: "test",
+          },
         },
       }),
       "src/my-component.tsx": declareOperation(gql`
@@ -629,8 +631,10 @@ describe("config validation", () => {
   test("errors when widgetSettings.description is not a string", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        widgetSettings: {
-          description: true,
+        "apollo-client-ai-apps": {
+          widgetSettings: {
+            description: true,
+          },
         },
       }),
       "src/my-component.tsx": declareOperation(gql`
@@ -653,8 +657,10 @@ describe("config validation", () => {
   test("errors when widgetSettings.domain is not a string", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        widgetSettings: {
-          domain: true,
+        "apollo-client-ai-apps": {
+          widgetSettings: {
+            domain: true,
+          },
         },
       }),
       "src/my-component.tsx": declareOperation(gql`
@@ -698,9 +704,11 @@ describe("config validation", () => {
   test("errors when labels.toolInvocation.invoking in package.json is not a string", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        labels: {
-          toolInvocation: {
-            invoking: true,
+        "apollo-client-ai-apps": {
+          labels: {
+            toolInvocation: {
+              invoking: true,
+            },
           },
         },
       }),
@@ -749,9 +757,11 @@ describe("config validation", () => {
   test("errors when labels.toolInvocation.invoked in package.json is not a string", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        labels: {
-          toolInvocation: {
-            invoked: true,
+        "apollo-client-ai-apps": {
+          labels: {
+            toolInvocation: {
+              invoked: true,
+            },
           },
         },
       }),
@@ -822,8 +832,10 @@ describe("entry points", () => {
   test("uses custom entry point when in serve mode and provided in package.json", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        entry: {
-          staging: "http://staging.awesome.com",
+        "apollo-client-ai-apps": {
+          entry: {
+            staging: "http://staging.awesome.com",
+          },
         },
       }),
       "src/my-component.tsx": declareOperation(gql`
@@ -847,9 +859,11 @@ describe("entry points", () => {
   test("uses custom entry point for devTarget when in serve mode and provided in package.json", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        entry: {
-          staging: {
-            mcp: "http://staging.awesome.com",
+        "apollo-client-ai-apps": {
+          entry: {
+            staging: {
+              mcp: "http://staging.awesome.com",
+            },
           },
         },
       }),
@@ -916,8 +930,10 @@ describe("entry points", () => {
   test("uses custom entry point when in build mode and provided in package.json", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        entry: {
-          staging: "http://staging.awesome.com",
+        "apollo-client-ai-apps": {
+          entry: {
+            staging: "http://staging.awesome.com",
+          },
         },
       }),
       "src/my-component.tsx": declareOperation(gql`
@@ -940,10 +956,12 @@ describe("entry points", () => {
   test("uses custom entry point for target when in build mode with multiple targets", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        entry: {
-          staging: {
-            mcp: "http://staging-mcp.awesome.com",
-            openai: "http://staging-openai.awesome.com",
+        "apollo-client-ai-apps": {
+          entry: {
+            staging: {
+              mcp: "http://staging-mcp.awesome.com",
+              openai: "http://staging-openai.awesome.com",
+            },
           },
         },
       }),
@@ -970,8 +988,10 @@ describe("entry points", () => {
   test("uses custom entry point for all targets when in build mode with multiple targets", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        entry: {
-          staging: "http://staging.awesome.com",
+        "apollo-client-ai-apps": {
+          entry: {
+            staging: "http://staging.awesome.com",
+          },
         },
       }),
       "src/my-component.tsx": declareOperation(gql`
@@ -997,9 +1017,11 @@ describe("entry points", () => {
   test("uses custom entry point for target when in build mode with single target", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        entry: {
-          staging: {
-            mcp: "http://staging-mcp.awesome.com",
+        "apollo-client-ai-apps": {
+          entry: {
+            staging: {
+              mcp: "http://staging-mcp.awesome.com",
+            },
           },
         },
       }),
@@ -1125,6 +1147,97 @@ describe("entry points", () => {
 
     expect(vol.existsSync(".application-manifest.json")).toBe(true);
     expect(vol.existsSync("dist/.application-manifest.json")).toBe(true);
+  });
+});
+
+describe("config files", () => {
+  const appConfigName = "test-app";
+  const appConfigDescription = "test description";
+
+  const json = JSON.stringify({
+    name: appConfigName,
+    description: appConfigDescription,
+  });
+  const yaml = `
+name: "${appConfigName}"
+description: "${appConfigDescription}"
+`;
+  const cjs = `
+module.exports = {
+  name: "${appConfigName}",
+  description: "${appConfigDescription}",
+}
+`;
+  const mjs = `
+export default {
+  name: "${appConfigName}",
+  description: "${appConfigDescription}"
+}
+`;
+  const ts = `
+import type { ApolloAiAppsConfig } from "@apollo/client-ai-apps/config";
+
+const config: ApolloAiAppsConfig.Config = {
+  name: "${appConfigName}",
+  description: "${appConfigDescription}",
+}
+
+export default config;
+`;
+
+  test("reads config from package.json", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson({
+        "apollo-client-ai-apps": JSON.parse(json),
+      }),
+    });
+
+    await buildApp({
+      mode: "production",
+      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+    });
+
+    const manifest = readManifestFile();
+    expect(manifest).toMatchObject({
+      name: appConfigName,
+      description: appConfigDescription,
+    });
+  });
+
+  test.each([
+    [".apollo-client-ai-apps.config.json", json],
+    ["apollo-client-ai-apps.config.json", json],
+    [".apollo-client-ai-apps.config.yml", yaml],
+    ["apollo-client-ai-apps.config.yml", yaml],
+    [".apollo-client-ai-apps.config.yaml", yaml],
+    ["apollo-client-ai-apps.config.yaml", yaml],
+    [".apollo-client-ai-apps.config.js", cjs],
+    ["apollo-client-ai-apps.config.js", cjs],
+    [".apollo-client-ai-apps.config.ts", ts],
+    ["apollo-client-ai-apps.config.ts", ts],
+    [".apollo-client-ai-apps.config.cjs", cjs],
+    ["apollo-client-ai-apps.config.cjs", cjs],
+    [".apollo-client-ai-apps.config.mjs", mjs],
+    ["apollo-client-ai-apps.config.mjs", mjs],
+  ])("reads config from %s", async (filepath, contents) => {
+    using _ = interceptWriteESMtoCJS();
+    using __ = await tmpWriteRealFile(filepath, contents);
+
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      [filepath]: contents.trimStart(),
+    });
+
+    await buildApp({
+      mode: "production",
+      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+    });
+
+    const manifest = readManifestFile();
+    expect(manifest).toMatchObject({
+      name: appConfigName,
+      description: appConfigDescription,
+    });
   });
 });
 
@@ -1338,4 +1451,47 @@ function readManifestFile(
   manifest.hash = "abc";
 
   return manifest;
+}
+
+async function tmpWriteRealFile(filepath: string, contents: string) {
+  vi.doUnmock("node:fs");
+  const fs = await import("node:fs");
+
+  fs.writeFileSync(filepath, contents);
+
+  return {
+    [Symbol.dispose]() {
+      fs.rmSync(filepath);
+    },
+  } satisfies Disposable;
+}
+
+function interceptWriteESMtoCJS() {
+  // Cosmiconfig's async loadTs transpiles .ts configs to ES2022 module syntax
+  // and writes a .mjs file. In vitest, the subsequent import() transforms ESM to
+  // CJS differently than Node's native loader, causing the default export to be
+  // double-wrapped as { __esModule: true, default: actualConfig }. Converting to
+  // CJS module.exports before the file is written ensures correct behavior.
+  const origWriteFile = fs.promises.writeFile.bind(fs.promises);
+  (fs.promises as any).writeFile = async function (
+    filepath: any,
+    content: any,
+    ...args: any[]
+  ) {
+    if (
+      typeof filepath === "string" &&
+      filepath.endsWith(".mjs") &&
+      typeof content === "string"
+    ) {
+      content = content.replace(/\bexport\s+default\s+/g, "module.exports = ");
+    }
+    return origWriteFile(filepath, content, ...args);
+  };
+
+  return {
+    ...fs.promises,
+    [Symbol.dispose]() {
+      fs.promises.writeFile = origWriteFile;
+    },
+  };
 }

@@ -78,7 +78,7 @@ jobs:
 
       - name: Check types
         shell: bash
-        run: npm test
+        run: npm test -- --coverage
 
   arethetypeswrong:
     name: Are the types wrong

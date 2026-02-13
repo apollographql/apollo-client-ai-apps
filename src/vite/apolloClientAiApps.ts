@@ -19,7 +19,7 @@ import {
   getArgumentValue,
   getDirectiveArgument,
   getTypeName,
-} from "./utilities/graphql";
+} from "./utilities/graphql.js";
 import type {
   ApplicationManifest,
   ManifestExtraInput,
@@ -29,9 +29,11 @@ import type {
   ManifestWidgetSettings,
 } from "../types/application-manifest";
 import { invariant } from "../utilities/invariant.js";
+import { explorer } from "./utilities/config.js";
+import type { ApolloClientAiAppsConfig } from "../config/index.js";
 
 export declare namespace apolloClientAiApps {
-  export type Target = "openai" | "mcp";
+  export type Target = ApolloClientAiAppsConfig.AppTarget;
 
   export interface Options {
     targets: Target[];
@@ -74,7 +76,8 @@ export function apolloClientAiApps(
   const targets = Array.from(new Set(options.targets));
   const { devTarget = targets.length === 1 ? targets[0] : undefined } = options;
   const cache = new Map<string, FileCache>();
-  let packageJson!: any;
+
+  let packageJson!: Record<string, any>;
   let config!: ResolvedConfig;
 
   invariant(
@@ -145,6 +148,7 @@ export function apolloClientAiApps(
   }
 
   async function generateManifest(environment?: Environment) {
+    const appsConfig = await getAppsConfig();
     const operations = Array.from(cache.values()).flatMap(
       (entry) => entry.operations
     );
@@ -155,11 +159,7 @@ export function apolloClientAiApps(
     );
 
     function getBuildResourceForTarget(target: apolloClientAiApps.Target) {
-      const entryPoint = getResourceConfigFromPackageJson(
-        packageJson,
-        config.mode,
-        target
-      );
+      const entryPoint = getResourceFromConfig(appsConfig, config.mode, target);
 
       if (entryPoint) {
         return entryPoint;
@@ -178,11 +178,7 @@ export function apolloClientAiApps(
     if (config.command === "serve") {
       // Dev mode: resource is a string (dev server URL)
       resource =
-        getResourceConfigFromPackageJson(
-          packageJson,
-          config.mode,
-          devTarget!
-        ) ??
+        getResourceFromConfig(appsConfig, config.mode, devTarget!) ??
         `http${config.server.https ? "s" : ""}://${config.server.host ?? "localhost"}:${config.server.port}`;
     } else {
       resource = Object.fromEntries(
@@ -193,25 +189,25 @@ export function apolloClientAiApps(
     const manifest: ApplicationManifest = {
       format: "apollo-ai-app-manifest",
       version: "1",
-      appVersion: packageJson.version,
-      name: packageJson.name,
-      description: packageJson.description,
+      appVersion: appsConfig.version ?? packageJson.version,
+      name: appsConfig.name ?? packageJson.name,
+      description: appsConfig.description ?? packageJson.description,
       hash: createHash("sha256").update(Date.now().toString()).digest("hex"),
       operations: Array.from(cache.values()).flatMap(
         (entry) => entry.operations
       ),
       resource,
       csp: {
-        connectDomains: packageJson.csp?.connectDomains ?? [],
-        frameDomains: packageJson.csp?.frameDomains ?? [],
-        redirectDomains: packageJson.csp?.redirectDomains ?? [],
-        resourceDomains: packageJson.csp?.resourceDomains ?? [],
+        connectDomains: appsConfig.csp?.connectDomains ?? [],
+        frameDomains: appsConfig.csp?.frameDomains ?? [],
+        redirectDomains: appsConfig.csp?.redirectDomains ?? [],
+        resourceDomains: appsConfig.csp?.resourceDomains ?? [],
       },
     };
 
     if (
-      packageJson.widgetSettings &&
-      isNonEmptyObject(packageJson.widgetSettings)
+      appsConfig.widgetSettings &&
+      isNonEmptyObject(appsConfig.widgetSettings)
     ) {
       function validateWidgetSetting(
         key: keyof ManifestWidgetSettings,
@@ -225,18 +221,17 @@ export function apolloClientAiApps(
         }
       }
 
-      const widgetSettings =
-        packageJson.widgetSettings as ManifestWidgetSettings;
+      const widgetSettings = appsConfig.widgetSettings;
 
       validateWidgetSetting("prefersBorder", "boolean");
       validateWidgetSetting("description", "string");
       validateWidgetSetting("domain", "string");
 
-      manifest.widgetSettings = packageJson.widgetSettings;
+      manifest.widgetSettings = widgetSettings;
     }
 
-    if (packageJson.labels) {
-      const labels = getLabelsFromConfig(packageJson.labels);
+    if (appsConfig.labels) {
+      const labels = getLabelsFromConfig(appsConfig.labels);
 
       if (labels) {
         manifest.labels = labels;
@@ -296,6 +291,9 @@ export function apolloClientAiApps(
       server.watcher.on("change", async (file) => {
         if (file.endsWith("package.json")) {
           packageJson = JSON.parse(fs.readFileSync("package.json", "utf-8"));
+          await generateManifest();
+        } else if (file.match(/\.?apollo-client-ai-apps\.config\.\w+$/)) {
+          explorer.clearCaches();
           await generateManifest();
         } else if (file.match(/\.(jsx?|tsx?)$/)) {
           await processFile(file);
@@ -453,14 +451,9 @@ const processQueryLink = new ApolloLink((operation) => {
   });
 });
 
-interface LabelConfig {
-  toolInvocation?: {
-    invoking?: string;
-    invoked?: string;
-  };
-}
-
-function getLabelsFromConfig(config: LabelConfig): ManifestLabels | undefined {
+function getLabelsFromConfig(
+  config: ApolloClientAiAppsConfig.Labels
+): ManifestLabels | undefined {
   if (!("toolInvocation" in config)) {
     return;
   }
@@ -580,22 +573,46 @@ function isNonEmptyObject(obj: object) {
   return Object.keys(obj).length > 0;
 }
 
-// TODO: Once we move to cosmicconfig, use the config type from that
-interface PackageJson {
-  entry?: Record<string, string | Record<apolloClientAiApps.Target, string>>;
-  [x: string]: unknown;
+async function getAppsConfig(): Promise<ApolloClientAiAppsConfig.Config> {
+  const result = await explorer.search();
+  const config = (result?.config ??
+    {}) as Partial<ApolloClientAiAppsConfig.Config>;
+  validateAppsConfig(config);
+
+  return config;
 }
 
-function getResourceConfigFromPackageJson(
-  packageJson: PackageJson,
+type RequiredKeys<T> = keyof {
+  [K in keyof T as Omit<T, K> extends T ? never : K]: T[K];
+};
+
+function validateAppsConfig(
+  config: Partial<ApolloClientAiAppsConfig.Config>
+): asserts config is ApolloClientAiAppsConfig.Config {
+  // This function is a runtime no-op because we currently do not have any
+  // required keys in our config, so the partial config satisfies the
+  // non-partial config.
+  //
+  // If we add or change an existing property that is required, the following
+  // variable is used to alert us. We'll see a type error when that happens to
+  // ensure we add some runtime validation.
+  //
+  // NOTE: If we end up adding zod to validate the raw result from cosmiconfig,
+  // this check should no longer be needed.
+  const _requiredKeys: never =
+    {} as RequiredKeys<ApolloClientAiAppsConfig.Config>;
+}
+
+function getResourceFromConfig(
+  appsConfig: ApolloClientAiAppsConfig.Config,
   mode: string,
   target: apolloClientAiApps.Target
 ) {
-  if (!packageJson.entry || !packageJson.entry[mode]) {
+  if (!appsConfig.entry || !appsConfig.entry[mode]) {
     return;
   }
 
-  const config = packageJson.entry[mode];
+  const config = appsConfig.entry[mode];
 
   return typeof config === "string" ? config : config[target];
 }
