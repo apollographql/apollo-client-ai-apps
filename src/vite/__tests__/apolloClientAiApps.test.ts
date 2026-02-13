@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test } from "vitest";
 import fs from "node:fs";
 import { gql, type DocumentNode } from "@apollo/client";
 import { print } from "@apollo/client/utilities";
@@ -10,6 +10,11 @@ import type {
   ApplicationManifest,
   ManifestWidgetSettings,
 } from "../../types/application-manifest.js";
+import { explorer } from "../utilities/config.js";
+
+beforeEach(() => {
+  explorer.clearCaches();
+});
 
 describe("operations", () => {
   test("writes to dev application manifest file when using a serve command", async () => {
