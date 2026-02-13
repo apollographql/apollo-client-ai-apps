@@ -510,7 +510,10 @@ describe("@tool validation", () => {
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
-      `[Error: Tool with name "hello world" contains spaces which is not allowed.]`
+      `
+      [Error: ✖ Tool with name "hello world" must not contain spaces
+        → at name]
+    `
     );
   });
 
@@ -624,7 +627,10 @@ describe("config validation", () => {
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
-      `[Error: Expected 'widgetSettings.prefersBorder' to be of type 'boolean' but found 'string' instead.]`
+      `
+      "✖ Invalid input: expected boolean, received string
+        → at widgetSettings.prefersBorder"
+    `
     );
   });
 
@@ -650,7 +656,10 @@ describe("config validation", () => {
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
-      `[Error: Expected 'widgetSettings.description' to be of type 'string' but found 'boolean' instead.]`
+      `
+      "✖ Invalid input: expected string, received boolean
+        → at widgetSettings.description"
+    `
     );
   });
 
@@ -676,7 +685,10 @@ describe("config validation", () => {
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
-      `[Error: Expected 'widgetSettings.domain' to be of type 'string' but found 'boolean' instead.]`
+      `
+      "✖ Invalid input: expected string, received boolean
+        → at widgetSettings.domain"
+    `
     );
   });
 
@@ -725,7 +737,10 @@ describe("config validation", () => {
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
-      `[Error: Expected 'labels.toolInvocation.invoking' to be of type 'string' but found 'boolean' instead.]`
+      `
+      "✖ Invalid input: expected string, received boolean
+        → at labels.toolInvocation.invoking"
+    `
     );
   });
 
@@ -750,7 +765,10 @@ describe("config validation", () => {
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
-      `[Error: Expected 'labels.toolInvocation.invoking' to be of type 'string' but found 'boolean' instead.]`
+      `
+      [Error: ✖ Invalid input: expected string, received boolean
+        → at labels.toolInvocation.invoking]
+    `
     );
   });
 
@@ -778,7 +796,10 @@ describe("config validation", () => {
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
-      `[Error: Expected 'labels.toolInvocation.invoked' to be of type 'string' but found 'boolean' instead.]`
+      `
+      "✖ Invalid input: expected string, received boolean
+        → at labels.toolInvocation.invoked"
+    `
     );
   });
 
@@ -803,7 +824,10 @@ describe("config validation", () => {
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
-      `[Error: Expected 'labels.toolInvocation.invoked' to be of type 'string' but found 'boolean' instead.]`
+      `
+      [Error: ✖ Invalid input: expected string, received boolean
+        → at labels.toolInvocation.invoked]
+    `
     );
   });
 

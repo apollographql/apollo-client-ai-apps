@@ -20,15 +20,14 @@ export function getArgumentValue(
   expectedType: Kind.BOOLEAN
 ): boolean;
 
-export function getArgumentValue(
+export function getArgumentValue<T = unknown>(
   argument: ArgumentNode,
   expectedType: Kind.LIST
-): unknown[];
+): T[];
 
-export function getArgumentValue(
-  argument: ArgumentNode,
-  expectedType: Kind.OBJECT
-): Record<string, unknown>;
+export function getArgumentValue<
+  T extends Record<string, unknown> = Record<string, unknown>,
+>(argument: ArgumentNode, expectedType: Kind.OBJECT): T;
 
 export function getArgumentValue(argument: ArgumentNode, expectedType: Kind) {
   const argumentType = argument.value.kind;
@@ -72,6 +71,36 @@ export function getDirectiveArgument(
   );
 
   return argument;
+}
+
+export function maybeGetArgumentValue(
+  argument: ArgumentNode | undefined,
+  expectedType: Kind.STRING
+): string | undefined;
+
+export function maybeGetArgumentValue(
+  argument: ArgumentNode | undefined,
+  expectedType: Kind.BOOLEAN
+): boolean | undefined;
+
+export function maybeGetArgumentValue<T = unknown>(
+  argument: ArgumentNode | undefined,
+  expectedType: Kind.LIST
+): T[] | undefined;
+
+export function maybeGetArgumentValue<
+  T extends Record<string, unknown> = Record<string, unknown>,
+>(argument: ArgumentNode | undefined, expectedType: Kind.OBJECT): T | undefined;
+
+export function maybeGetArgumentValue(
+  argument: ArgumentNode | undefined,
+  expectedType: Kind
+) {
+  if (!argument) {
+    return;
+  }
+
+  return getArgumentValue(argument, expectedType as any) as any;
 }
 
 function getRawValue(node: ValueNode): unknown {
