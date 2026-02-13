@@ -19,7 +19,7 @@ import {
   getArgumentValue,
   getDirectiveArgument,
   getTypeName,
-} from "./utilities/graphql";
+} from "./utilities/graphql.js";
 import type {
   ApplicationManifest,
   ManifestExtraInput,
