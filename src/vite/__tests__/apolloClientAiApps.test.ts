@@ -20,7 +20,7 @@ describe("operations", () => {
   test("writes to dev application manifest file when using a serve command", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        "apollo-ai-apps": {
+        "apollo-client-ai-apps": {
           labels: {
             toolInvocation: {
               invoking: "Testing global...",
@@ -605,7 +605,7 @@ describe("config validation", () => {
   test("errors when widgetSettings.prefersBorder is not a boolean", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        "apollo-ai-apps": {
+        "apollo-client-ai-apps": {
           widgetSettings: {
             prefersBorder: "test",
           },
@@ -631,7 +631,7 @@ describe("config validation", () => {
   test("errors when widgetSettings.description is not a string", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        "apollo-ai-apps": {
+        "apollo-client-ai-apps": {
           widgetSettings: {
             description: true,
           },
@@ -657,7 +657,7 @@ describe("config validation", () => {
   test("errors when widgetSettings.domain is not a string", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        "apollo-ai-apps": {
+        "apollo-client-ai-apps": {
           widgetSettings: {
             domain: true,
           },
@@ -704,7 +704,7 @@ describe("config validation", () => {
   test("errors when labels.toolInvocation.invoking in package.json is not a string", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        "apollo-ai-apps": {
+        "apollo-client-ai-apps": {
           labels: {
             toolInvocation: {
               invoking: true,
@@ -757,7 +757,7 @@ describe("config validation", () => {
   test("errors when labels.toolInvocation.invoked in package.json is not a string", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        "apollo-ai-apps": {
+        "apollo-client-ai-apps": {
           labels: {
             toolInvocation: {
               invoked: true,
@@ -832,7 +832,7 @@ describe("entry points", () => {
   test("uses custom entry point when in serve mode and provided in package.json", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        "apollo-ai-apps": {
+        "apollo-client-ai-apps": {
           entry: {
             staging: "http://staging.awesome.com",
           },
@@ -859,7 +859,7 @@ describe("entry points", () => {
   test("uses custom entry point for devTarget when in serve mode and provided in package.json", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        "apollo-ai-apps": {
+        "apollo-client-ai-apps": {
           entry: {
             staging: {
               mcp: "http://staging.awesome.com",
@@ -930,7 +930,7 @@ describe("entry points", () => {
   test("uses custom entry point when in build mode and provided in package.json", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        "apollo-ai-apps": {
+        "apollo-client-ai-apps": {
           entry: {
             staging: "http://staging.awesome.com",
           },
@@ -956,7 +956,7 @@ describe("entry points", () => {
   test("uses custom entry point for target when in build mode with multiple targets", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        "apollo-ai-apps": {
+        "apollo-client-ai-apps": {
           entry: {
             staging: {
               mcp: "http://staging-mcp.awesome.com",
@@ -988,7 +988,7 @@ describe("entry points", () => {
   test("uses custom entry point for all targets when in build mode with multiple targets", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        "apollo-ai-apps": {
+        "apollo-client-ai-apps": {
           entry: {
             staging: "http://staging.awesome.com",
           },
@@ -1017,7 +1017,7 @@ describe("entry points", () => {
   test("uses custom entry point for target when in build mode with single target", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        "apollo-ai-apps": {
+        "apollo-client-ai-apps": {
           entry: {
             staging: {
               mcp: "http://staging-mcp.awesome.com",

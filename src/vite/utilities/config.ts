@@ -1,6 +1,6 @@
 import { cosmiconfig } from "cosmiconfig";
 
-const moduleName = "apollo-ai-apps";
+const moduleName = "apollo-client-ai-apps";
 
 const supportedExtensions = ["json", "yml", "yaml", "js", "ts", "cjs", "mjs"];
 const searchPlaces = supportedExtensions
