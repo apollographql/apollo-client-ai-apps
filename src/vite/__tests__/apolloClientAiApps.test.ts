@@ -510,7 +510,10 @@ describe("@tool validation", () => {
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
-      `[Error: Tool with name "hello world" contains spaces which is not allowed.]`
+      `
+      [Error: ✖ Tool with name "hello world" must not contain spaces
+        → at name]
+    `
     );
   });
 
@@ -762,7 +765,10 @@ describe("config validation", () => {
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
-      `[Error: Expected 'labels.toolInvocation.invoking' to be of type 'string' but found 'boolean' instead.]`
+      `
+      [Error: ✖ Invalid input: expected string, received boolean
+        → at labels.toolInvocation.invoking]
+    `
     );
   });
 
@@ -818,7 +824,10 @@ describe("config validation", () => {
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
-      `[Error: Expected 'labels.toolInvocation.invoked' to be of type 'string' but found 'boolean' instead.]`
+      `
+      [Error: ✖ Invalid input: expected string, received boolean
+        → at labels.toolInvocation.invoked]
+    `
     );
   });
 

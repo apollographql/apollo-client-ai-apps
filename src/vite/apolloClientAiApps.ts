@@ -19,13 +19,11 @@ import {
   getArgumentValue,
   getDirectiveArgument,
   getTypeName,
+  maybeGetArgumentValue,
 } from "./utilities/graphql.js";
 import type {
   ApplicationManifest,
-  ManifestExtraInput,
-  ManifestLabels,
   ManifestOperation,
-  ManifestTool,
 } from "../types/application-manifest";
 import { invariant } from "../utilities/invariant.js";
 import { explorer } from "./utilities/config.js";
@@ -210,12 +208,8 @@ export function apolloClientAiApps(
       manifest.widgetSettings = appsConfig.widgetSettings;
     }
 
-    if (appsConfig.labels) {
-      const labels = getLabelsFromConfig(appsConfig.labels);
-
-      if (labels) {
-        manifest.labels = labels;
-      }
+    if (isNonEmptyObject(appsConfig.labels)) {
+      manifest.labels = appsConfig.labels;
     }
 
     // We create mcp and openai environments in order to write to
@@ -382,48 +376,30 @@ const processQueryLink = new ApolloLink((operation) => {
   const tools = directives
     ?.filter((d) => d.name.value === "tool")
     .map((directive) => {
-      const name = getArgumentValue(
-        getDirectiveArgument("name", directive, { required: true }),
-        Kind.STRING
-      );
-
-      invariant(
-        name.indexOf(" ") === -1,
-        `Tool with name "${name}" contains spaces which is not allowed.`
-      );
-
-      const description = getArgumentValue(
-        getDirectiveArgument("description", directive, { required: true }),
-        Kind.STRING
-      );
-
-      const extraInputsNode = getDirectiveArgument("extraInputs", directive);
-
-      const labelsNode = getDirectiveArgument("labels", directive);
-
-      const toolOptions: ManifestTool = {
-        name,
-        description,
-      };
-
-      if (extraInputsNode) {
-        toolOptions.extraInputs = getArgumentValue(
-          extraInputsNode,
+      const result = ToolDirectiveSchema.safeParse({
+        name: getArgumentValue(
+          getDirectiveArgument("name", directive, { required: true }),
+          Kind.STRING
+        ),
+        description: getArgumentValue(
+          getDirectiveArgument("description", directive, { required: true }),
+          Kind.STRING
+        ),
+        extraInputs: maybeGetArgumentValue(
+          getDirectiveArgument("extraInputs", directive),
           Kind.LIST
-        ) as ManifestExtraInput[];
+        ),
+        labels: maybeGetArgumentValue(
+          getDirectiveArgument("labels", directive),
+          Kind.OBJECT
+        ),
+      });
+
+      if (result.error) {
+        throw z.prettifyError(result.error);
       }
 
-      if (labelsNode) {
-        const labels = getLabelsFromConfig(
-          getArgumentValue(labelsNode, Kind.OBJECT)
-        );
-
-        if (labels) {
-          toolOptions.labels = labels;
-        }
-      }
-
-      return toolOptions;
+      return result.data;
     });
 
   // TODO: Make this object satisfy the `ManifestOperation` type. Currently
@@ -433,75 +409,11 @@ const processQueryLink = new ApolloLink((operation) => {
   });
 });
 
-function getLabelsFromConfig(
-  config: NonNullable<ApolloClientAiAppsConfig.Config["labels"]>
-): ManifestLabels | undefined {
-  if (!("toolInvocation" in config)) {
-    return;
-  }
-
-  const { toolInvocation } = config;
-  const labels: ManifestLabels = {};
-
-  if (Object.hasOwn(toolInvocation, "invoking")) {
-    validateType(toolInvocation.invoking, "string", {
-      propertyName: "labels.toolInvocation.invoking",
-    });
-
-    labels["toolInvocation/invoking"] = toolInvocation.invoking;
-  }
-
-  if (Object.hasOwn(toolInvocation, "invoked")) {
-    validateType(toolInvocation.invoked, "string", {
-      propertyName: "labels.toolInvocation.invoked",
-    });
-
-    labels["toolInvocation/invoked"] = toolInvocation.invoked;
-  }
-
-  if (isNonEmptyObject(labels)) {
-    return labels;
-  }
-}
-
 function removeManifestDirectives(doc: DocumentNode) {
   return removeDirectivesFromDocument(
     [{ name: "prefetch" }, { name: "tool" }],
     doc
   )!;
-}
-
-// possible values of `typeof`
-type TypeofResult =
-  | "string"
-  | "number"
-  | "bigint"
-  | "boolean"
-  | "symbol"
-  | "undefined"
-  | "object"
-  | "function";
-
-type TypeofResultToConcreteType<T extends TypeofResult> =
-  T extends "string" ? string
-  : T extends "number" ? number
-  : T extends "bigint" ? bigint
-  : T extends "boolean" ? boolean
-  : T extends "symbol" ? symbol
-  : T extends "undefined" ? undefined
-  : T extends "object" ? object
-  : T extends "function" ? Function
-  : never;
-
-function validateType<Typeof extends TypeofResult>(
-  value: unknown,
-  expectedType: Typeof,
-  options: { propertyName: string }
-): asserts value is TypeofResultToConcreteType<Typeof> {
-  invariant(
-    typeof value === expectedType,
-    `Expected '${options.propertyName}' to be of type '${expectedType}' but found '${typeof value}' instead.`
-  );
 }
 
 // Sort the definitions in this document so that operations come before fragments,
@@ -584,3 +496,20 @@ function getResourceFromConfig(
 
   return typeof config === "string" ? config : config[target];
 }
+
+const ToolDirectiveSchema = z.strictObject({
+  name: z.stringFormat("toolName", (value) => value.indexOf(" ") === -1, {
+    error: (iss) => `Tool with name "${iss.input}" must not contain spaces`,
+  }),
+  description: z.string(),
+  extraInputs: z.optional(
+    z.array(
+      z.strictObject({
+        name: z.string(),
+        description: z.string(),
+        type: z.literal(["string", "boolean", "number"]),
+      })
+    )
+  ),
+  labels: ApolloClientAiAppsConfigSchema.shape.labels.optional(),
+});
