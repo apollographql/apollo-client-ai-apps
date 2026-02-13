@@ -77,7 +77,7 @@ export function apolloClientAiApps(
   const { devTarget = targets.length === 1 ? targets[0] : undefined } = options;
   const cache = new Map<string, FileCache>();
 
-  let packageJson!: any;
+  let packageJson!: Record<string, any>;
   let config!: ResolvedConfig;
 
   invariant(
