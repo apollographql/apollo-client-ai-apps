@@ -292,10 +292,11 @@ export function apolloClientAiApps(
         if (file.endsWith("package.json")) {
           packageJson = JSON.parse(fs.readFileSync("package.json", "utf-8"));
           await generateManifest();
+        } else if (file.match(/\.?apollo-client-ai-apps\.config\.\w+$/)) {
+          explorer.clearCaches();
+          await generateManifest();
         } else if (file.match(/\.(jsx?|tsx?)$/)) {
           await processFile(file);
-          await generateManifest();
-        } else if (file.match(/\.?apollo-client-ai-apps\.config\.\w+$/)) {
           await generateManifest();
         }
       });
