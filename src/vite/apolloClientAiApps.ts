@@ -31,6 +31,8 @@ import type {
 import { invariant } from "../utilities/invariant.js";
 import { explorer } from "./utilities/config.js";
 import type { ApolloClientAiAppsConfig } from "../config/index.js";
+import { ApolloClientAiAppsConfigSchema } from "../config/schema.js";
+import { z } from "zod";
 
 export declare namespace apolloClientAiApps {
   export type Target = ApolloClientAiAppsConfig.AppTarget;
@@ -454,7 +456,7 @@ const processQueryLink = new ApolloLink((operation) => {
 });
 
 function getLabelsFromConfig(
-  config: ApolloClientAiAppsConfig.Labels
+  config: NonNullable<ApolloClientAiAppsConfig.Config["labels"]>
 ): ManifestLabels | undefined {
   if (!("toolInvocation" in config)) {
     return;
@@ -579,30 +581,14 @@ async function getAppsConfig(): Promise<ApolloClientAiAppsConfig.Config> {
   const result = await explorer.search();
   const config = (result?.config ??
     {}) as Partial<ApolloClientAiAppsConfig.Config>;
-  validateAppsConfig(config);
 
-  return config;
-}
+  const parsed = ApolloClientAiAppsConfigSchema.safeParse(config);
 
-type RequiredKeys<T> = keyof {
-  [K in keyof T as Omit<T, K> extends T ? never : K]: T[K];
-};
+  if (parsed.error) {
+    throw z.prettifyError(parsed.error);
+  }
 
-function validateAppsConfig(
-  config: Partial<ApolloClientAiAppsConfig.Config>
-): asserts config is ApolloClientAiAppsConfig.Config {
-  // This function is a runtime no-op because we currently do not have any
-  // required keys in our config, so the partial config satisfies the
-  // non-partial config.
-  //
-  // If we add or change an existing property that is required, the following
-  // variable is used to alert us. We'll see a type error when that happens to
-  // ensure we add some runtime validation.
-  //
-  // NOTE: If we end up adding zod to validate the raw result from cosmiconfig,
-  // this check should no longer be needed.
-  const _requiredKeys: never =
-    {} as RequiredKeys<ApolloClientAiAppsConfig.Config>;
+  return parsed.data;
 }
 
 function getResourceFromConfig(
