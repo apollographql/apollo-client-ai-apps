@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import fs from "node:fs";
 import { gql, type DocumentNode } from "@apollo/client";
 import { print } from "@apollo/client/utilities";
@@ -1150,6 +1150,100 @@ describe("entry points", () => {
   });
 });
 
+describe("config files", () => {
+  const appConfigName = "test-app";
+  const appConfigDescription = "test description";
+
+  const json = JSON.stringify({
+    name: appConfigName,
+    description: appConfigDescription,
+  });
+  const yaml = `
+name: "${appConfigName}"
+description: "${appConfigDescription}"
+`;
+  const cjs = `
+module.exports = {
+  name: "${appConfigName}",
+  description: "${appConfigDescription}",
+}
+`;
+  const mjs = `
+export default {
+  name: "${appConfigName}",
+  description: "${appConfigDescription}"
+}
+`;
+  const ts = `
+import type { ApolloAiAppsConfig } from "@apollo/client-ai-apps/config";
+
+const config: ApolloAiAppsConfig.Config = {
+  name: "${appConfigName}",
+  description: "${appConfigDescription}",
+}
+
+export default config;
+`;
+
+  test("reads config from package.json", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson({
+        "apollo-client-ai-apps": JSON.parse(json),
+      }),
+    });
+
+    await buildApp({
+      mode: "production",
+      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+    });
+
+    const manifest = readManifestFile();
+    expect(manifest).toMatchObject({
+      name: appConfigName,
+      description: appConfigDescription,
+    });
+  });
+
+  test.each([
+    [".apollo-client-ai-apps.config.json", json],
+    ["apollo-client-ai-apps.config.json", json],
+    [".apollo-client-ai-apps.config.yml", yaml],
+    ["apollo-client-ai-apps.config.yml", yaml],
+    [".apollo-client-ai-apps.config.yaml", yaml],
+    ["apollo-client-ai-apps.config.yaml", yaml],
+    [".apollo-client-ai-apps.config.js", cjs],
+    ["apollo-client-ai-apps.config.js", cjs],
+    [".apollo-client-ai-apps.config.ts", ts],
+    ["apollo-client-ai-apps.config.ts", ts],
+    [".apollo-client-ai-apps.config.cjs", cjs],
+    ["apollo-client-ai-apps.config.cjs", cjs],
+    [".apollo-client-ai-apps.config.mjs", mjs],
+    ["apollo-client-ai-apps.config.mjs", mjs],
+  ])("reads config from %s", async (filepath, contents) => {
+    vi.doUnmock("node:fs");
+    vi.doUnmock("node:fs/promises");
+
+    using _ = interceptWriteESMtoCJS();
+    using __ = await tmpWriteRealFile(filepath, contents);
+
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      [filepath]: contents.trimStart(),
+    });
+
+    await buildApp({
+      mode: "production",
+      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+    });
+
+    const manifest = readManifestFile();
+    expect(manifest).toMatchObject({
+      name: appConfigName,
+      description: appConfigDescription,
+    });
+  });
+});
+
 describe("file watching", () => {
   test("updates manifest file when a source file is changed", async () => {
     vol.fromJSON({
@@ -1360,4 +1454,45 @@ function readManifestFile(
   manifest.hash = "abc";
 
   return manifest;
+}
+
+async function tmpWriteRealFile(filepath: string, contents: string) {
+  const fs = await import("node:fs");
+  fs.writeFileSync(filepath, contents);
+
+  return {
+    [Symbol.dispose]() {
+      fs.rmSync(filepath);
+    },
+  } satisfies Disposable;
+}
+
+function interceptWriteESMtoCJS() {
+  // Cosmiconfig's async loadTs transpiles .ts configs to ES2022 module syntax
+  // and writes a .mjs file. In vitest, the subsequent import() transforms ESM to
+  // CJS differently than Node's native loader, causing the default export to be
+  // double-wrapped as { __esModule: true, default: actualConfig }. Converting to
+  // CJS module.exports before the file is written ensures correct behavior.
+  const origWriteFile = fs.promises.writeFile.bind(fs.promises);
+  (fs.promises as any).writeFile = async function (
+    filepath: any,
+    content: any,
+    ...args: any[]
+  ) {
+    if (
+      typeof filepath === "string" &&
+      filepath.endsWith(".mjs") &&
+      typeof content === "string"
+    ) {
+      content = content.replace(/\bexport\s+default\s+/g, "module.exports = ");
+    }
+    return origWriteFile(filepath, content, ...args);
+  };
+
+  return {
+    ...fs.promises,
+    [Symbol.dispose]() {
+      fs.promises.writeFile = origWriteFile;
+    },
+  };
 }
