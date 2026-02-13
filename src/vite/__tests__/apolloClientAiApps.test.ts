@@ -20,17 +20,19 @@ describe("operations", () => {
   test("writes to dev application manifest file when using a serve command", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        labels: {
-          toolInvocation: {
-            invoking: "Testing global...",
-            invoked: "Tested global!",
+        "apollo-ai-apps": {
+          labels: {
+            toolInvocation: {
+              invoking: "Testing global...",
+              invoked: "Tested global!",
+            },
           },
+          widgetSettings: {
+            description: "Test",
+            domain: "https://example.com",
+            prefersBorder: true,
+          } satisfies ManifestWidgetSettings,
         },
-        widgetSettings: {
-          description: "Test",
-          domain: "https://example.com",
-          prefersBorder: true,
-        } satisfies ManifestWidgetSettings,
       }),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery($name: string!)
@@ -603,8 +605,10 @@ describe("config validation", () => {
   test("errors when widgetSettings.prefersBorder is not a boolean", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        widgetSettings: {
-          prefersBorder: "test",
+        "apollo-ai-apps": {
+          widgetSettings: {
+            prefersBorder: "test",
+          },
         },
       }),
       "src/my-component.tsx": declareOperation(gql`
@@ -627,8 +631,10 @@ describe("config validation", () => {
   test("errors when widgetSettings.description is not a string", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        widgetSettings: {
-          description: true,
+        "apollo-ai-apps": {
+          widgetSettings: {
+            description: true,
+          },
         },
       }),
       "src/my-component.tsx": declareOperation(gql`
@@ -651,8 +657,10 @@ describe("config validation", () => {
   test("errors when widgetSettings.domain is not a string", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        widgetSettings: {
-          domain: true,
+        "apollo-ai-apps": {
+          widgetSettings: {
+            domain: true,
+          },
         },
       }),
       "src/my-component.tsx": declareOperation(gql`
@@ -696,9 +704,11 @@ describe("config validation", () => {
   test("errors when labels.toolInvocation.invoking in package.json is not a string", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        labels: {
-          toolInvocation: {
-            invoking: true,
+        "apollo-ai-apps": {
+          labels: {
+            toolInvocation: {
+              invoking: true,
+            },
           },
         },
       }),
@@ -747,9 +757,11 @@ describe("config validation", () => {
   test("errors when labels.toolInvocation.invoked in package.json is not a string", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        labels: {
-          toolInvocation: {
-            invoked: true,
+        "apollo-ai-apps": {
+          labels: {
+            toolInvocation: {
+              invoked: true,
+            },
           },
         },
       }),
@@ -820,8 +832,10 @@ describe("entry points", () => {
   test("uses custom entry point when in serve mode and provided in package.json", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        entry: {
-          staging: "http://staging.awesome.com",
+        "apollo-ai-apps": {
+          entry: {
+            staging: "http://staging.awesome.com",
+          },
         },
       }),
       "src/my-component.tsx": declareOperation(gql`
@@ -845,9 +859,11 @@ describe("entry points", () => {
   test("uses custom entry point for devTarget when in serve mode and provided in package.json", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        entry: {
-          staging: {
-            mcp: "http://staging.awesome.com",
+        "apollo-ai-apps": {
+          entry: {
+            staging: {
+              mcp: "http://staging.awesome.com",
+            },
           },
         },
       }),
@@ -914,8 +930,10 @@ describe("entry points", () => {
   test("uses custom entry point when in build mode and provided in package.json", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        entry: {
-          staging: "http://staging.awesome.com",
+        "apollo-ai-apps": {
+          entry: {
+            staging: "http://staging.awesome.com",
+          },
         },
       }),
       "src/my-component.tsx": declareOperation(gql`
@@ -938,10 +956,12 @@ describe("entry points", () => {
   test("uses custom entry point for target when in build mode with multiple targets", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        entry: {
-          staging: {
-            mcp: "http://staging-mcp.awesome.com",
-            openai: "http://staging-openai.awesome.com",
+        "apollo-ai-apps": {
+          entry: {
+            staging: {
+              mcp: "http://staging-mcp.awesome.com",
+              openai: "http://staging-openai.awesome.com",
+            },
           },
         },
       }),
@@ -968,8 +988,10 @@ describe("entry points", () => {
   test("uses custom entry point for all targets when in build mode with multiple targets", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        entry: {
-          staging: "http://staging.awesome.com",
+        "apollo-ai-apps": {
+          entry: {
+            staging: "http://staging.awesome.com",
+          },
         },
       }),
       "src/my-component.tsx": declareOperation(gql`
@@ -995,9 +1017,11 @@ describe("entry points", () => {
   test("uses custom entry point for target when in build mode with single target", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson({
-        entry: {
-          staging: {
-            mcp: "http://staging-mcp.awesome.com",
+        "apollo-ai-apps": {
+          entry: {
+            staging: {
+              mcp: "http://staging-mcp.awesome.com",
+            },
           },
         },
       }),
