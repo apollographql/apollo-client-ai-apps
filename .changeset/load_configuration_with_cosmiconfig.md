@@ -39,7 +39,7 @@ Configuration can be loaded from the following files:
 
 ## Type-safe configuration
 
-A `defineConfig` helper is now available to export type-safe configuration when using a `config.ts` file.
+A `defineConfig` helper is now available to export type-safe configuration when using a `config.ts` file (recommended).
 
 ```ts
 // apollo-client-ai-apps.config.ts
