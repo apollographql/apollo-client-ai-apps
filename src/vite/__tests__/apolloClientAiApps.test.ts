@@ -1220,9 +1220,6 @@ export default config;
     [".apollo-client-ai-apps.config.mjs", mjs],
     ["apollo-client-ai-apps.config.mjs", mjs],
   ])("reads config from %s", async (filepath, contents) => {
-    vi.doUnmock("node:fs");
-    vi.doUnmock("node:fs/promises");
-
     using _ = interceptWriteESMtoCJS();
     using __ = await tmpWriteRealFile(filepath, contents);
 
@@ -1457,7 +1454,9 @@ function readManifestFile(
 }
 
 async function tmpWriteRealFile(filepath: string, contents: string) {
+  vi.doUnmock("node:fs");
   const fs = await import("node:fs");
+
   fs.writeFileSync(filepath, contents);
 
   return {
