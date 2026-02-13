@@ -295,6 +295,8 @@ export function apolloClientAiApps(
         } else if (file.match(/\.(jsx?|tsx?)$/)) {
           await processFile(file);
           await generateManifest();
+        } else if (file.match(/\.?apollo-client-ai-apps\.config\.\w+$/)) {
+          await generateManifest();
         }
       });
     },
