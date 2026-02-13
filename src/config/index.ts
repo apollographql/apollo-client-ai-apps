@@ -1,2 +1,2 @@
-export type { ApolloAiAppsConfig } from "./types.js";
+export type { ApolloClientAiAppsConfig } from "./types.js";
 export { defineConfig } from "./defineConfig.js";

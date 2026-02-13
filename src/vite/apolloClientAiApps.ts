@@ -30,10 +30,10 @@ import type {
 } from "../types/application-manifest";
 import { invariant } from "../utilities/invariant.js";
 import { explorer } from "./utilities/config.js";
-import type { ApolloAiAppsConfig } from "../config/index.js";
+import type { ApolloClientAiAppsConfig } from "../config/index.js";
 
 export declare namespace apolloClientAiApps {
-  export type Target = ApolloAiAppsConfig.AppTarget;
+  export type Target = ApolloClientAiAppsConfig.AppTarget;
 
   export interface Options {
     targets: Target[];
@@ -449,7 +449,7 @@ const processQueryLink = new ApolloLink((operation) => {
 });
 
 function getLabelsFromConfig(
-  config: ApolloAiAppsConfig.Labels
+  config: ApolloClientAiAppsConfig.Labels
 ): ManifestLabels | undefined {
   if (!("toolInvocation" in config)) {
     return;
@@ -570,9 +570,10 @@ function isNonEmptyObject(obj: object) {
   return Object.keys(obj).length > 0;
 }
 
-async function getAppsConfig(): Promise<ApolloAiAppsConfig.Config> {
+async function getAppsConfig(): Promise<ApolloClientAiAppsConfig.Config> {
   const result = await explorer.search();
-  const config = (result?.config ?? {}) as Partial<ApolloAiAppsConfig.Config>;
+  const config = (result?.config ??
+    {}) as Partial<ApolloClientAiAppsConfig.Config>;
   validateAppsConfig(config);
 
   return config;
@@ -583,8 +584,8 @@ type RequiredKeys<T> = keyof {
 };
 
 function validateAppsConfig(
-  config: Partial<ApolloAiAppsConfig.Config>
-): asserts config is ApolloAiAppsConfig.Config {
+  config: Partial<ApolloClientAiAppsConfig.Config>
+): asserts config is ApolloClientAiAppsConfig.Config {
   // This function is a runtime no-op because we currently do not have any
   // required keys in our config, so the partial config satisfies the
   // non-partial config.
@@ -595,11 +596,12 @@ function validateAppsConfig(
   //
   // NOTE: If we end up adding zod to validate the raw result from cosmiconfig,
   // this check should no longer be needed.
-  const _requiredKeys: never = {} as RequiredKeys<ApolloAiAppsConfig.Config>;
+  const _requiredKeys: never =
+    {} as RequiredKeys<ApolloClientAiAppsConfig.Config>;
 }
 
 function getResourceFromConfig(
-  appsConfig: ApolloAiAppsConfig.Config,
+  appsConfig: ApolloClientAiAppsConfig.Config,
   mode: string,
   target: apolloClientAiApps.Target
 ) {

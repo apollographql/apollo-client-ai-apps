@@ -1,4 +1,4 @@
-export declare namespace ApolloAiAppsConfig {
+export declare namespace ApolloClientAiAppsConfig {
   export type AppTarget = "mcp" | "openai";
 
   export type Mode = "development" | "production" | (string & {});
@@ -34,25 +34,25 @@ export declare namespace ApolloAiAppsConfig {
     version?: string;
 
     /** CSP settings for the app */
-    csp?: ApolloAiAppsConfig.Csp;
+    csp?: ApolloClientAiAppsConfig.Csp;
 
     /**
      * Widget settings for the app
      */
-    widgetSettings?: ApolloAiAppsConfig.WidgetSettings;
+    widgetSettings?: ApolloClientAiAppsConfig.WidgetSettings;
 
     /**
      * Label settings for the app.
      *
      * NOTE: Only available with `openai` apps.
      */
-    labels?: ApolloAiAppsConfig.Labels;
+    labels?: ApolloClientAiAppsConfig.Labels;
   }
 
   export type EntryPoint = Partial<
     Record<
-      ApolloAiAppsConfig.Mode,
-      string | Partial<Record<ApolloAiAppsConfig.AppTarget, string>>
+      ApolloClientAiAppsConfig.Mode,
+      string | Partial<Record<ApolloClientAiAppsConfig.AppTarget, string>>
     >
   >;
 
