@@ -29,7 +29,7 @@ import type {
   ManifestWidgetSettings,
 } from "../types/application-manifest";
 import { invariant } from "../utilities/invariant.js";
-import { explorer } from "./utilities/config";
+import { explorer } from "./utilities/config.js";
 import type { ApolloAiAppsConfig } from "../config/index.js";
 
 export declare namespace apolloClientAiApps {

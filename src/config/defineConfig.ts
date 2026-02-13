@@ -1,4 +1,4 @@
-import type { ApolloAiAppsConfig } from "./types";
+import type { ApolloAiAppsConfig } from "./types.js";
 
 /**
  * Helper type that makes it easier to define app configuration
