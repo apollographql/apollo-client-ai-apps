@@ -16,7 +16,7 @@ export class McpAppManager {
   readonly app: App;
 
   #toolName: string | undefined;
-  #toolMetadata: Record<string, unknown> = {};
+  #toolMetadata: ApolloMcpServerApps.CallToolResult["_meta"];
 
   constructor(manifest: ApplicationManifest) {
     this.app = new App({ name: manifest.name, version: manifest.appVersion });
