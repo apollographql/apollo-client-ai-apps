@@ -30,7 +30,7 @@ test("returns the tool name from the MCP host", async () => {
   host.onCleanup(() => client.stop());
 
   host.sendToolInput({ arguments: {} });
-  host.sendToolResult(graphqlToolResult({ data: null }));
+  host.sendToolResult(graphqlToolResult({ data: { product: null } }));
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot } = await renderHookToSnapshotStream(

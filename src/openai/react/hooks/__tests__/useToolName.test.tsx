@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { useToolName } from "../useToolName.js";
 import {
+  graphqlToolResult,
   minimalHostContextWithToolName,
   mockApplicationManifest,
   mockMcpHost,
@@ -30,14 +31,7 @@ test("returns the tool name from the MCP host", async () => {
   host.onCleanup(() => client.stop());
 
   host.sendToolInput({ arguments: {} });
-  host.sendToolResult({
-    content: [],
-    structuredContent: {
-      result: {
-        data: null,
-      },
-    },
-  });
+  host.sendToolResult(graphqlToolResult({ data: { product: null } }));
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot } = await renderHookToSnapshotStream(
