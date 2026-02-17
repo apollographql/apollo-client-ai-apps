@@ -1,6 +1,6 @@
 import { ApolloLink, Observable } from "@apollo/client";
-import { print } from "@apollo/client/utilities";
-import { from, map } from "rxjs";
+import { from } from "rxjs";
+import type { ApolloClient as OpenAiApolloClient } from "../core/ApolloClient";
 
 /**
  * A terminating link that sends a GraphQL request through an agent tool call.
@@ -26,10 +26,13 @@ import { from, map } from "rxjs";
  */
 export class ToolCallLink extends ApolloLink {
   request(operation: ApolloLink.Operation): Observable<ApolloLink.Result> {
-    const { query, variables } = operation;
+    const client = operation.client as OpenAiApolloClient;
 
     return from(
-      window.openai.callTool("execute", { query: print(query), variables })
-    ).pipe(map((result) => ({ data: result.structuredContent.data })));
+      client["appManager"].executeQuery({
+        query: operation.query,
+        variables: operation.variables,
+      })
+    );
   }
 }
