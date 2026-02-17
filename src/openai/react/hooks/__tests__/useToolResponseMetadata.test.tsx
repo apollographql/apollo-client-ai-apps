@@ -1,5 +1,6 @@
 import { afterEach, expect, test, vi } from "vitest";
 import {
+  minimalHostContextWithToolName,
   mockApplicationManifest,
   mockMcpHost,
   spyOnConsole,
@@ -28,11 +29,7 @@ test("returns the tool output set in window", async () => {
   });
 
   using host = await mockMcpHost({
-    hostContext: {
-      toolInfo: {
-        tool: { name: "GetProduct", inputSchema: { type: "object" } },
-      },
-    },
+    hostContext: minimalHostContextWithToolName("GetProduct"),
   });
   host.onCleanup(() => client.stop());
 
@@ -67,11 +64,7 @@ test("returns null when not set", async () => {
   });
 
   using host = await mockMcpHost({
-    hostContext: {
-      toolInfo: {
-        tool: { name: "GetProduct", inputSchema: { type: "object" } },
-      },
-    },
+    hostContext: minimalHostContextWithToolName("GetProduct"),
   });
   host.onCleanup(() => client.stop());
 

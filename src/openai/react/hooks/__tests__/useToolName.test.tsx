@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { useToolName } from "../useToolName.js";
 import {
+  minimalHostContextWithToolName,
   mockApplicationManifest,
   mockMcpHost,
   spyOnConsole,
@@ -24,11 +25,7 @@ test("returns the tool name from the MCP host", async () => {
   });
 
   using host = await mockMcpHost({
-    hostContext: {
-      toolInfo: {
-        tool: { name: "GetProduct", inputSchema: { type: "object" } },
-      },
-    },
+    hostContext: minimalHostContextWithToolName("GetProduct"),
   });
   host.onCleanup(() => client.stop());
 
