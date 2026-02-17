@@ -22,12 +22,17 @@ test("returns the tool name from the MCP host", async () => {
     manifest: mockApplicationManifest(),
   });
 
-  using host = await mockMcpHost();
+  using host = await mockMcpHost({
+    hostContext: {
+      toolInfo: {
+        tool: { name: "GetProduct", inputSchema: { type: "object" } },
+      },
+    },
+  });
   host.onCleanup(() => client.stop());
 
   host.sendToolInput({ arguments: {} });
   host.sendToolResult({
-    _meta: { toolName: "GetProduct" },
     content: [],
     structuredContent: {},
   });
