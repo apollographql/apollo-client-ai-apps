@@ -1,6 +1,5 @@
 import { afterEach, expect, test, vi } from "vitest";
 import {
-  minimalHostContextWithToolName,
   mockApplicationManifest,
   mockMcpHost,
   spyOnConsole,
@@ -20,7 +19,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-test("returns the tool output set in window", async () => {
+test("returns the tool metadata from window.openai", async () => {
   using _ = spyOnConsole("debug");
   stubOpenAiGlobals({ toolResponseMetadata: { foo: true } });
   const client = new ApolloClient({
@@ -28,9 +27,7 @@ test("returns the tool output set in window", async () => {
     manifest: mockApplicationManifest(),
   });
 
-  using host = await mockMcpHost({
-    hostContext: minimalHostContextWithToolName("GetProduct"),
-  });
+  using host = await mockMcpHost();
   host.onCleanup(() => client.stop());
 
   host.sendToolInput({ arguments: {} });
@@ -63,9 +60,7 @@ test("returns null when not set", async () => {
     manifest: mockApplicationManifest(),
   });
 
-  using host = await mockMcpHost({
-    hostContext: minimalHostContextWithToolName("GetProduct"),
-  });
+  using host = await mockMcpHost();
   host.onCleanup(() => client.stop());
 
   host.sendToolInput({ arguments: {} });
