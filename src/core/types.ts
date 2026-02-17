@@ -2,11 +2,6 @@ import type { CallToolResult as McpCallToolResult } from "@modelcontextprotocol/
 import type { FormattedExecutionResult } from "graphql";
 
 export namespace ApolloMcpServerApps {
-  export interface Meta {
-    toolName: string;
-    [x: string]: unknown;
-  }
-
   export interface StructuredContent {
     result: FormattedExecutionResult;
     prefetch?: Record<string, FormattedExecutionResult>;
@@ -14,9 +9,8 @@ export namespace ApolloMcpServerApps {
 
   export interface CallToolResult extends Omit<
     McpCallToolResult,
-    "_meta" | "structuredContent"
+    "structuredContent"
   > {
-    _meta: ApolloMcpServerApps.Meta;
     structuredContent: ApolloMcpServerApps.StructuredContent;
   }
 }
