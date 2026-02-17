@@ -20,9 +20,7 @@ describe("Client Basics", () => {
       cache: new InMemoryCache(),
       manifest,
     });
-    using host = await mockMcpHost({
-      hostContext: minimalHostContextWithToolName("GetProduct"),
-    });
+    using host = await mockMcpHost();
 
     host.onCleanup(() => client.stop());
 
@@ -96,10 +94,9 @@ describe("prefetchData", () => {
   test("caches tool response when data is provided", async () => {
     stubOpenAiGlobals();
     using _ = spyOnConsole("debug");
-    const manifest = mockApplicationManifest();
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      manifest,
+      manifest: mockApplicationManifest(),
     });
     using host = await mockMcpHost({
       hostContext: minimalHostContextWithToolName("GetProduct"),
