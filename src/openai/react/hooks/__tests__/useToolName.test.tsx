@@ -32,7 +32,11 @@ test("returns the tool name from the MCP host", async () => {
   host.sendToolInput({ arguments: {} });
   host.sendToolResult({
     content: [],
-    structuredContent: {},
+    structuredContent: {
+      result: {
+        data: null,
+      },
+    },
   });
 
   using _disabledAct = disableActEnvironment();
