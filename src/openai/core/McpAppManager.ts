@@ -16,7 +16,7 @@ export class McpAppManager {
   readonly app: App;
 
   #toolName: string | undefined;
-  #toolMetadata: Record<string, unknown> = {};
+  #toolMetadata: Record<string, unknown> | null = null;
 
   constructor(manifest: ApplicationManifest) {
     this.app = new App({ name: manifest.name, version: manifest.appVersion });
@@ -62,9 +62,7 @@ export class McpAppManager {
 
     // OpenAI doesn't provide access to `_meta`, so we need to use
     // window.openai.toolResponseMetadata directly
-    if (window.openai.toolResponseMetadata) {
-      this.#toolMetadata = window.openai.toolResponseMetadata;
-    }
+    this.#toolMetadata = window.openai.toolResponseMetadata;
 
     return {
       ...structuredContent,
