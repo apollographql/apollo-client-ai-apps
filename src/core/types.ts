@@ -8,10 +8,7 @@ export namespace ApolloMcpServerApps {
     [x: string]: unknown;
   }
 
-  export interface CallToolResult extends Omit<
-    McpCallToolResult,
-    "structuredContent"
-  > {
+  export interface CallToolResult extends McpCallToolResult {
     structuredContent: ApolloMcpServerApps.StructuredContent;
   }
 }
