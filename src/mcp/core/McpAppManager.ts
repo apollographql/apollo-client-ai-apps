@@ -15,7 +15,7 @@ type ExecuteQueryCallToolResult = Omit<CallToolResult, "structuredContent"> & {
 export class McpAppManager {
   readonly app: App;
 
-  #toolName!: string;
+  #toolName: string | undefined;
   #toolMetadata: Record<string, unknown> = {};
 
   constructor(manifest: ApplicationManifest) {
@@ -49,12 +49,12 @@ export class McpAppManager {
     const { structuredContent, _meta } = await toolResult.promise;
     const { arguments: args } = await toolInput.promise;
 
-    this.#toolName = _meta.toolName;
+    this.#toolName = this.app.getHostContext()?.toolInfo?.tool.name;
     this.#toolMetadata = _meta;
 
     return {
       ...structuredContent,
-      toolName: _meta.toolName,
+      toolName: this.toolName,
       args,
     };
   });
