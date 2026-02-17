@@ -1,5 +1,5 @@
-import { useOpenAiGlobal } from "./useOpenAiGlobal.js";
+import { useApolloClient } from "./useApolloClient.js";
 
 export function useToolResponseMetadata() {
-  return useOpenAiGlobal("toolResponseMetadata") ?? null;
+  return useApolloClient()["appManager"].toolMetadata;
 }
