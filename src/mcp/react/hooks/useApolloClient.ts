@@ -1,7 +1,6 @@
 import { useApolloClient as useBaseApolloClient } from "@apollo/client/react";
-import { ApolloClient } from "../../core/ApolloClient";
-import { invariant } from "@apollo/client/utilities/invariant";
-import { aiClientSymbol } from "../../../utilities";
+import { ApolloClient } from "../../core/ApolloClient.js";
+import { aiClientSymbol, invariant } from "../../../utilities/index.js";
 
 export function useApolloClient(override?: ApolloClient) {
   const client = useBaseApolloClient(override) as ApolloClient;
