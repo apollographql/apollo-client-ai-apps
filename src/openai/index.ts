@@ -1,7 +1,6 @@
 export { useApp } from "./react/hooks/useApp.js";
 export { useOpenAiGlobal } from "./react/hooks/useOpenAiGlobal.js";
 export { useToolName } from "./react/hooks/useToolName.js";
-export { useRequestDisplayMode } from "./react/hooks/useRequestDisplayMode.js";
 export { useToolEffect } from "./react/hooks/useToolEffect.js";
 export { useToolOutput } from "./react/hooks/useToolOutput.js";
 export { useToolResponseMetadata } from "./react/hooks/useToolResponseMetadata.js";
