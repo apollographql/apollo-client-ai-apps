@@ -23,7 +23,6 @@ export { useOpenExternal } from "./react/hooks/useOpenExternal.js";
 export { useToolOutput } from "./react/hooks/useToolOutput.js";
 export { useToolResponseMetadata } from "./react/hooks/useToolResponseMetadata.js";
 export { useWidgetState } from "./react/hooks/useWidgetState.js";
-export { useCallTool } from "./react/hooks/useCallTool.js";
 
 export { ApolloClient } from "./core/ApolloClient.js";
 export { ToolCallLink } from "./link/ToolCallLink.js";
