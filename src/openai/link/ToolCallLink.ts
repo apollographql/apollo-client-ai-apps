@@ -25,6 +25,8 @@ import type { ApolloClient as OpenAiApolloClient } from "../core/ApolloClient";
  * ```
  */
 export class ToolCallLink extends ApolloLink {
+  readonly name = "ToolCallLink";
+
   request(operation: ApolloLink.Operation): Observable<ApolloLink.Result> {
     const client = operation.client as OpenAiApolloClient;
 
