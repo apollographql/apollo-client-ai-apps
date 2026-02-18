@@ -17,7 +17,6 @@ export { useApp } from "./react/hooks/useApp.js";
 export { useOpenAiGlobal } from "./react/hooks/useOpenAiGlobal.js";
 export { useToolName } from "./react/hooks/useToolName.js";
 export { useToolInput } from "./react/hooks/useToolInput.js";
-export { useSendFollowUpMessage } from "./react/hooks/useSendFollowUpMessage.js";
 export { useRequestDisplayMode } from "./react/hooks/useRequestDisplayMode.js";
 export { useToolEffect } from "./react/hooks/useToolEffect.js";
 export { useOpenExternal } from "./react/hooks/useOpenExternal.js";
