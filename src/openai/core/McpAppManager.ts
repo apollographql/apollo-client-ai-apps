@@ -17,6 +17,7 @@ export class McpAppManager {
 
   #toolName: string | undefined;
   #toolMetadata: Record<string, unknown> | null = null;
+  #toolInput: Record<string, unknown> | undefined;
 
   constructor(manifest: ApplicationManifest) {
     this.app = new App({ name: manifest.name, version: manifest.appVersion });
@@ -28,6 +29,10 @@ export class McpAppManager {
 
   get toolMetadata() {
     return this.#toolMetadata;
+  }
+
+  get toolInput() {
+    return this.#toolInput;
   }
 
   waitForInitialization = cacheAsync(async () => {
@@ -59,6 +64,7 @@ export class McpAppManager {
     const { arguments: args } = await toolInput.promise;
 
     this.#toolName = this.app.getHostContext()?.toolInfo?.tool.name;
+    this.#toolInput = args;
 
     // OpenAI doesn't provide access to `_meta`, so we need to use
     // window.openai.toolResponseMetadata directly

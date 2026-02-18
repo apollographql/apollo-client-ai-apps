@@ -9,7 +9,7 @@ import {
   disableActEnvironment,
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
-import { useToolResponseMetadata } from "../useToolResponseMetadata.js";
+import { useToolInput } from "../useToolInput.js";
 import { ApolloClient } from "../../../core/ApolloClient.js";
 import { InMemoryCache } from "@apollo/client";
 import { Suspense } from "react";
@@ -19,9 +19,9 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-test("returns the tool metadata from window.openai", async () => {
+test("returns the tool input from the MCP host", async () => {
   using _ = spyOnConsole("debug");
-  stubOpenAiGlobals({ toolResponseMetadata: { foo: true } });
+  stubOpenAiGlobals({ toolResponseMetadata: {} });
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     manifest: mockApplicationManifest(),
@@ -30,7 +30,7 @@ test("returns the tool metadata from window.openai", async () => {
   using host = await mockMcpHost();
   host.onCleanup(() => client.stop());
 
-  host.sendToolInput({ arguments: {} });
+  host.sendToolInput({ arguments: { id: "1" } });
   host.sendToolResult({
     content: [],
     structuredContent: {},
@@ -38,7 +38,7 @@ test("returns the tool metadata from window.openai", async () => {
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot } = await renderHookToSnapshotStream(
-    () => useToolResponseMetadata(),
+    () => useToolInput(),
     {
       wrapper: ({ children }) => (
         <Suspense>
@@ -48,13 +48,13 @@ test("returns the tool metadata from window.openai", async () => {
     }
   );
 
-  await expect(takeSnapshot()).resolves.toEqual({ foo: true });
+  await expect(takeSnapshot()).resolves.toEqual({ id: "1" });
   await expect(takeSnapshot).not.toRerender();
 });
 
-test("returns null when not set", async () => {
+test("returns undefined when ontoolinput is not fired", async () => {
   using _ = spyOnConsole("debug");
-  stubOpenAiGlobals();
+  stubOpenAiGlobals({ toolResponseMetadata: {} });
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     manifest: mockApplicationManifest(),
@@ -63,7 +63,6 @@ test("returns null when not set", async () => {
   using host = await mockMcpHost();
   host.onCleanup(() => client.stop());
 
-  host.sendToolInput({ arguments: {} });
   host.sendToolResult({
     content: [],
     structuredContent: {},
@@ -71,7 +70,7 @@ test("returns null when not set", async () => {
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot } = await renderHookToSnapshotStream(
-    () => useToolResponseMetadata(),
+    () => useToolInput(),
     {
       wrapper: ({ children }) => (
         <Suspense>
@@ -81,6 +80,6 @@ test("returns null when not set", async () => {
     }
   );
 
-  await expect(takeSnapshot()).resolves.toBeNull();
+  await expect(takeSnapshot()).resolves.toBeUndefined();
   await expect(takeSnapshot).not.toRerender();
 });

@@ -1,5 +1,5 @@
 import { useApolloClient } from "./useApolloClient.js";
 
-export function useToolResponseMetadata() {
+export function useToolMetadata() {
   return useApolloClient()["appManager"].toolMetadata;
 }
