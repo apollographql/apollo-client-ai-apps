@@ -17,6 +17,7 @@ export class McpAppManager {
 
   #toolName: string | undefined;
   #toolMetadata: ApolloMcpServerApps.CallToolResult["_meta"];
+  #toolInput: Record<string, unknown> | undefined;
 
   constructor(manifest: ApplicationManifest) {
     this.app = new App({ name: manifest.name, version: manifest.appVersion });
@@ -28,6 +29,10 @@ export class McpAppManager {
 
   get toolMetadata() {
     return this.#toolMetadata;
+  }
+
+  get toolInput() {
+    return this.#toolInput;
   }
 
   waitForInitialization = cacheAsync(async () => {
@@ -51,6 +56,7 @@ export class McpAppManager {
 
     this.#toolName = this.app.getHostContext()?.toolInfo?.tool.name;
     this.#toolMetadata = _meta;
+    this.#toolInput = args;
 
     return {
       ...structuredContent,
