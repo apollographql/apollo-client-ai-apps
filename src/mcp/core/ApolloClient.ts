@@ -87,9 +87,16 @@ function validateTerminatingLink(link: ApolloLink) {
     terminatingLink = terminatingLink.right;
   }
 
-  if (terminatingLink.constructor.name !== "ToolCallLink") {
+  if (
+    !isNamedLink(terminatingLink) ||
+    terminatingLink.name !== "ToolCallLink"
+  ) {
     throw new Error(
       "The terminating link must be a `ToolCallLink`. If you are using a `split` link, ensure the `right` branch uses a `ToolCallLink` as the terminating link."
     );
   }
+}
+
+function isNamedLink(link: ApolloLink): link is ApolloLink & { name: string } {
+  return "name" in link;
 }

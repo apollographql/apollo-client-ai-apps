@@ -14,6 +14,8 @@ export { ApolloProvider, ToolUseProvider } from "./react/index.js";
 export { ApolloClient } from "./core/ApolloClient.js";
 export { ToolCallLink } from "./link/ToolCallLink.js";
 
+export { Platform } from "./core/Platform.js";
+
 export const useApp =
   missingHook<typeof import("./mcp/react/hooks/useApp.js").useApp>("useApp");
 
