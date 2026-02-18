@@ -1,1 +1,1 @@
-export const PLATFORM = "openai" as const;
+export const PLATFORM = "openai";

@@ -1,1 +1,1 @@
-export const PLATFORM = "mcp" as const;
+export const PLATFORM = "mcp";
