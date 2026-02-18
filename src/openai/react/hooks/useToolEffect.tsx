@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { useToolName } from "./useToolName.js";
+import { useToolInput } from "./useToolInput.js";
 import { useToolUseState } from "../../../react/ToolUseContext.js";
 
 export const useToolEffect = (
@@ -9,6 +10,7 @@ export const useToolEffect = (
 ) => {
   const ctx = useToolUseState();
   const fullToolName = useToolName();
+  const toolInput = useToolInput();
   if (!ctx)
     throw new Error("useToolEffect must be used within ToolUseProvider");
 
@@ -18,8 +20,15 @@ export const useToolEffect = (
     const matches = toolNames.some((name) => fullToolName === name);
 
     if (!ctx.hasNavigated && matches) {
-      effect(window.openai.toolInput);
+      effect(toolInput);
       ctx.setHasNavigated(true);
     }
-  }, [ctx.hasNavigated, ctx.setHasNavigated, toolNames, fullToolName, ...deps]);
+  }, [
+    ctx.hasNavigated,
+    ctx.setHasNavigated,
+    toolNames,
+    fullToolName,
+    toolInput,
+    ...deps,
+  ]);
 };
