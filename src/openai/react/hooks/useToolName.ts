@@ -1,7 +1,5 @@
-import { useOpenAiGlobal } from "./useOpenAiGlobal.js";
+import { useApolloClient } from "./useApolloClient.js";
 
-export const useToolName = (): string | undefined => {
-  const toolResponseMetadata = useOpenAiGlobal("toolResponseMetadata");
-
-  return toolResponseMetadata?.toolName as string;
+export const useToolName = () => {
+  return useApolloClient()["appManager"].toolName;
 };

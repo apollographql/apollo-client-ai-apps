@@ -5,14 +5,13 @@ import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal"
 import { parse } from "graphql";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { ApplicationManifest } from "../../types/application-manifest.js";
-import { SET_GLOBALS_EVENT_TYPE } from "../types.js";
 import { ToolCallLink } from "../link/ToolCallLink.js";
 import {
   aiClientSymbol,
   cacheAsync,
   getVariablesForOperationFromToolInput,
 } from "../../utilities/index.js";
-import type { ApolloMcpServerApps } from "../../core/types.js";
+import { McpAppManager } from "./McpAppManager.js";
 
 export declare namespace ApolloClient {
   export interface Options extends Omit<BaseApolloClient.Options, "link"> {
@@ -23,6 +22,7 @@ export declare namespace ApolloClient {
 
 export class ApolloClient extends BaseApolloClient {
   manifest: ApplicationManifest;
+  private readonly appManager: McpAppManager;
 
   /** @internal */
   readonly [aiClientSymbol] = true;
@@ -47,62 +47,34 @@ export class ApolloClient extends BaseApolloClient {
     });
 
     this.manifest = options.manifest;
+    this.appManager = new McpAppManager(this.manifest);
+  }
+
+  stop() {
+    super.stop();
+    this.appManager.close().catch(() => {});
   }
 
   waitForInitialization = cacheAsync(async () => {
-    const toolOutput = await waitForToolOutput();
-
-    if (!toolOutput) {
-      return;
-    }
+    const { prefetch, result, toolName, args } =
+      await this.appManager.waitForInitialization();
 
     this.manifest.operations.forEach((operation) => {
-      if (operation.prefetchID && toolOutput.prefetch?.[operation.prefetchID]) {
+      if (operation.prefetchID && prefetch?.[operation.prefetchID]) {
         this.writeQuery({
           query: parse(operation.body),
-          data: toolOutput.prefetch[operation.prefetchID].data,
+          data: prefetch[operation.prefetchID].data,
         });
       }
 
-      if (
-        operation.tools?.find(
-          (tool) => tool.name === window.openai.toolResponseMetadata?.toolName
-        )
-      ) {
+      if (operation.tools.find((tool) => tool.name === toolName)) {
         this.writeQuery({
           query: parse(operation.body),
-          data: toolOutput.result.data,
-          variables: getVariablesForOperationFromToolInput(
-            operation,
-            window.openai.toolInput
-          ),
+          data: result.data,
+          variables: getVariablesForOperationFromToolInput(operation, args),
         });
       }
     });
-  });
-}
-
-async function waitForToolOutput(): Promise<ApolloMcpServerApps.StructuredContent | null> {
-  if (window.openai.toolOutput !== undefined) {
-    return window.openai.toolOutput;
-  }
-
-  return new Promise((resolve) => {
-    const controller = new AbortController();
-
-    window.addEventListener(
-      SET_GLOBALS_EVENT_TYPE,
-      (event) => {
-        if ("toolOutput" in event.detail.globals) {
-          resolve(event.detail.globals.toolOutput ?? null);
-          controller.abort();
-        }
-      },
-      {
-        passive: true,
-        signal: controller.signal,
-      }
-    );
   });
 }
 

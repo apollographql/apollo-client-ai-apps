@@ -4,6 +4,7 @@ import { ApolloLink, HttpLink, InMemoryCache, gql } from "@apollo/client";
 import { print } from "@apollo/client/utilities";
 import { ToolCallLink } from "../../link/ToolCallLink.js";
 import {
+  minimalHostContextWithToolName,
   mockApplicationManifest,
   mockMcpHost,
   spyOnConsole,
@@ -39,11 +40,12 @@ test("writes tool result data to cache", async () => {
     }),
   });
 
-  using host = await mockMcpHost();
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GetProduct"),
+  });
   host.onCleanup(() => client.stop());
 
   host.sendToolResult({
-    _meta: { toolName: "GetProduct" },
     content: [],
     structuredContent: {
       result: {
@@ -103,11 +105,12 @@ test("writes prefetch data to cache", async () => {
     }),
   });
 
-  using host = await mockMcpHost();
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("OtherTool"),
+  });
   host.onCleanup(() => client.stop());
 
   host.sendToolResult({
-    _meta: { toolName: "OtherTool" },
     content: [],
     structuredContent: {
       prefetch: {
@@ -186,11 +189,12 @@ test("writes prefetch and tool response data to cache when both are provided", a
     }),
   });
 
-  using host = await mockMcpHost();
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("Product"),
+  });
   host.onCleanup(() => client.stop());
 
   host.sendToolResult({
-    _meta: { toolName: "Product" },
     content: [],
     structuredContent: {
       prefetch: {
@@ -260,11 +264,12 @@ test("excludes extra tool input variables not defined in the operation", async (
     }),
   });
 
-  using host = await mockMcpHost();
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GetProduct"),
+  });
   host.onCleanup(() => client.stop());
 
   host.sendToolResult({
-    _meta: { toolName: "GetProduct" },
     content: [],
     structuredContent: {
       result: {
@@ -306,11 +311,12 @@ test("allows for custom links provided to the constructor", async () => {
     link: ApolloLink.from([new ApolloLink(linkHandler), new ToolCallLink()]),
   });
 
-  using host = await mockMcpHost();
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GetProduct"),
+  });
   host.onCleanup(() => client.stop());
 
   host.sendToolResult({
-    _meta: { toolName: "GetProduct" },
     content: [],
     structuredContent: {
       result: {

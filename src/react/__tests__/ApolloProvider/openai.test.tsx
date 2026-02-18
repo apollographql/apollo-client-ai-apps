@@ -3,34 +3,30 @@ import { Suspense } from "react";
 import { ApolloProvider } from "../../ApolloProvider.js";
 import { waitFor } from "@testing-library/react";
 import { ApolloClient } from "../../../openai/core/ApolloClient.js";
-import { SET_GLOBALS_EVENT_TYPE } from "../../../openai/types.js";
 import { gql, InMemoryCache } from "@apollo/client";
 import { print } from "@apollo/client/utilities";
 import {
+  minimalHostContextWithToolName,
   mockApplicationManifest,
+  mockMcpHost,
   renderAsync,
+  spyOnConsole,
   stubOpenAiGlobals,
 } from "../../../testing/internal/index.js";
 
 test("writes data to the cache when immediately available", async () => {
+  stubOpenAiGlobals();
+  using _ = spyOnConsole("debug");
+
   const query = gql`
     query GreetingQuery {
       greeting
     }
   `;
+
   const data = {
     greeting: "hello",
   };
-  stubOpenAiGlobals({
-    toolOutput: {
-      result: {
-        data: null,
-      },
-      prefetch: {
-        __anonymous: { data },
-      },
-    },
-  });
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -48,6 +44,24 @@ test("writes data to the cache when immediately available", async () => {
         },
       ],
     }),
+  });
+
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GreetingQuery"),
+  });
+  host.onCleanup(() => client.stop());
+
+  host.sendToolInput({ arguments: {} });
+  host.sendToolResult({
+    content: [],
+    structuredContent: {
+      result: {
+        data: null,
+      },
+      prefetch: {
+        __anonymous: { data },
+      },
+    },
   });
 
   await renderAsync(<ApolloProvider client={client} />, {
@@ -65,7 +79,10 @@ test("writes data to the cache when immediately available", async () => {
 });
 
 test("writes to the cache as soon as toolOutput is available", async () => {
-  stubOpenAiGlobals(({ toolOutput, ...defaults }) => defaults);
+  stubOpenAiGlobals();
+  using _ = spyOnConsole("debug");
+
+  stubOpenAiGlobals();
 
   const query = gql`
     query GreetingQuery {
@@ -94,6 +111,13 @@ test("writes to the cache as soon as toolOutput is available", async () => {
     }),
   });
 
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GreetingQuery"),
+  });
+
+  host.onCleanup(() => client.stop());
+  host.sendToolInput({ arguments: {} });
+
   await renderAsync(<ApolloProvider client={client} />, {
     wrapper: ({ children }) => <Suspense>{children}</Suspense>,
   });
@@ -102,19 +126,14 @@ test("writes to the cache as soon as toolOutput is available", async () => {
     waitFor(() => expect(client.extract()).not.toEqual({}))
   ).rejects.toThrow();
 
-  window.dispatchEvent(
-    new CustomEvent(SET_GLOBALS_EVENT_TYPE, {
-      detail: {
-        globals: {
-          toolOutput: {
-            prefetch: {
-              __anonymous: { data },
-            },
-          },
-        },
+  host.sendToolResult({
+    content: [],
+    structuredContent: {
+      prefetch: {
+        __anonymous: { data },
       },
-    })
-  );
+    },
+  });
 
   await waitFor(() => {
     expect(client.extract()).toEqual({

@@ -21,7 +21,7 @@ export function mockApplicationManifest(
         prefetch: false,
         tools: [
           {
-            name: "Get Product",
+            name: "GetProduct",
             description: "Shows the details page for a specific product.",
           },
         ],

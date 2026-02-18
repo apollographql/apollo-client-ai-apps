@@ -16,7 +16,7 @@ export class McpAppManager {
   readonly app: App;
 
   #toolName: string | undefined;
-  #toolMetadata: ApolloMcpServerApps.CallToolResult["_meta"];
+  #toolMetadata: Record<string, unknown> | null = null;
 
   constructor(manifest: ApplicationManifest) {
     this.app = new App({ name: manifest.name, version: manifest.appVersion });
@@ -38,6 +38,15 @@ export class McpAppManager {
       toolResult.resolve(
         params as unknown as ApolloMcpServerApps.CallToolResult
       );
+
+      // OpenAI is not consistent about sending `ui/notifications/tool-input`
+      // before we get the rool result (which should happen according to the
+      // spec). We resolve this promise in case it wasn't sent to avoid stalling
+      // initialization indefinitely.
+      //
+      // When OpenAI fixes this issue and sends `ui/notifications/tool-input`
+      // consistently, this can be removed.
+      toolInput.resolve({});
     };
 
     this.app.ontoolinput = (params) => {
@@ -46,11 +55,14 @@ export class McpAppManager {
 
     await this.connect();
 
-    const { structuredContent, _meta } = await toolResult.promise;
+    const { structuredContent } = await toolResult.promise;
     const { arguments: args } = await toolInput.promise;
 
     this.#toolName = this.app.getHostContext()?.toolInfo?.tool.name;
-    this.#toolMetadata = _meta;
+
+    // OpenAI doesn't provide access to `_meta`, so we need to use
+    // window.openai.toolResponseMetadata directly
+    this.#toolMetadata = window.openai.toolResponseMetadata;
 
     return {
       ...structuredContent,

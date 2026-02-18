@@ -1,24 +1,25 @@
-import { test, expect } from "vitest";
-import {
-  disableActEnvironment,
-  renderHookToSnapshotStream,
-} from "@testing-library/react-render-stream";
-import { Suspense } from "react";
-import { InMemoryCache } from "@apollo/client";
-
+import { expect, test } from "vitest";
 import { useToolName } from "../useToolName.js";
-import { ApolloClient } from "../../../core/ApolloClient.js";
 import {
   graphqlToolResult,
   minimalHostContextWithToolName,
   mockApplicationManifest,
   mockMcpHost,
   spyOnConsole,
+  stubOpenAiGlobals,
 } from "../../../../testing/internal/index.js";
-import { ApolloProvider } from "../../../../react/ApolloProvider.js";
+import { ApolloClient } from "../../../core/ApolloClient.js";
+import { InMemoryCache } from "@apollo/client";
+import {
+  disableActEnvironment,
+  renderHookToSnapshotStream,
+} from "@testing-library/react-render-stream";
+import { Suspense } from "react";
+import { ApolloProvider } from "../../../../index.js";
 
 test("returns the tool name from the MCP host", async () => {
   using _ = spyOnConsole("debug");
+  stubOpenAiGlobals({ toolResponseMetadata: {} });
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     manifest: mockApplicationManifest(),
@@ -45,6 +46,5 @@ test("returns the tool name from the MCP host", async () => {
   );
 
   await expect(takeSnapshot()).resolves.toBe("GetProduct");
-
   await expect(takeSnapshot).not.toRerender();
 });

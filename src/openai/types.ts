@@ -5,7 +5,7 @@ export type UnknownObject = Record<string, unknown>;
 export type OpenAiGlobals<
   ToolInput extends UnknownObject = UnknownObject,
   ToolOutput = ApolloMcpServerApps.StructuredContent,
-  ToolResponseMetadata = ApolloMcpServerApps.Meta,
+  ToolResponseMetadata = UnknownObject,
   WidgetState extends UnknownObject = UnknownObject,
 > = {
   theme: Theme;

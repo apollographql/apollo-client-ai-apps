@@ -1,4 +1,4 @@
-import { expect, test, vi } from "vitest";
+import { expect, test } from "vitest";
 import { Suspense } from "react";
 import { ApolloProvider } from "../../ApolloProvider.js";
 import { waitFor } from "@testing-library/react";
@@ -6,15 +6,20 @@ import { ApolloClient } from "../../../mcp/core/ApolloClient.js";
 import { gql, InMemoryCache } from "@apollo/client";
 import { print } from "@apollo/client/utilities";
 import {
+  minimalHostContextWithToolName,
   mockApplicationManifest,
   mockMcpHost,
   renderAsync,
+  spyOnConsole,
 } from "../../../testing/internal/index.js";
 
 test("writes to the cache as soon as toolOutput is available", async () => {
-  const spy = vi.spyOn(console, "debug").mockImplementation(() => {});
+  using _ = spyOnConsole("debug");
 
-  using host = await mockMcpHost();
+  const toolName = "GreetingQuery";
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName(toolName),
+  });
   host.onCleanup(() => client.stop());
 
   const query = gql`
@@ -25,8 +30,6 @@ test("writes to the cache as soon as toolOutput is available", async () => {
   const data = {
     greeting: "hello",
   };
-
-  const toolName = "GreetingQuery";
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -54,12 +57,11 @@ test("writes to the cache as soon as toolOutput is available", async () => {
     waitFor(() => expect(client.extract()).not.toEqual({}))
   ).rejects.toThrow();
 
+  host.sendToolInput({ arguments: {} });
   host.sendToolResult({
-    _meta: { toolName },
     content: [{ type: "text", text: JSON.stringify({ result: { data } }) }],
     structuredContent: { result: { data } },
   });
-  host.sendToolInput({ arguments: {} });
 
   await waitFor(() => {
     expect(client.extract()).toEqual({
@@ -69,6 +71,4 @@ test("writes to the cache as soon as toolOutput is available", async () => {
       },
     });
   });
-
-  spy.mockRestore();
 });

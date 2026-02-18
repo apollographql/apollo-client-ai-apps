@@ -1,6 +1,8 @@
 export { dispatchStateChange } from "./openai/dispatchStateChange.js";
+export { graphqlToolResult } from "./mcp/graphqlToolResult.js";
 export { mockApplicationManifest } from "./utilities/mockApplicationManifest.js";
 export { stubOpenAiGlobals } from "./openai/stubOpenAiGlobals.js";
+export { minimalHostContextWithToolName } from "./mcp/minimalHostContextWithToolName.js";
 export { mockMcpHost } from "./mcp/mockMcpHost.js";
 export { ObservableStream } from "./utilities/ObservableStream.js";
 export { renderAsync } from "./react/renderAsync.js";
