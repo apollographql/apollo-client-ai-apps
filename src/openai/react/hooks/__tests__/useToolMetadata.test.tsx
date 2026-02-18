@@ -9,7 +9,7 @@ import {
   disableActEnvironment,
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
-import { useToolResponseMetadata } from "../useToolResponseMetadata.js";
+import { useToolMetadata } from "../useToolMetadata.js";
 import { ApolloClient } from "../../../core/ApolloClient.js";
 import { InMemoryCache } from "@apollo/client";
 import { Suspense } from "react";
@@ -38,7 +38,7 @@ test("returns the tool metadata from window.openai", async () => {
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot } = await renderHookToSnapshotStream(
-    () => useToolResponseMetadata(),
+    () => useToolMetadata(),
     {
       wrapper: ({ children }) => (
         <Suspense>
@@ -71,7 +71,7 @@ test("returns null when not set", async () => {
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot } = await renderHookToSnapshotStream(
-    () => useToolResponseMetadata(),
+    () => useToolMetadata(),
     {
       wrapper: ({ children }) => (
         <Suspense>
