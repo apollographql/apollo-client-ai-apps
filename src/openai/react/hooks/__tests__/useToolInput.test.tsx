@@ -21,7 +21,7 @@ afterEach(() => {
 
 test("returns the tool input from the MCP host", async () => {
   using _ = spyOnConsole("debug");
-  stubOpenAiGlobals({ toolResponseMetadata: {} });
+  stubOpenAiGlobals({ toolResponseMetadata: {}, toolInput: { id: "1" } });
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     manifest: mockApplicationManifest(),
