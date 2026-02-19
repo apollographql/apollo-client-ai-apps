@@ -14,7 +14,7 @@ jobs:
   release:
     name: Release
     # Important: Only run this when we've merged a "release/*" PR into main... all other PRs should be skipped.
-    if: github.repository == 'apollographql/apollo-ai-apps-client' && (github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/'))
+    if: github.repository == 'apollographql/apollo-client-ai-apps' && (github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
