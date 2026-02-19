@@ -469,7 +469,7 @@ function isNonEmptyObject<T extends object>(
   return !!obj && Object.keys(obj).length > 0;
 }
 
-async function getAppsConfig(): Promise<ApolloClientAiAppsConfig.Config> {
+async function getAppsConfig() {
   const result = await explorer.search();
   const config = (result?.config ??
     {}) as Partial<ApolloClientAiAppsConfig.Config>;
@@ -484,7 +484,7 @@ async function getAppsConfig(): Promise<ApolloClientAiAppsConfig.Config> {
 }
 
 function getResourceFromConfig(
-  appsConfig: ApolloClientAiAppsConfig.Config,
+  appsConfig: z.infer<typeof ApolloClientAiAppsConfigSchema>,
   mode: string,
   target: apolloClientAiApps.Target
 ) {
