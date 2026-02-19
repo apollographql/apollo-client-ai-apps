@@ -38,6 +38,13 @@
       },
       "default": "./dist/utilities/emptyModule.js"
     },
+    "./mcp/react": {
+      "mcp": {
+        "types": "./dist/mcp/react/index.d.ts",
+        "default": "./dist/mcp/react/index.js"
+      },
+      "default": "./dist/utilities/emptyModule.js"
+    },
     "./openai": {
       "openai": {
         "types": "./dist/openai/index.d.ts",
@@ -51,6 +58,27 @@
         "default": "./dist/openai/globals.js"
       },
       "default": "./dist/utilities/emptyModule.js"
+    },
+    "./openai/react": {
+      "openai": {
+        "types": "./dist/openai/react/index.d.ts",
+        "default": "./dist/openai/react/index.js"
+      },
+      "default": "./dist/utilities/emptyModule.js"
+    },
+    "./react": {
+      "mcp": {
+        "types": "./dist/react/index.mcp.d.ts",
+        "default": "./dist/react/index.mcp.js"
+      },
+      "openai": {
+        "types": "./dist/react/index.openai.d.ts",
+        "default": "./dist/react/index.openai.js"
+      },
+      "default": {
+        "types": "./dist/react/index.d.ts",
+        "default": "./dist/react/index.js"
+      }
     },
     "./tsconfig/core": "./dist/tsconfig/core/tsconfig.json",
     "./tsconfig/mcp": "./dist/tsconfig/mcp/tsconfig.json",
@@ -118,6 +146,12 @@
   },
   "peerDependenciesMeta": {
     "@modelcontextprotocol/ext-apps": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
       "optional": true
     }
   },

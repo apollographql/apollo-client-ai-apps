@@ -15,7 +15,7 @@ import {
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
 import { Suspense } from "react";
-import { ApolloProvider } from "../../../../index.js";
+import { ApolloProvider } from "../../../../react/ApolloProvider.js";
 
 test("returns the tool name from the MCP host", async () => {
   using _ = spyOnConsole("debug");
