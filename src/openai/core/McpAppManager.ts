@@ -51,7 +51,9 @@ export class McpAppManager {
       //
       // When OpenAI fixes this issue and sends `ui/notifications/tool-input`
       // consistently, this can be removed.
-      toolInput.resolve({});
+      toolInput.resolve({
+        arguments: window.openai.toolInput,
+      });
     };
 
     this.app.ontoolinput = (params) => {
