@@ -54,12 +54,12 @@
     },
     "./react": {
       "mcp": {
-        "types": "./dist/mcp/react/index.mcp.d.ts",
-        "default": "./dist/mcp/react/index.mcp.js"
+        "types": "./dist/react/index.mcp.d.ts",
+        "default": "./dist/react/index.mcp.js"
       },
       "openai": {
-        "types": "./dist/openai/react/index.openai.d.ts",
-        "default": "./dist/openai/react/index.openai.js"
+        "types": "./dist/react/index.openai.d.ts",
+        "default": "./dist/react/index.openai.js"
       },
       "default": {
         "types": "./dist/react/index.d.ts",
