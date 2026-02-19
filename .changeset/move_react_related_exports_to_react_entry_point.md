@@ -9,3 +9,5 @@ Move all React-related exports to `/react` entry point. This ensures apps that b
 - `@apollo/client-ai-apps/react` - Shared React utilities for both platforms
 - `@apollo/client-ai-apps/openai/react` - OpenAI specific React utilities
 - `@apollo/client-ai-apps/mcp/react` - MCP Apps specific React utilities
+
+This change means the `react` and `react-dom` packages are now marked as optional peer dependencies.
