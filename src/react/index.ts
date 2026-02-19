@@ -1,5 +1,6 @@
-export { ApolloProvider } from "./ApolloProvider.js";
 import { missingHook } from "./missingHook.js";
+
+export { ApolloProvider } from "./ApolloProvider.js";
 
 // Use `mcp` related types since these are the most common between the two
 // targets
