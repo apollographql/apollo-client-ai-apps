@@ -2,8 +2,8 @@
 default: patch
 ---
 
-# Fallback to `window.openai.toolInput` when initializing
+# Always use `window.openai.toolInput` to initialize the tool input value
 
-ChatGPT doesn't always send the `ui/notifications/tool-input` notification before we get `ui/notifications/tool-result`. Because we don't get input arguments from the notification, we resolve `variables` incorrectly and write data to the cache with the wrong variables. When the query executes, it is unable to read data from the cache and results in a cache miss. This further can result in a GraphQL execution error due to missing required variables.
+ChatGPT doesn't always send the `ui/notifications/tool-input` notification before we get `ui/notifications/tool-result`. Other times it sends the notification more than once. Because of the inconsistency, we can't always accurately get the correct tool input value using the notification by the time we get the `ui/notifications/tool-result` notification. This results in the wrong value for `variables` and incorrectly writes the query data to the cache.
 
-This fix falls back to get `toolInput` from `window.openai.toolInput` if we haven't received the `ui/notifications/tool-input` notification by the time we get the `ui/notification/tool-result` notification.
+This fix falls back to get `toolInput` from `window.openai.toolInput` in ChatGPT apps after we receive the `ui/notification/tool-result` notification to ensure we have the correct tool input value.
