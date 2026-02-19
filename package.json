@@ -38,6 +38,13 @@
       },
       "default": "./dist/utilities/emptyModule.js"
     },
+    "./mcp/react": {
+      "mcp": {
+        "types": "./dist/mcp/react/index.d.ts",
+        "default": "./dist/mcp/react/index.js"
+      },
+      "default": "./dist/utilities/emptyModule.js"
+    },
     "./openai": {
       "openai": {
         "types": "./dist/openai/index.d.ts",
@@ -49,6 +56,13 @@
       "openai": {
         "types": "./dist/openai/globals.d.ts",
         "default": "./dist/openai/globals.js"
+      },
+      "default": "./dist/utilities/emptyModule.js"
+    },
+    "./openai/react": {
+      "openai": {
+        "types": "./dist/openai/react/index.d.ts",
+        "default": "./dist/openai/react/index.js"
       },
       "default": "./dist/utilities/emptyModule.js"
     },
