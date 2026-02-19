@@ -52,6 +52,20 @@
       },
       "default": "./dist/utilities/emptyModule.js"
     },
+    "./react": {
+      "mcp": {
+        "types": "./dist/mcp/react/index.mcp.d.ts",
+        "default": "./dist/mcp/react/index.mcp.js"
+      },
+      "openai": {
+        "types": "./dist/openai/react/index.openai.d.ts",
+        "default": "./dist/openai/react/index.openai.js"
+      },
+      "default": {
+        "types": "./dist/react/index.d.ts",
+        "default": "./dist/react/index.js"
+      }
+    },
     "./tsconfig/core": "./dist/tsconfig/core/tsconfig.json",
     "./tsconfig/mcp": "./dist/tsconfig/mcp/tsconfig.json",
     "./tsconfig/openai": "./dist/tsconfig/openai/tsconfig.json",
