@@ -147,6 +147,12 @@
   "peerDependenciesMeta": {
     "@modelcontextprotocol/ext-apps": {
       "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
     }
   },
   "dependencies": {
