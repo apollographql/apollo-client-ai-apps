@@ -6,7 +6,7 @@
     "access": "public"
   },
   "repository": {
-    "url": "https://github.com/apollographql/apollo-ai-apps-client"
+    "url": "https://github.com/apollographql/apollo-client-ai-apps"
   },
   "type": "module",
   "main": "dist/index.js",
