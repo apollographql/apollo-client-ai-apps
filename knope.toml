@@ -60,4 +60,4 @@ command = 'echo "$version"'
 
 [github]
 owner = "apollographql"
-repo = "apollo-ai-apps-client"
+repo = "apollo-client-ai-apps"
