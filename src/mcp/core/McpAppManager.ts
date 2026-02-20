@@ -16,7 +16,7 @@ export class McpAppManager {
   readonly app: App;
 
   #toolName: string | undefined;
-  #toolMetadata: ApolloMcpServerApps.CallToolResult["_meta"];
+  #toolMetadata: ApolloMcpServerApps.CallToolResult["_meta"] | undefined;
   #toolInput: Record<string, unknown> | undefined;
 
   constructor(manifest: ApplicationManifest) {
@@ -54,7 +54,8 @@ export class McpAppManager {
     const { structuredContent, _meta } = await toolResult.promise;
     const { arguments: args } = await toolInput.promise;
 
-    this.#toolName = this.app.getHostContext()?.toolInfo?.tool.name;
+    this.#toolName =
+      this.app.getHostContext()?.toolInfo?.tool.name ?? _meta.toolName;
     this.#toolMetadata = _meta;
     this.#toolInput = args;
 
