@@ -92,7 +92,7 @@ describe("Client Basics", () => {
 
 describe("prefetchData", () => {
   test("caches tool response when data is provided", async () => {
-    stubOpenAiGlobals();
+    stubOpenAiGlobals({ toolInput: { id: 1 } });
     using _ = spyOnConsole("debug");
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -148,7 +148,7 @@ describe("prefetchData", () => {
   });
 
   test("caches prefetched data when prefetched data is provided", async () => {
-    stubOpenAiGlobals();
+    stubOpenAiGlobals({ toolInput: { id: 1 } });
     using _ = spyOnConsole("debug");
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -226,7 +226,7 @@ describe("prefetchData", () => {
   });
 
   test("caches both prefetch and tool response when both are provided", async () => {
-    stubOpenAiGlobals();
+    stubOpenAiGlobals({ toolInput: { id: 1 } });
     using _ = spyOnConsole("debug");
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -343,7 +343,7 @@ describe("prefetchData", () => {
   });
 
   test("excludes extra inputs when writing to cache", async () => {
-    stubOpenAiGlobals();
+    stubOpenAiGlobals({ toolInput: { id: 1, myOtherThing: 2 } });
     using _ = spyOnConsole("debug");
     const client = new ApolloClient({
       cache: new InMemoryCache(),
