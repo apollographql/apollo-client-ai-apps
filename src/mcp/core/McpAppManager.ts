@@ -16,7 +16,7 @@ export class McpAppManager {
   readonly app: App;
 
   #toolName: string | undefined;
-  #toolMetadata: ApolloMcpServerApps.CallToolResult["_meta"];
+  #toolMetadata: ApolloMcpServerApps.CallToolResult["_meta"] | undefined;
   #toolInput: Record<string, unknown> | undefined;
 
   constructor(manifest: ApplicationManifest) {
@@ -54,7 +54,16 @@ export class McpAppManager {
     const { structuredContent, _meta } = await toolResult.promise;
     const { arguments: args } = await toolInput.promise;
 
-    this.#toolName = this.app.getHostContext()?.toolInfo?.tool.name;
+    // Some hosts do not provide toolInfo in the ui/initialize response, so we
+    // fallback to `_meta.toolName` provided by Apollo MCP server if the value
+    // is not available.
+    this.#toolName =
+      this.app.getHostContext()?.toolInfo?.tool.name ??
+      _meta?.toolName ??
+      // Some hosts do not forward `_meta` nor do they provide `toolInfo`. Our
+      // MCP server provides `toolName` in `structuredContent` as a workaround
+      // that we can use if all else fails
+      structuredContent.toolName;
     this.#toolMetadata = _meta;
     this.#toolInput = args;
 

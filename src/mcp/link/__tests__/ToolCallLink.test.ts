@@ -3,6 +3,7 @@ import { gql, InMemoryCache } from "@apollo/client";
 import { execute } from "@apollo/client/link";
 import { ApolloClient } from "../../core/ApolloClient.js";
 import {
+  minimalHostContextWithToolName,
   mockApplicationManifest,
   mockMcpHost,
   ObservableStream,
@@ -23,15 +24,23 @@ test("delegates query execution to MCP host", async () => {
     manifest: mockApplicationManifest(),
   });
 
-  using host = await mockMcpHost();
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GetProduct"),
+  });
   host.onCleanup(() => client.stop());
 
+  host.sendToolInput({ arguments: {} });
   host.sendToolResult({
     _meta: { toolName: "GetProduct" },
     content: [],
-    structuredContent: {},
+    structuredContent: {
+      result: {
+        data: {
+          product: null,
+        },
+      },
+    },
   });
-  host.sendToolInput({ arguments: {} });
 
   host.mockToolCall("execute", () => ({
     content: [],
