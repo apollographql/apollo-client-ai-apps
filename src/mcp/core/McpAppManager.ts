@@ -58,7 +58,7 @@ export class McpAppManager {
     // fallback to `_meta.toolName` provided by Apollo MCP server if the value
     // is not available.
     this.#toolName =
-      this.app.getHostContext()?.toolInfo?.tool.name ?? _meta.toolName;
+      this.app.getHostContext()?.toolInfo?.tool.name ?? _meta?.toolName;
     this.#toolMetadata = _meta;
     this.#toolInput = args;
 

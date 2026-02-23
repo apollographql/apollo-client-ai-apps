@@ -14,7 +14,7 @@ export namespace ApolloMcpServerApps {
   }
 
   export interface CallToolResult extends McpCallToolResult {
-    _meta: ApolloMcpServerApps.Meta;
+    _meta?: ApolloMcpServerApps.Meta;
     structuredContent: ApolloMcpServerApps.StructuredContent;
   }
 }
