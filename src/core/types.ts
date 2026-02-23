@@ -10,6 +10,7 @@ export namespace ApolloMcpServerApps {
   export interface StructuredContent {
     result: FormattedExecutionResult;
     prefetch?: Record<string, FormattedExecutionResult>;
+    toolName?: string;
     [x: string]: unknown;
   }
 
