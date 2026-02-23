@@ -1,3 +1,17 @@
+## 0.5.2 (2026-02-23)
+
+### Fixes
+
+#### Add fallback when `toolName` is not available from host context
+
+Provides a fallback in MCP apps to get the executed tool name from `_meta.toolName` when the host does not provide `toolInfo` from host context, or `structuredContent.toolName` when the host does not forward `_meta` to the connected application.
+
+#### Always use `window.openai.toolInput` to initialize the tool input value
+
+ChatGPT doesn't always send the `ui/notifications/tool-input` notification before we get `ui/notifications/tool-result`. Other times it sends the notification more than once. Because of the inconsistency, we can't always accurately get the correct tool input value using the notification by the time we get the `ui/notifications/tool-result` notification. This results in the wrong value for `variables` and incorrectly writes the query data to the cache.
+
+This fix falls back to get `toolInput` from `window.openai.toolInput` in ChatGPT apps after we receive the `ui/notification/tool-result` notification to ensure we have the correct tool input value.
+
 ## 0.5.1 (2026-02-19)
 
 ### Fixes
