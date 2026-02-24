@@ -17,3 +17,8 @@ export const useToolMetadata =
 
 export const useToolName =
   missingHook<typeof import("./index.mcp.js").useToolName>("useToolName");
+
+export const useToolInputVariables =
+  missingHook<typeof import("./index.mcp.js").useToolInputVariables>(
+    "useToolInputVariables"
+  );
