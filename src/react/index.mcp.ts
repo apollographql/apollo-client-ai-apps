@@ -2,7 +2,7 @@ export * from "./index.js";
 export {
   useApp,
   useToolInput,
-  useToolInputVariables,
+  createHydratedVariables,
   useToolMetadata,
   useToolName,
 } from "../mcp/react/index.js";

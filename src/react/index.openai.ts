@@ -2,7 +2,7 @@ export * from "./index.js";
 export {
   useApp,
   useToolInput,
-  useToolInputVariables,
+  createHydratedVariables,
   useToolMetadata,
   useToolName,
 } from "../openai/react/index.js";

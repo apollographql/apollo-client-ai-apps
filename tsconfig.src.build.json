@@ -9,6 +9,6 @@
     "./src/testing/internal/"
   ],
   "compilerOptions": {
-    "lib": ["DOM"]
+    "lib": ["DOM", "ESNext"]
   }
 }

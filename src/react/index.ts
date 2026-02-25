@@ -1,6 +1,8 @@
 import { missingHook } from "./missingHook.js";
 
 export { ApolloProvider } from "./ApolloProvider.js";
+export { reactive } from "./reactive.js";
+export type { Reactive } from "./reactive.js";
 
 // Use `mcp` related types since these are the most common between the two
 // targets
@@ -18,6 +20,6 @@ export const useToolMetadata =
 export const useToolName =
   missingHook<typeof import("./index.mcp.js").useToolName>("useToolName");
 
-export const useToolInputVariables = missingHook<
-  typeof import("./index.mcp.js").useToolInputVariables
->("useToolInputVariables");
+export const createHydratedVariables = missingHook<
+  typeof import("./index.mcp.js").createHydratedVariables
+>("createHydratedVariables");
