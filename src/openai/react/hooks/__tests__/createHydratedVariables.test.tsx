@@ -437,7 +437,7 @@ test("setVariables ignores reactive variable keys (object form)", async () => {
   setVariables({ category: "sports" });
 
   expect(console.warn).toHaveBeenCalledWith(
-    expect.stringContaining('"category"')
+    expect.stringContaining('Attempted to set reactive variable "category"')
   );
   await expect(takeSnapshot).not.toRerender();
 });
@@ -493,7 +493,7 @@ test("setVariables ignores reactive variable keys (callback form)", async () => 
   setVariables(() => ({ category: "sports" }));
 
   expect(console.warn).toHaveBeenCalledWith(
-    expect.stringContaining('"category"')
+    expect.stringContaining('Attempted to set reactive variable "category"')
   );
   await expect(takeSnapshot).not.toRerender();
 });

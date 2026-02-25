@@ -59,7 +59,7 @@ export function createHydratedVariables<
   ] {
     const client = useApolloClient();
     const toolName = useToolName();
-    const [toolInput] = useState(() => client.takeToolInput());
+    const [toolInput] = useState(() => client.toolInput);
 
     const toolMatches =
       toolInput !== undefined &&
@@ -128,6 +128,17 @@ export function createHydratedVariables<
     if (!equal(nextReactiveVars, reactiveVars)) {
       setReactiveVars(nextReactiveVars);
     }
+
+    // Clear the tool input after first mount so that remounting the component
+    // uses the user-provided variables rather than the hydrated tool input.
+    // This runs once on mount; watchQuery also clears it when useQuery is
+    // present, so both paths are idempotent.
+    useLayoutEffect(() => {
+      if (toolMatches) {
+        client.clearToolInput();
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useLayoutEffect(() => {
       for (const [key, value] of Object.entries(variables)) {

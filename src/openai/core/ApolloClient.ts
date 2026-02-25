@@ -1,8 +1,17 @@
 import type { ApolloLink } from "@apollo/client";
 import { ApolloClient as BaseApolloClient } from "@apollo/client";
 import { DocumentTransform } from "@apollo/client";
-import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
-import { parse } from "graphql";
+import type {
+  WatchQueryOptions,
+  ObservableQuery,
+  OperationVariables,
+} from "@apollo/client";
+import {
+  removeDirectivesFromDocument,
+  getOperationDefinition,
+} from "@apollo/client/utilities/internal";
+import { Kind, parse } from "graphql";
+import { equal } from "@wry/equality";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { ApplicationManifest } from "../../types/application-manifest.js";
 import { ToolCallLink } from "../link/ToolCallLink.js";
@@ -57,14 +66,58 @@ export class ApolloClient extends BaseApolloClient {
     this.appManager.close().catch(() => {});
   }
 
-  // Hydrated variables (i.e. variables that are used by the tool that rendered
-  // the view) should only be consumed once. This ensures that navigating away
-  // from the initial view, then returning to that view doesn't use the hydrated
-  // variables, but the user input variables from that point forward.
-  takeToolInput() {
-    const toolInput = this.#toolInput;
+  get toolInput() {
+    return this.#toolInput;
+  }
+
+  clearToolInput() {
     this.#toolInput = undefined;
-    return toolInput;
+  }
+
+  watchQuery<
+    T = any,
+    TVariables extends OperationVariables = OperationVariables,
+  >(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables> {
+    if (__DEV__) {
+      const toolInput = this.#toolInput;
+
+      if (toolInput) {
+        const toolName = this.appManager.toolName;
+        const operationDef = getOperationDefinition(options.query);
+        const hasMatchingTool = operationDef?.directives?.some((d) => {
+          if (d.name.value !== "tool") return false;
+          const nameArg = d.arguments?.find((arg) => arg.name.value === "name");
+          return (
+            nameArg?.value.kind === Kind.STRING &&
+            nameArg.value.value === toolName
+          );
+        });
+
+        if (hasMatchingTool) {
+          // Clear after first matching comparison so this only fires once and
+          // remounting doesn't produce spurious warnings.
+          this.#toolInput = undefined;
+
+          const variables = (options.variables ?? {}) as Record<
+            string,
+            unknown
+          >;
+          const hasToolInputMismatch = Object.entries(toolInput).some(
+            ([key, value]) => !equal(variables[key], value)
+          );
+
+          if (hasToolInputMismatch) {
+            console.warn(
+              "This query has a @tool directive matching the current tool call, but the " +
+                "variables passed to watchQuery don't match the tool input. Use " +
+                "`useHydratedVariables` to automatically use the tool input as the initial variables."
+            );
+          }
+        }
+      }
+    }
+
+    return super.watchQuery(options);
   }
 
   connect = cacheAsync(async () => {
