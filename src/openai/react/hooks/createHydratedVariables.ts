@@ -28,6 +28,7 @@ type SetVariables<TState> = (
   update: Partial<TState> | ((prev: TState) => Partial<TState>)
 ) => void;
 
+/** @experimental */
 export function createHydratedVariables<
   TVariables extends OperationVariables = OperationVariables,
 >(document: TypedDocumentNode<any, TVariables> | DocumentNode) {

@@ -20,6 +20,7 @@ export const useToolMetadata =
 export const useToolName =
   missingHook<typeof import("./index.mcp.js").useToolName>("useToolName");
 
+/** @experimental */
 export const createHydratedVariables = missingHook<
   typeof import("./index.mcp.js").createHydratedVariables
 >("createHydratedVariables");
