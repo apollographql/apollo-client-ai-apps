@@ -55,12 +55,12 @@ export class McpAppManager {
     // before we get the tool result (which should always happen and at most
     // once according to the spec). Rather than relying on the
     // `ui/notifications/tool-input` notification to set the tool input value,
-    // we read from `window.openai.toolInput so that we hvae the most recent
+    // we read from `window.openai.toolInput so that we have the most recent
     // set value.
     //
     // When OpenAI fixes this issue and sends `ui/notifications/tool-input`
     // consistently according to the MCP Apps specification, this can be
-    // reverrted to use the `app.ontoolinput` callback.
+    // reverted to use the `app.ontoolinput` callback.
     this.#toolInput = window.openai.toolInput;
 
     // OpenAI doesn't provide access to `_meta`, so we need to use
