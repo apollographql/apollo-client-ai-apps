@@ -775,6 +775,56 @@ test("optional reactive variable is omitted from result when tool input omits it
   await expect(takeSnapshot).not.toRerender();
 });
 
+test("handles optional variable omitted from user-variables when tool input includes it", async () => {
+  using _ = spyOnConsole("debug");
+  stubOpenAiGlobals({
+    toolResponseMetadata: {},
+    toolInput: { category: "electronics", page: 1 },
+  });
+
+  const query: TypedDocumentNode<
+    any,
+    { category: string; page?: number | null }
+  > = gql`
+    query OptionalProduct($category: String!, $page: Int)
+    @tool(name: "GetProductsByCategory") {
+      products(category: $category, page: $page) {
+        id
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    manifest: mockApplicationManifest(),
+  });
+
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
+  });
+  host.onCleanup(() => client.stop());
+
+  host.sendToolInput({ arguments: { category: "electronics", page: 1 } });
+  host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
+
+  const { useHydratedVariables } = createHydratedVariables(query);
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () => useHydratedVariables({ category: "music" }),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  const [variables] = await takeSnapshot();
+  expect(variables).toStrictEqual({ category: "electronics", page: 1 });
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
 test("returned variables are referentially stable between re-renders when nothing changes", async () => {
   using _ = spyOnConsole("debug");
   stubOpenAiGlobals({
