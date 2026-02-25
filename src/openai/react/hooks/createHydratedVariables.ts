@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useLayoutEffect } from "react";
 import { Kind } from "graphql";
 import type {
   DocumentNode,
@@ -82,18 +82,17 @@ export function createHydratedVariables<
       }
     );
 
-    const initialReactiveValuesRef = useRef<Record<string, unknown> | null>(
-      null
-    );
-    if (initialReactiveValuesRef.current === null) {
-      initialReactiveValuesRef.current = {};
-
+    const [initialReactiveValues] = useState<Record<string, unknown>>(() => {
+      const initial: Record<string, unknown> = {};
       for (const [key, value] of Object.entries(variables)) {
         if (isReactive(value) && variableNames.has(key)) {
-          initialReactiveValuesRef.current[key] = value.value;
+          initial[key] = value.value;
         }
       }
-    }
+      return initial;
+    });
+
+    const hasChangedRef = useRef(new Set<string>());
 
     const activeReactiveEntries: [string, unknown][] = [];
     const nextReactive: Record<string, unknown> = {};
@@ -104,8 +103,8 @@ export function createHydratedVariables<
       }
 
       const useInputValue =
-        !Object.hasOwn(initialReactiveValuesRef.current, key) ||
-        !equal(value.value, initialReactiveValuesRef.current[key]);
+        hasChangedRef.current.has(key) ||
+        !equal(value.value, initialReactiveValues[key]);
 
       if (!useInputValue && toolMatches && variableNames.has(key)) {
         if (key in toolInput!) {
@@ -115,15 +114,22 @@ export function createHydratedVariables<
           nextReactive[key] = value.value; // tracked for dep stability, but not merged
         }
       } else {
-        // Once a reactive variable has changed at least once, we know longer
-        // need to track its value since we want to use the input value from
-        // that point forward. This makes it possible to change a value, then
-        // change it back to its initial value and continue to work.
-        delete initialReactiveValuesRef.current[key];
         nextReactive[key] = value.value;
         activeReactiveEntries.push([key, value.value]);
       }
     }
+
+    useLayoutEffect(() => {
+      for (const [key, value] of Object.entries(variables)) {
+        if (
+          isReactive(value) &&
+          variableNames.has(key) &&
+          !equal(value.value, initialReactiveValues[key])
+        ) {
+          hasChangedRef.current.add(key);
+        }
+      }
+    });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const resolvedVariables = useMemo(() => {
