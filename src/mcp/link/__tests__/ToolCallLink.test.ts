@@ -49,7 +49,7 @@ test("delegates query execution to MCP host", async () => {
     },
   }));
 
-  await client.waitForInitialization();
+  await client.connect();
 
   const observable = execute(new ToolCallLink(), { query }, { client });
   const stream = new ObservableStream(observable);

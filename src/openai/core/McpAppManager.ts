@@ -35,7 +35,7 @@ export class McpAppManager {
     return this.#toolInput;
   }
 
-  waitForInitialization = cacheAsync(async () => {
+  connect = cacheAsync(async () => {
     let toolResult = promiseWithResolvers<ApolloMcpServerApps.CallToolResult>();
 
     this.app.ontoolresult = (params) => {
@@ -44,7 +44,7 @@ export class McpAppManager {
       );
     };
 
-    await this.connect();
+    await this.connectToServer();
 
     const { structuredContent } = await toolResult.promise;
 
@@ -93,7 +93,7 @@ export class McpAppManager {
     return result.structuredContent;
   }
 
-  private async connect() {
+  private async connectToServer() {
     try {
       return await this.app.connect(
         new PostMessageTransport(window.parent, window.parent)

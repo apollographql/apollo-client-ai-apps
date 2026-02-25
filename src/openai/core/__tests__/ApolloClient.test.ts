@@ -30,7 +30,7 @@ describe("Client Basics", () => {
       structuredContent: {},
     });
 
-    await client.waitForInitialization();
+    await client.connect();
 
     host.mockToolCall("execute", () => ({
       content: [],
@@ -124,7 +124,7 @@ describe("prefetchData", () => {
       },
     });
 
-    await client.waitForInitialization();
+    await client.connect();
 
     expect(client.extract()).toMatchInlineSnapshot(`
       {
@@ -202,7 +202,7 @@ describe("prefetchData", () => {
       },
     });
 
-    await client.waitForInitialization();
+    await client.connect();
 
     expect(client.extract()).toMatchInlineSnapshot(`
       {
@@ -307,7 +307,7 @@ describe("prefetchData", () => {
       },
     });
 
-    await client.waitForInitialization();
+    await client.connect();
 
     expect(client.extract()).toMatchInlineSnapshot(`
       {
@@ -375,7 +375,7 @@ describe("prefetchData", () => {
       },
     });
 
-    await client.waitForInitialization();
+    await client.connect();
 
     expect(client.extract()).toMatchInlineSnapshot(`
       {
@@ -440,7 +440,7 @@ describe("custom links", () => {
       },
     }));
 
-    await client.waitForInitialization();
+    await client.connect();
 
     const variables = { id: "1" };
     const query = parse(manifest.operations[0].body);

@@ -57,7 +57,7 @@ test("writes tool result data to cache", async () => {
   });
   host.sendToolInput({ arguments: { id: "1" } });
 
-  await client.waitForInitialization();
+  await client.connect();
 
   expect(client.extract()).toEqual({
     "Product:1": {
@@ -124,7 +124,7 @@ test("writes prefetch data to cache", async () => {
   });
   host.sendToolInput({ arguments: {} });
 
-  await client.waitForInitialization();
+  await client.connect();
 
   expect(client.extract()).toEqual({
     "Product:1": {
@@ -213,7 +213,7 @@ test("writes prefetch and tool response data to cache when both are provided", a
   });
   host.sendToolInput({ arguments: { id: "2" } });
 
-  await client.waitForInitialization();
+  await client.connect();
 
   expect(client.extract()).toEqual({
     "Product:1": {
@@ -281,7 +281,7 @@ test("excludes extra tool input variables not defined in the operation", async (
   });
   host.sendToolInput({ arguments: { id: "1", extraParam: "ignored" } });
 
-  await client.waitForInitialization();
+  await client.connect();
 
   expect(client.extract()).toEqual({
     "Product:1": {
@@ -345,7 +345,7 @@ test("allows for custom links provided to the constructor", async () => {
     },
   }));
 
-  await client.waitForInitialization();
+  await client.connect();
 
   const variables = { id: "1" };
   const query = gql(manifest.operations[0].body);

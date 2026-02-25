@@ -55,9 +55,9 @@ export class ApolloClient extends BaseApolloClient {
     this.appManager.close().catch(() => {});
   }
 
-  waitForInitialization = cacheAsync(async () => {
+  connect = cacheAsync(async () => {
     const { prefetch, result, toolName, args } =
-      await this.appManager.waitForInitialization();
+      await this.appManager.connect();
 
     this.manifest.operations.forEach((operation) => {
       if (operation.prefetchID && prefetch?.[operation.prefetchID]) {

@@ -25,7 +25,7 @@ export function ApolloProvider({ children, client }: ApolloProvider.Props) {
     );
   }
 
-  use(client.waitForInitialization());
+  use(client.connect());
 
   return (
     <BaseApolloProvider client={client as BaseApolloClient}>
