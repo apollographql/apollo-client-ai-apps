@@ -1,5 +1,6 @@
 import { afterEach, describe, test, expect, vi } from "vitest";
 import {
+  createRenderStream,
   disableActEnvironment,
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
@@ -17,6 +18,7 @@ import {
 } from "../../../../testing/internal/index.js";
 import { ApolloProvider } from "../../../../react/ApolloProvider.js";
 import { StrictMode } from "react";
+import assert from "node:assert";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -936,60 +938,62 @@ test("hydrated variables are only used the first time the component mounts, then
   const { useHydratedVariables } = createHydratedVariables(PRODUCTS_QUERY);
 
   using _disabledAct = disableActEnvironment();
+  const { replaceSnapshot, render, takeRender } = createRenderStream<
+    ReturnType<typeof useHydratedVariables> | undefined
+  >();
 
-  {
-    const { takeSnapshot, unmount } = await renderHookToSnapshotStream(
-      () =>
-        useHydratedVariables({
-          category: "music",
-          page: 1,
-          sortBy: "name",
-        }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
+  function HydratedVariables() {
+    replaceSnapshot(
+      useHydratedVariables({ category: "music", page: 1, sortBy: "name" })
     );
 
-    const [variables] = await takeSnapshot();
+    return null;
+  }
 
-    expect(variables).toStrictEqual({
+  function App({ mounted }: { mounted: boolean }) {
+    replaceSnapshot(undefined);
+    return mounted && <HydratedVariables />;
+  }
+
+  const { rerender } = await render(<App mounted />, {
+    wrapper: ({ children }) => (
+      <ApolloProvider client={client}>{children}</ApolloProvider>
+    ),
+  });
+
+  {
+    const { snapshot } = await takeRender();
+
+    assert(snapshot);
+    expect(snapshot[0]).toStrictEqual({
       category: "electronics",
       page: 1,
       sortBy: "title",
     });
-
-    await expect(takeSnapshot).not.toRerender();
-
-    unmount();
   }
 
+  await rerender(<App mounted={false} />);
+
   {
-    const { takeSnapshot } = await renderHookToSnapshotStream(
-      () =>
-        useHydratedVariables({
-          category: "music",
-          page: 1,
-          sortBy: "name",
-        }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
+    const { snapshot } = await takeRender();
 
-    const [variables] = await takeSnapshot();
+    expect(snapshot).toBeUndefined();
+  }
 
-    expect(variables).toStrictEqual({
+  await rerender(<App mounted />);
+
+  {
+    const { snapshot } = await takeRender();
+
+    assert(snapshot);
+    expect(snapshot[0]).toStrictEqual({
       category: "music",
       page: 1,
       sortBy: "name",
     });
-
-    await expect(takeSnapshot).not.toRerender();
   }
+
+  expect(takeRender).not.toRerender();
 });
 
 test("hydrated variables are only used the first time the component mounts, then uses user vars after in React strict mode", async () => {
@@ -1022,63 +1026,64 @@ test("hydrated variables are only used the first time the component mounts, then
 
   using _disabledAct = disableActEnvironment();
 
-  {
-    const { takeSnapshot, unmount } = await renderHookToSnapshotStream(
-      () =>
-        useHydratedVariables({
-          category: "music",
-          page: 1,
-          sortBy: "name",
-        }),
-      {
-        wrapper: ({ children }) => (
-          <StrictMode>
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          </StrictMode>
-        ),
-      }
+  const { replaceSnapshot, render, takeRender } = createRenderStream<
+    ReturnType<typeof useHydratedVariables> | undefined
+  >();
+
+  function HydratedVariables() {
+    replaceSnapshot(
+      useHydratedVariables({ category: "music", page: 1, sortBy: "name" })
     );
 
-    const [variables] = await takeSnapshot();
+    return null;
+  }
 
-    expect(variables).toStrictEqual({
+  function App({ mounted }: { mounted: boolean }) {
+    replaceSnapshot(undefined);
+    return mounted && <HydratedVariables />;
+  }
+
+  const { rerender } = await render(<App mounted />, {
+    wrapper: ({ children }) => (
+      <StrictMode>
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      </StrictMode>
+    ),
+  });
+
+  {
+    const { snapshot } = await takeRender();
+
+    assert(snapshot);
+    expect(snapshot[0]).toStrictEqual({
       category: "electronics",
       page: 1,
       sortBy: "title",
     });
-
-    await expect(takeSnapshot).not.toRerender();
-
-    unmount();
   }
 
+  await rerender(<App mounted={false} />);
+
   {
-    const { takeSnapshot } = await renderHookToSnapshotStream(
-      () =>
-        useHydratedVariables({
-          category: "music",
-          page: 1,
-          sortBy: "name",
-        }),
-      {
-        wrapper: ({ children }) => (
-          <StrictMode>
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          </StrictMode>
-        ),
-      }
-    );
+    const { snapshot } = await takeRender();
 
-    const [variables] = await takeSnapshot();
+    expect(snapshot).toBeUndefined();
+  }
 
-    expect(variables).toStrictEqual({
+  await rerender(<App mounted />);
+
+  {
+    const { snapshot } = await takeRender();
+
+    assert(snapshot);
+    expect(snapshot[0]).toStrictEqual({
       category: "music",
       page: 1,
       sortBy: "name",
     });
-
-    await expect(takeSnapshot).not.toRerender();
   }
+
+  expect(takeRender).not.toRerender();
 });
 
 describe.skip("type tests", () => {
