@@ -2,20 +2,20 @@ import type { McpUiToolResultNotification } from "@modelcontextprotocol/ext-apps
 import type { FormattedExecutionResult } from "graphql";
 import type { ApolloMcpServerApps } from "../../../core/types";
 
-export function graphqlToolResult(
+export function graphqlToolResult<TData = Record<string, unknown>>(
   options:
-    | FormattedExecutionResult
+    | FormattedExecutionResult<TData>
     | {
         prefetch?: Record<string, FormattedExecutionResult>;
-        result: FormattedExecutionResult;
+        result: FormattedExecutionResult<TData>;
       }
 ): McpUiToolResultNotification["params"] {
   let structuredContent: ApolloMcpServerApps.StructuredContent;
 
   if ("data" in options) {
-    structuredContent = { result: options };
+    structuredContent = { result: options as FormattedExecutionResult };
   } else if ("result" in options) {
-    structuredContent = { result: options.result };
+    structuredContent = { result: options.result as FormattedExecutionResult };
 
     if (options.prefetch) {
       structuredContent.prefetch = options.prefetch;
