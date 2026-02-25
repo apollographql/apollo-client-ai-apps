@@ -65,76 +65,84 @@ export function createHydratedVariables<
       documentToolNames.has(toolName);
 
     const [stateVars, setStateVars] = useState<Record<string, unknown>>(() => {
-      const initial: Record<string, unknown> = {};
+      const values: Record<string, unknown> = {};
 
       for (const [key, value] of Object.entries(
         toolMatches ? toolInput : variables
       )) {
         if (variableNames.has(key) && !isReactive(value)) {
-          initial[key] = value;
+          values[key] = value;
         }
       }
 
-      return initial;
+      return values;
     });
 
-    const [initialReactiveValues] = useState<Record<string, unknown>>(() => {
-      const initial: Record<string, unknown> = {};
+    const [initialReactiveVars] = useState<Record<string, unknown>>(() => {
+      const values: Record<string, unknown> = {};
 
       for (const [key, value] of Object.entries(variables)) {
         if (variableNames.has(key) && isReactive(value)) {
-          initial[key] = value.value;
+          values[key] = value.value;
         }
       }
 
-      return initial;
+      return values;
+    });
+
+    const [reactiveVars, setReactiveVars] = useState(() => {
+      const values: Record<string, unknown> = {};
+
+      for (const [key, value] of Object.entries(initialReactiveVars)) {
+        if (toolMatches && key in toolInput) {
+          values[key] = toolInput[key];
+        } else if (!toolMatches) {
+          values[key] = value;
+        }
+      }
+
+      return values;
     });
 
     const changedKeysRef = useRef(new Set<string>());
-
-    const activeReactive: Record<string, unknown> = {};
-    const nextReactive: Record<string, unknown> = {};
+    const nextReactiveVars: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(variables)) {
-      if (!variableNames.has(key) || !isReactive(value)) {
-        continue;
-      }
+      if (!variableNames.has(key) || !isReactive(value)) continue;
 
-      const useInputValue =
+      const hasChanged =
         changedKeysRef.current.has(key) ||
-        !equal(value.value, initialReactiveValues[key]);
+        !equal(value.value, initialReactiveVars[key]);
 
-      if (toolMatches && !useInputValue) {
+      if (toolMatches && !hasChanged) {
         if (key in toolInput) {
-          nextReactive[key] = toolInput[key];
-          activeReactive[key] = toolInput[key];
-        } else {
-          nextReactive[key] = value.value; // tracked for dep stability, but not merged
+          nextReactiveVars[key] = toolInput[key];
         }
       } else {
-        nextReactive[key] = value.value;
-        activeReactive[key] = value.value;
+        nextReactiveVars[key] = value.value;
       }
+    }
+
+    if (!equal(nextReactiveVars, reactiveVars)) {
+      setReactiveVars(nextReactiveVars);
     }
 
     useLayoutEffect(() => {
       for (const [key, value] of Object.entries(variables)) {
         if (
           variableNames.has(key) &&
-          // short-circuit deep equality check if we've already recorded key as changed
-          !changedKeysRef.current.has(key) &&
           isReactive(value) &&
-          !equal(value.value, initialReactiveValues[key])
+          !changedKeysRef.current.has(key) &&
+          !equal(value.value, initialReactiveVars[key])
         ) {
           changedKeysRef.current.add(key);
         }
       }
     });
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     const resolvedVariables = useMemo(() => {
-      return { ...stateVars, ...activeReactive } as TVariables;
-    }, [stateVars, ...Object.values(nextReactive)]);
+      return { ...stateVars, ...reactiveVars } as TVariables;
+    }, [stateVars, reactiveVars]);
 
     const setVariables = useCallback<
       SetVariables<StateVariables<TVariables, TInputVariables>>
