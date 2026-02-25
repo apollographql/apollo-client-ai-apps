@@ -64,29 +64,29 @@ export function createHydratedVariables<
       toolName !== undefined &&
       documentToolNames.has(toolName);
 
-    const [stateVars, setStateVarsInternal] = useState<Record<string, unknown>>(
-      () => {
-        const initial: Record<string, unknown> = {};
+    const [stateVars, setStateVars] = useState<Record<string, unknown>>(() => {
+      const initial: Record<string, unknown> = {};
 
-        for (const [key, value] of Object.entries(
-          toolMatches ? toolInput : variables
-        )) {
-          if (!isReactive(value) && variableNames.has(key)) {
-            initial[key] = value;
-          }
+      for (const [key, value] of Object.entries(
+        toolMatches ? toolInput : variables
+      )) {
+        if (variableNames.has(key) && !isReactive(value)) {
+          initial[key] = value;
         }
-
-        return initial;
       }
-    );
+
+      return initial;
+    });
 
     const [initialReactiveValues] = useState<Record<string, unknown>>(() => {
       const initial: Record<string, unknown> = {};
+
       for (const [key, value] of Object.entries(variables)) {
-        if (isReactive(value) && variableNames.has(key)) {
+        if (variableNames.has(key) && isReactive(value)) {
           initial[key] = value.value;
         }
       }
+
       return initial;
     });
 
@@ -96,7 +96,7 @@ export function createHydratedVariables<
     const nextReactive: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(variables)) {
-      if (!isReactive(value) || !variableNames.has(key)) {
+      if (!variableNames.has(key) || !isReactive(value)) {
         continue;
       }
 
@@ -120,6 +120,8 @@ export function createHydratedVariables<
     useLayoutEffect(() => {
       for (const [key, value] of Object.entries(variables)) {
         if (
+          // short-circuit deep equality check if we've already recorded key as changed
+          !hasChangedRef.current.has(key) &&
           isReactive(value) &&
           variableNames.has(key) &&
           !equal(value.value, initialReactiveValues[key])
@@ -141,7 +143,7 @@ export function createHydratedVariables<
     const setVariables = useCallback<
       SetVariables<StateVariables<TVariables, TInputVariables>>
     >((update) => {
-      setStateVarsInternal((prev) => {
+      setStateVars((prev) => {
         const updates =
           typeof update === "function" ? update(prev as any) : update;
         return { ...prev, ...updates };
