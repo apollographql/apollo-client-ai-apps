@@ -67,17 +67,15 @@ export function createHydratedVariables<
     const [stateVars, setStateVarsInternal] = useState<Record<string, unknown>>(
       () => {
         const initial: Record<string, unknown> = {};
-        for (const [key, value] of Object.entries(variables)) {
-          if (isReactive(value) || !variableNames.has(key)) {
-            continue;
-          }
 
-          if (!toolMatches) {
+        for (const [key, value] of Object.entries(
+          toolMatches ? toolInput : variables
+        )) {
+          if (!isReactive(value) && variableNames.has(key)) {
             initial[key] = value;
-          } else if (key in toolInput) {
-            initial[key] = toolInput[key];
           }
         }
+
         return initial;
       }
     );
