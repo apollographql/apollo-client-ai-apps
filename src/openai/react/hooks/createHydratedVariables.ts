@@ -5,7 +5,7 @@ import type {
   OperationVariables,
   TypedDocumentNode,
 } from "@apollo/client";
-import { useToolInput } from "./useToolInput.js";
+import { useApolloClient } from "./useApolloClient.js";
 import { useToolName } from "./useToolName.js";
 import { isReactive } from "../../../react/reactive.js";
 import type { Reactive } from "../../../react/reactive.js";
@@ -55,8 +55,9 @@ export function createHydratedVariables<
     variables: TVariables,
     setVariables: SetVariables<StateVariables<TVariables, TInputVariables>>,
   ] {
+    const client = useApolloClient();
     const toolName = useToolName();
-    const toolInput = useToolInput();
+    const [toolInput] = useState(() => client.takeToolInput());
 
     const toolMatches =
       toolInput !== undefined &&

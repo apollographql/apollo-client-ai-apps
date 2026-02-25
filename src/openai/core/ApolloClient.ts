@@ -27,6 +27,8 @@ export class ApolloClient extends BaseApolloClient {
   /** @internal */
   readonly [aiClientSymbol] = true;
 
+  #toolInput: Record<string, unknown> | undefined;
+
   constructor(options: ApolloClient.Options) {
     const link = options.link ?? new ToolCallLink();
 
@@ -55,9 +57,21 @@ export class ApolloClient extends BaseApolloClient {
     this.appManager.close().catch(() => {});
   }
 
+  // Hydrated variables (i.e. variables that are used by the tool that rendered
+  // the view) should only be consumed once. This ensures that navigating away
+  // from the initial view, then returning to that view doesn't use the hydrated
+  // variables, but the user input variables from that point forward.
+  takeToolInput() {
+    const toolInput = this.#toolInput;
+    this.#toolInput = undefined;
+    return toolInput;
+  }
+
   connect = cacheAsync(async () => {
     const { prefetch, result, toolName, args } =
       await this.appManager.connect();
+
+    this.#toolInput = args;
 
     this.manifest.operations.forEach((operation) => {
       if (operation.prefetchID && prefetch?.[operation.prefetchID]) {
