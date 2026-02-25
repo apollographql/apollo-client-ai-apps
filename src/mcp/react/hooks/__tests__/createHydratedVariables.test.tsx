@@ -41,7 +41,7 @@ test("returns tool input value when tool matches", async () => {
   host.onCleanup(() => client.stop());
 
   host.sendToolInput({
-    arguments: { id: "1", category: "electronics", page: 1, sortBy: "title" },
+    arguments: { category: "electronics", page: 1, sortBy: "title" },
   });
   host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
 
@@ -614,7 +614,7 @@ test("optional state variable is omitted from result when tool input omits it", 
     { category: string; page?: number | null }
   > = gql`
     query OptionalProduct($category: String!, $page: Int)
-    @tool(name: "GetProductsForCategory") {
+    @tool(name: "GetProductsByCategory") {
       products(category: $category, page: $page) {
         id
       }
@@ -627,7 +627,7 @@ test("optional state variable is omitted from result when tool input omits it", 
   });
 
   using host = await mockMcpHost({
-    hostContext: minimalHostContextWithToolName("GetProductsForCategory"),
+    hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
   });
   host.onCleanup(() => client.stop());
 
@@ -660,7 +660,7 @@ test("optional reactive variable is omitted from result when tool input omits it
     { category: string; page?: number | null }
   > = gql`
     query OptionalProduct($category: String!, $page: Int)
-    @tool(name: "GetProductsForCategory") {
+    @tool(name: "GetProductsByCategory") {
       products(category: $category, page: $page) {
         id
       }
@@ -673,7 +673,7 @@ test("optional reactive variable is omitted from result when tool input omits it
   });
 
   using host = await mockMcpHost({
-    hostContext: minimalHostContextWithToolName("GetProductsForCategory"),
+    hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
   });
   host.onCleanup(() => client.stop());
 
@@ -723,7 +723,7 @@ test("returned variables are referentially stable between re-renders when nothin
   });
 
   using host = await mockMcpHost({
-    hostContext: minimalHostContextWithToolName("GetProductsForCategory"),
+    hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
   });
   host.onCleanup(() => client.stop());
 
@@ -750,6 +750,11 @@ test("returned variables are referentially stable between re-renders when nothin
   );
 
   const [initialVariables] = await takeSnapshot();
+  expect(initialVariables).toStrictEqual({
+    category: "electronics",
+    page: 1,
+    sortBy: "title",
+  });
 
   rerender();
 
