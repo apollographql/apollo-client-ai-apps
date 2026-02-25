@@ -837,6 +837,82 @@ test("state variable is hydrated when tool name matches one of multiple @tool di
   await expect(takeSnapshot).not.toRerender();
 });
 
+test("hydrated variables are only used the first time the component mounts, then uses user vars after", async () => {
+  using _ = spyOnConsole("debug");
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    manifest: mockApplicationManifest(),
+  });
+
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
+  });
+  host.onCleanup(() => client.stop());
+
+  host.sendToolInput({
+    arguments: { category: "electronics", page: 1, sortBy: "title" },
+  });
+  host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
+
+  const { useHydratedVariables } = createHydratedVariables(PRODUCTS_QUERY);
+
+  using _disabledAct = disableActEnvironment();
+
+  {
+    const { takeSnapshot, unmount } = await renderHookToSnapshotStream(
+      () =>
+        useHydratedVariables({
+          category: "music",
+          page: 1,
+          sortBy: "name",
+        }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    const [variables] = await takeSnapshot();
+
+    expect(variables).toStrictEqual({
+      category: "electronics",
+      page: 1,
+      sortBy: "title",
+    });
+
+    await expect(takeSnapshot).not.toRerender();
+
+    unmount();
+  }
+
+  {
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () =>
+        useHydratedVariables({
+          category: "music",
+          page: 1,
+          sortBy: "name",
+        }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    const [variables] = await takeSnapshot();
+
+    expect(variables).toStrictEqual({
+      category: "music",
+      page: 1,
+      sortBy: "name",
+    });
+
+    await expect(takeSnapshot).not.toRerender();
+  }
+});
+
 describe.skip("type tests", () => {
   test("TypeScript rejects variables not defined in TVariables", () => {
     const { useHydratedVariables } = createHydratedVariables(PRODUCTS_QUERY);
