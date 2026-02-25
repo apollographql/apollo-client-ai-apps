@@ -17,11 +17,11 @@ type HydratedVariablesInput<TVariables> = {
 };
 
 type StateVariables<TVariables, Input> = {
-  [K in keyof Input as Input[K] extends Reactive<any> ? never : K]: K extends (
-    keyof TVariables
-  ) ?
-    TVariables[K]
-  : never;
+  [K in keyof TVariables as K extends keyof Input ?
+    Input[K] extends Reactive<any> ?
+      never
+    : K
+  : K]: K extends keyof TVariables ? TVariables[K] : never;
 };
 
 type SetVariables<TState> = (
