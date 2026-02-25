@@ -11,6 +11,7 @@ import { isReactive } from "../../../react/reactive.js";
 import type { Reactive } from "../../../react/reactive.js";
 import { getOperationDefinition } from "@apollo/client/utilities/internal";
 import { equal } from "@wry/equality";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 
 type HydratedVariablesInput<TVariables> = {
   [K in keyof TVariables]: TVariables[K] | Reactive<TVariables[K]>;
@@ -151,7 +152,25 @@ export function createHydratedVariables<
       setStateVars((prev) => {
         const updates =
           typeof update === "function" ? update(prev as any) : update;
-        return { ...prev, ...updates };
+
+        const filtered = Object.fromEntries(
+          Object.entries(updates).filter(([key]) => {
+            if (key in initialReactiveVars) {
+              if (__DEV__) {
+                console.warn(
+                  `Attempted to set reactive variable "${key}" via setVariables. ` +
+                    `Reactive variables are read-only and are ignored. `
+                );
+              }
+              return false;
+            }
+            return true;
+          })
+        );
+
+        if (Object.keys(filtered).length === 0) return prev;
+
+        return { ...prev, ...filtered };
       });
     }, []);
 

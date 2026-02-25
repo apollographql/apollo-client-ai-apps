@@ -388,6 +388,116 @@ test("setVariables supports updater function", async () => {
   await expect(takeSnapshot).not.toRerender();
 });
 
+test("setVariables ignores reactive variable keys (object form)", async () => {
+  using _ = spyOnConsole("debug", "warn");
+  stubOpenAiGlobals({
+    toolResponseMetadata: {},
+    toolInput: { category: "electronics", page: 1, sortBy: "title" },
+  });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    manifest: mockApplicationManifest(),
+  });
+
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
+  });
+  host.onCleanup(() => client.stop());
+
+  host.sendToolInput({
+    arguments: { category: "electronics", page: 1, sortBy: "title" },
+  });
+  host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
+
+  const { useHydratedVariables } = createHydratedVariables(PRODUCTS_QUERY);
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () =>
+      useHydratedVariables({
+        category: reactive("music"),
+        page: 1,
+        sortBy: "name",
+      }),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  const [initialVariables, setVariables] = await takeSnapshot();
+  expect(initialVariables).toStrictEqual({
+    category: "electronics",
+    page: 1,
+    sortBy: "title",
+  });
+
+  // @ts-expect-error category is reactive
+  setVariables({ category: "sports" });
+
+  expect(console.warn).toHaveBeenCalledWith(
+    expect.stringContaining('"category"')
+  );
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("setVariables ignores reactive variable keys (callback form)", async () => {
+  using _ = spyOnConsole("debug", "warn");
+  stubOpenAiGlobals({
+    toolResponseMetadata: {},
+    toolInput: { category: "electronics", page: 1, sortBy: "title" },
+  });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    manifest: mockApplicationManifest(),
+  });
+
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
+  });
+  host.onCleanup(() => client.stop());
+
+  host.sendToolInput({
+    arguments: { category: "electronics", page: 1, sortBy: "title" },
+  });
+  host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
+
+  const { useHydratedVariables } = createHydratedVariables(PRODUCTS_QUERY);
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () =>
+      useHydratedVariables({
+        category: reactive("music"),
+        page: 1,
+        sortBy: "name",
+      }),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  using _warn = spyOnConsole("warn");
+
+  const [initialVariables, setVariables] = await takeSnapshot();
+  expect(initialVariables).toStrictEqual({
+    category: "electronics",
+    page: 1,
+    sortBy: "title",
+  });
+
+  // @ts-expect-error category is reactive
+  setVariables(() => ({ category: "sports" }));
+
+  expect(console.warn).toHaveBeenCalledWith(
+    expect.stringContaining('"category"')
+  );
+  await expect(takeSnapshot).not.toRerender();
+});
+
 test("state variable is not reset when component re-renders with new input", async () => {
   using _ = spyOnConsole("debug");
   stubOpenAiGlobals({
