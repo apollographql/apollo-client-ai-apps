@@ -142,7 +142,6 @@ export function createHydratedVariables<
       }
     });
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     const resolvedVariables = useMemo(() => {
       return { ...stateVars, ...reactiveVars } as TVariables;
     }, [stateVars, reactiveVars]);
