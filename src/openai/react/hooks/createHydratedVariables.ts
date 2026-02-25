@@ -90,9 +90,9 @@ export function createHydratedVariables<
       return initial;
     });
 
-    const hasChangedRef = useRef(new Set<string>());
+    const changedKeysRef = useRef(new Set<string>());
 
-    const activeReactiveEntries: [string, unknown][] = [];
+    const activeReactive: Record<string, unknown> = {};
     const nextReactive: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(variables)) {
@@ -101,43 +101,39 @@ export function createHydratedVariables<
       }
 
       const useInputValue =
-        hasChangedRef.current.has(key) ||
+        changedKeysRef.current.has(key) ||
         !equal(value.value, initialReactiveValues[key]);
 
-      if (!useInputValue && toolMatches && variableNames.has(key)) {
+      if (toolMatches && !useInputValue) {
         if (key in toolInput!) {
           nextReactive[key] = toolInput![key];
-          activeReactiveEntries.push([key, toolInput![key]]);
+          activeReactive[key] = toolInput![key];
         } else {
           nextReactive[key] = value.value; // tracked for dep stability, but not merged
         }
       } else {
         nextReactive[key] = value.value;
-        activeReactiveEntries.push([key, value.value]);
+        activeReactive[key] = value.value;
       }
     }
 
     useLayoutEffect(() => {
       for (const [key, value] of Object.entries(variables)) {
         if (
-          // short-circuit deep equality check if we've already recorded key as changed
-          !hasChangedRef.current.has(key) &&
-          isReactive(value) &&
           variableNames.has(key) &&
+          // short-circuit deep equality check if we've already recorded key as changed
+          !changedKeysRef.current.has(key) &&
+          isReactive(value) &&
           !equal(value.value, initialReactiveValues[key])
         ) {
-          hasChangedRef.current.add(key);
+          changedKeysRef.current.add(key);
         }
       }
     });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const resolvedVariables = useMemo(() => {
-      const result = { ...stateVars } as Record<string, unknown>;
-      for (const [k, v] of activeReactiveEntries) {
-        result[k] = v;
-      }
-      return result as TVariables;
+      return { ...stateVars, ...activeReactive } as TVariables;
     }, [stateVars, ...Object.values(nextReactive)]);
 
     const setVariables = useCallback<
