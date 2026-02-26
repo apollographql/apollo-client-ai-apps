@@ -8,10 +8,12 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useToolName } from "./useToolName.js";
 import { isReactive } from "../../../react/reactive.js";
 import type { Reactive } from "../../../react/reactive.js";
-import { getOperationDefinition } from "@apollo/client/utilities/internal";
 import { equal } from "@wry/equality";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { getToolNamesFromDocument } from "../../../utilities/index.js";
+import {
+  getToolNamesFromDocument,
+  getVariableNamesFromDocument,
+} from "../../../utilities/index.js";
 
 type HydratedVariablesInput<TVariables> = {
   [K in keyof TVariables]: TVariables[K] | Reactive<TVariables[K]>;
@@ -34,11 +36,7 @@ export function createHydrationUtils<
   TVariables extends OperationVariables = OperationVariables,
 >(document: TypedDocumentNode<any, TVariables> | DocumentNode) {
   const documentToolNames = getToolNamesFromDocument(document);
-  const operationDef = getOperationDefinition(document);
-
-  const variableNames = new Set(
-    operationDef?.variableDefinitions?.map((v) => v.variable.name.value) ?? []
-  );
+  const variableNames = getVariableNamesFromDocument(document);
 
   function useHydratedVariables<
     TInputVariables extends HydratedVariablesInput<TVariables>,
