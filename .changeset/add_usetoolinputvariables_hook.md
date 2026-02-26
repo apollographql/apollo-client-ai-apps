@@ -9,7 +9,13 @@ Adds a new `createHydrationUtils(query)` factory that returns a `useHydratedVari
 ```typescript
 import { createHydrationUtils, reactive } from "@apollo/client-ai-apps/react";
 
-const { useHydratedVariables } = createHydrationUtils(QUERY);
+const MY_QUERY = gql`
+  query MyQuery($category: String!, $page: Int) @tool(name: "MyQuery") {
+    # ...
+  }
+`;
+
+const { useHydratedVariables } = createHydrationUtils(MY_QUERY);
 
 function ProductPage({ id, category }: Props) {
   const [variables, setVariables] = useHydratedVariables({
@@ -19,6 +25,6 @@ function ProductPage({ id, category }: Props) {
     category: reactive(props.category), // reactive: always follows props.category
   });
 
-  const { data } = useQuery(QUERY, { variables });
+  const { data } = useQuery(MY_QUERY, { variables });
 }
 ```
