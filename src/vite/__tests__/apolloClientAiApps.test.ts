@@ -228,7 +228,54 @@ describe("operations", () => {
     await server.listen();
 
     const manifest = readManifestFile();
-    expect(manifest).toMatchInlineSnapshot();
+    expect(manifest).toMatchInlineSnapshot(`
+      {
+        "appVersion": "1.0.0",
+        "csp": {
+          "connectDomains": [],
+          "frameDomains": [],
+          "redirectDomains": [],
+          "resourceDomains": [],
+        },
+        "format": "apollo-ai-app-manifest",
+        "hash": "abc",
+        "operations": [
+          {
+            "body": "query HelloWorldQuery {
+        greeting {
+          message
+          recipient {
+            ...RecipientFragment
+            __typename
+          }
+          __typename
+        }
+      }
+
+      fragment RecipientFragment on Recipient {
+        id
+        name
+        __typename
+      }",
+            "id": "1646a86ae2ff5ad75457161be5cff80f3ba5172da573a0fc796b268870119020",
+            "name": "HelloWorldQuery",
+            "prefetch": false,
+            "tools": [
+              {
+                "description": "This is an awesome tool!",
+                "name": "hello-world",
+              },
+            ],
+            "type": "query",
+            "variables": {
+              "name": "string",
+            },
+          },
+        ],
+        "resource": "http://localhost:3333",
+        "version": "1",
+      }
+    `);
   });
 
   test("does not write to dev application manifest file when using a build command", async () => {
@@ -399,7 +446,7 @@ describe("operations", () => {
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
-      `[Error: Found an unsupported operation type. Only Query and Mutation are supported.]`
+      `[Error: Found unsupported operation type 'subscription'. Only queries and mutations are supported.]`
     );
   });
 

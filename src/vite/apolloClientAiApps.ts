@@ -14,7 +14,7 @@ import { glob } from "glob";
 import { print } from "@apollo/client/utilities";
 import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
 import { of } from "rxjs";
-import { Kind, parse, type OperationDefinitionNode } from "graphql";
+import { Kind, OperationTypeNode, parse } from "graphql";
 import {
   getArgumentValue,
   getDirectiveArgument,
@@ -30,6 +30,7 @@ import { explorer } from "./utilities/config.js";
 import type { ApolloClientAiAppsConfig } from "../config/index.js";
 import { ApolloClientAiAppsConfigSchema } from "../config/schema.js";
 import { z } from "zod";
+import { createFragmentRegistry } from "@apollo/client/cache";
 
 export declare namespace apolloClientAiApps {
   export type Target = ApolloClientAiAppsConfig.AppTarget;
@@ -66,7 +67,7 @@ export function devTarget(target: string | undefined) {
 interface FileCache {
   file: string;
   hash: string;
-  operations: ManifestOperation[];
+  sources: DocumentNode[];
 }
 
 export function apolloClientAiApps(
@@ -79,6 +80,8 @@ export function apolloClientAiApps(
   let packageJson!: Record<string, any>;
   let config!: ResolvedConfig;
 
+  const fragments = createFragmentRegistry();
+
   invariant(
     Array.isArray(targets) && targets.length > 0,
     "The `targets` option must be a non-empty array"
@@ -90,7 +93,7 @@ export function apolloClientAiApps(
   );
 
   const client = new ApolloClient({
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({ fragments }),
     link: processQueryLink,
   });
 
@@ -106,51 +109,56 @@ export function apolloClientAiApps(
         { name: "graphql-tag", identifier: "gql" },
         { name: "@apollo/client", identifier: "gql" },
       ],
-    }).map((source) => ({
-      node: parse(source.body),
-      file,
-      location: source.locationOffset,
-    }));
-
-    const operations: ManifestOperation[] = [];
-    for (const source of sources) {
-      const type = (
-        source.node.definitions.find(
-          (d) => d.kind === "OperationDefinition"
-        ) as OperationDefinitionNode
-      ).operation;
-
-      let result;
-      if (type === "query") {
-        result = await client.query({
-          query: source.node,
-          fetchPolicy: "no-cache",
-        });
-      } else if (type === "mutation") {
-        result = await client.mutate({
-          mutation: source.node,
-          fetchPolicy: "no-cache",
-        });
-      } else {
-        throw new Error(
-          "Found an unsupported operation type. Only Query and Mutation are supported."
-        );
-      }
-      operations.push(result.data as ManifestOperation);
-    }
+    }).map((source) => parse(source.body));
 
     cache.set(file, {
       file: file,
       hash: fileHash,
-      operations,
+      sources,
     });
   }
 
   async function generateManifest(environment?: Environment) {
     const appsConfig = await getAppsConfig();
-    const operations = Array.from(cache.values()).flatMap(
-      (entry) => entry.operations
+    const sources = Array.from(cache.values()).flatMap(
+      (entry) => entry.sources
     );
+
+    const operations: ManifestOperation[] = [];
+    for (const source of sources) {
+      fragments.register(source);
+
+      const operationDef = source.definitions.find(
+        (d) => d.kind === Kind.OPERATION_DEFINITION
+      );
+
+      if (!operationDef) continue;
+
+      switch (operationDef.operation) {
+        case OperationTypeNode.QUERY: {
+          const result = await client.query<ManifestOperation>({
+            query: source,
+            fetchPolicy: "no-cache",
+          });
+
+          operations.push(result.data!);
+          break;
+        }
+        case OperationTypeNode.MUTATION: {
+          const result = await client.mutate<ManifestOperation>({
+            mutation: source,
+            fetchPolicy: "no-cache",
+          });
+
+          operations.push(result.data!);
+          break;
+        }
+        default:
+          throw new Error(
+            `Found unsupported operation type '${operationDef.operation}'. Only queries and mutations are supported.`
+          );
+      }
+    }
 
     invariant(
       operations.filter((o) => o.prefetch).length <= 1,
@@ -192,9 +200,7 @@ export function apolloClientAiApps(
       name: appsConfig.name ?? packageJson.name,
       description: appsConfig.description ?? packageJson.description,
       hash: createHash("sha256").update(Date.now().toString()).digest("hex"),
-      operations: Array.from(cache.values()).flatMap(
-        (entry) => entry.operations
-      ),
+      operations,
       resource,
       csp: {
         connectDomains: appsConfig.csp?.connectDomains ?? [],
