@@ -3,8 +3,8 @@ import { getOperationName } from "@apollo/client/utilities/internal/internal.cjs
 
 export function warnOnVariableMismatch(
   document: DocumentNode,
-  expected: OperationVariables,
-  received: OperationVariables | undefined
+  toolInput: OperationVariables,
+  actualVariables: OperationVariables | undefined
 ) {
   const operationName = getOperationName(document, "(anonymous)");
 
@@ -14,7 +14,7 @@ export function warnOnVariableMismatch(
       "input. Use the `useHydratedVariables` hook returned from `createHydrationUtils` " +
       "to provide the hydrated variables to the query. " +
       "\n\nExpected variables:\n%o\n\nReceived:\n%o",
-    received,
-    expected
+    toolInput,
+    actualVariables
   );
 }

@@ -505,7 +505,9 @@ describe("watchQuery dev warnings", () => {
     });
 
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining("useHydratedVariables")
+      expect.stringContaining("useHydratedVariables"),
+      { category: "electronics", page: 1, sortBy: "title" },
+      { category: "music", page: 1, sortBy: "name" }
     );
   });
 
