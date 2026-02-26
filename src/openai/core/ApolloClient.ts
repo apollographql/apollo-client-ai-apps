@@ -1,17 +1,26 @@
 import type { ApolloLink } from "@apollo/client";
 import { ApolloClient as BaseApolloClient } from "@apollo/client";
 import { DocumentTransform } from "@apollo/client";
+import type {
+  WatchQueryOptions,
+  ObservableQuery,
+  OperationVariables,
+} from "@apollo/client";
 import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
 import { parse } from "graphql";
+import { equal } from "@wry/equality";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { ApplicationManifest } from "../../types/application-manifest.js";
 import { ToolCallLink } from "../link/ToolCallLink.js";
 import {
   aiClientSymbol,
   cacheAsync,
+  getToolNamesFromDocument,
   getVariablesForOperationFromToolInput,
+  warnOnVariableMismatch,
 } from "../../utilities/index.js";
 import { McpAppManager } from "./McpAppManager.js";
+import { getVariableNamesFromDocument } from "../../utilities/getVariableNamesFromDocument.js";
 
 export declare namespace ApolloClient {
   export interface Options extends Omit<BaseApolloClient.Options, "link"> {
@@ -26,6 +35,8 @@ export class ApolloClient extends BaseApolloClient {
 
   /** @internal */
   readonly [aiClientSymbol] = true;
+
+  #toolInput: Record<string, unknown> | undefined;
 
   constructor(options: ApolloClient.Options) {
     const link = options.link ?? new ToolCallLink();
@@ -55,9 +66,64 @@ export class ApolloClient extends BaseApolloClient {
     this.appManager.close().catch(() => {});
   }
 
-  waitForInitialization = cacheAsync(async () => {
+  get toolInput() {
+    return this.#toolInput;
+  }
+
+  clearToolInput() {
+    this.#toolInput = undefined;
+  }
+
+  watchQuery<
+    T = any,
+    TVariables extends OperationVariables = OperationVariables,
+  >(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables> {
+    if (__DEV__) {
+      const toolInput = this.#toolInput;
+
+      if (toolInput) {
+        const toolName = this.appManager.toolName;
+        const hasMatchingTool =
+          !!toolName && getToolNamesFromDocument(options.query).has(toolName);
+
+        if (hasMatchingTool) {
+          // Clear after first matching comparison so this only fires once and
+          // remounting doesn't produce spurious warnings.
+          this.#toolInput = undefined;
+
+          const variableNames = getVariableNamesFromDocument(options.query);
+
+          if (variableNames.size > 0) {
+            const { variables } = options;
+
+            const toolInputVariables = Object.entries(toolInput).filter(
+              ([key]) => variableNames.has(key)
+            );
+
+            const hasToolInputMismatch = toolInputVariables.some(
+              ([key, value]) => !equal(value, variables?.[key])
+            );
+
+            if (hasToolInputMismatch) {
+              warnOnVariableMismatch(
+                options.query,
+                Object.fromEntries(toolInputVariables),
+                variables
+              );
+            }
+          }
+        }
+      }
+    }
+
+    return super.watchQuery(options);
+  }
+
+  connect = cacheAsync(async () => {
     const { prefetch, result, toolName, args } =
-      await this.appManager.waitForInitialization();
+      await this.appManager.connect();
+
+    this.#toolInput = args;
 
     this.manifest.operations.forEach((operation) => {
       if (operation.prefetchID && prefetch?.[operation.prefetchID]) {

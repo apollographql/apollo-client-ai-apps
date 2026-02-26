@@ -21,5 +21,5 @@ export class ApolloClient extends BaseApolloClient {
     );
   }
 
-  async waitForInitialization() {}
+  async connect() {}
 }

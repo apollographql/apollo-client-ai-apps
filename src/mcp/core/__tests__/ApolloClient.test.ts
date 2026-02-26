@@ -1,9 +1,10 @@
-import { expect, test, vi } from "vitest";
+import { expect, test, vi, describe } from "vitest";
 import { ApolloClient } from "../ApolloClient.js";
 import { ApolloLink, HttpLink, InMemoryCache, gql } from "@apollo/client";
 import { print } from "@apollo/client/utilities";
 import { ToolCallLink } from "../../link/ToolCallLink.js";
 import {
+  graphqlToolResult,
   minimalHostContextWithToolName,
   mockApplicationManifest,
   mockMcpHost,
@@ -57,7 +58,7 @@ test("writes tool result data to cache", async () => {
   });
   host.sendToolInput({ arguments: { id: "1" } });
 
-  await client.waitForInitialization();
+  await client.connect();
 
   expect(client.extract()).toEqual({
     "Product:1": {
@@ -124,7 +125,7 @@ test("writes prefetch data to cache", async () => {
   });
   host.sendToolInput({ arguments: {} });
 
-  await client.waitForInitialization();
+  await client.connect();
 
   expect(client.extract()).toEqual({
     "Product:1": {
@@ -213,7 +214,7 @@ test("writes prefetch and tool response data to cache when both are provided", a
   });
   host.sendToolInput({ arguments: { id: "2" } });
 
-  await client.waitForInitialization();
+  await client.connect();
 
   expect(client.extract()).toEqual({
     "Product:1": {
@@ -281,7 +282,7 @@ test("excludes extra tool input variables not defined in the operation", async (
   });
   host.sendToolInput({ arguments: { id: "1", extraParam: "ignored" } });
 
-  await client.waitForInitialization();
+  await client.connect();
 
   expect(client.extract()).toEqual({
     "Product:1": {
@@ -345,7 +346,7 @@ test("allows for custom links provided to the constructor", async () => {
     },
   }));
 
-  await client.waitForInitialization();
+  await client.connect();
 
   const variables = { id: "1" };
   const query = gql(manifest.operations[0].body);
@@ -461,4 +462,106 @@ test("creates a default ToolCallLink when no link is provided", () => {
       cache: new InMemoryCache(),
     });
   }).not.toThrow();
+});
+
+describe("watchQuery dev warnings", () => {
+  const query = gql`
+    query Products($category: String!, $page: Int!, $sortBy: String!)
+    @tool(name: "GetProductsByCategory") {
+      products(category: $category, page: $page, sortBy: $sortBy) {
+        id
+      }
+    }
+  `;
+
+  async function setupClient({
+    toolInput,
+  }: {
+    toolInput: Record<string, unknown>;
+  }) {
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      manifest: mockApplicationManifest(),
+    });
+    using host = await mockMcpHost({
+      hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
+    });
+    host.onCleanup(() => client.stop());
+    host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
+    host.sendToolInput({ arguments: toolInput });
+    await client.connect();
+    return client;
+  }
+
+  test("warns when variables don't match tool input", async () => {
+    using _ = spyOnConsole("debug", "warn");
+    const client = await setupClient({
+      toolInput: { category: "electronics", page: 1, sortBy: "title" },
+    });
+
+    client.watchQuery({
+      query,
+      variables: { category: "music", page: 1, sortBy: "name" },
+    });
+
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining("useHydratedVariables"),
+      { category: "electronics", page: 1, sortBy: "title" },
+      { category: "music", page: 1, sortBy: "name" }
+    );
+  });
+
+  test("does not warn when variables match tool input", async () => {
+    using _ = spyOnConsole("debug", "warn");
+    const client = await setupClient({
+      toolInput: { category: "electronics", page: 1, sortBy: "title" },
+    });
+
+    client.watchQuery({
+      query,
+      variables: { category: "electronics", page: 1, sortBy: "title" },
+    });
+
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  test("does not warn when query has no matching @tool directive", async () => {
+    using _ = spyOnConsole("debug", "warn");
+    const client = await setupClient({
+      toolInput: { category: "electronics", page: 1, sortBy: "title" },
+    });
+
+    const queryWithoutTool = gql`
+      query Products($category: String!) {
+        products(category: $category) {
+          id
+        }
+      }
+    `;
+
+    client.watchQuery({
+      query: queryWithoutTool,
+      variables: { category: "music" },
+    });
+
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  test("warning fires at most once (subsequent calls don't re-warn)", async () => {
+    using _ = spyOnConsole("debug", "warn");
+    const client = await setupClient({
+      toolInput: { category: "electronics", page: 1, sortBy: "title" },
+    });
+
+    client.watchQuery({
+      query,
+      variables: { category: "music", page: 1, sortBy: "name" },
+    });
+    client.watchQuery({
+      query,
+      variables: { category: "music", page: 1, sortBy: "name" },
+    });
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+  });
 });

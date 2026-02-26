@@ -1,9 +1,10 @@
 import { expect, test, describe, vi } from "vitest";
 import { ApolloClient } from "../ApolloClient.js";
 import { parse } from "graphql";
-import { ApolloLink, HttpLink, InMemoryCache } from "@apollo/client";
+import { ApolloLink, HttpLink, InMemoryCache, gql } from "@apollo/client";
 import { ToolCallLink } from "../../link/ToolCallLink.js";
 import {
+  graphqlToolResult,
   minimalHostContextWithToolName,
   mockApplicationManifest,
   mockMcpHost,
@@ -30,7 +31,7 @@ describe("Client Basics", () => {
       structuredContent: {},
     });
 
-    await client.waitForInitialization();
+    await client.connect();
 
     host.mockToolCall("execute", () => ({
       content: [],
@@ -124,7 +125,7 @@ describe("prefetchData", () => {
       },
     });
 
-    await client.waitForInitialization();
+    await client.connect();
 
     expect(client.extract()).toMatchInlineSnapshot(`
       {
@@ -202,7 +203,7 @@ describe("prefetchData", () => {
       },
     });
 
-    await client.waitForInitialization();
+    await client.connect();
 
     expect(client.extract()).toMatchInlineSnapshot(`
       {
@@ -307,7 +308,7 @@ describe("prefetchData", () => {
       },
     });
 
-    await client.waitForInitialization();
+    await client.connect();
 
     expect(client.extract()).toMatchInlineSnapshot(`
       {
@@ -375,7 +376,7 @@ describe("prefetchData", () => {
       },
     });
 
-    await client.waitForInitialization();
+    await client.connect();
 
     expect(client.extract()).toMatchInlineSnapshot(`
       {
@@ -440,7 +441,7 @@ describe("custom links", () => {
       },
     }));
 
-    await client.waitForInitialization();
+    await client.connect();
 
     const variables = { id: "1" };
     const query = parse(manifest.operations[0].body);
@@ -533,5 +534,110 @@ describe("custom links", () => {
         ),
       });
     }).not.toThrow();
+  });
+});
+
+describe("watchQuery dev warnings", () => {
+  const query = gql`
+    query Products($category: String!, $page: Int!, $sortBy: String!)
+    @tool(name: "GetProductsByCategory") {
+      products(category: $category, page: $page, sortBy: $sortBy) {
+        id
+      }
+    }
+  `;
+
+  async function setupClient({
+    toolInput,
+  }: {
+    toolInput: Record<string, unknown>;
+  }) {
+    stubOpenAiGlobals({ toolInput });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      manifest: mockApplicationManifest(),
+    });
+    using host = await mockMcpHost({
+      hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
+    });
+    host.onCleanup(() => client.stop());
+    host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
+    host.sendToolInput({
+      arguments: toolInput,
+    });
+    await client.connect();
+    return client;
+  }
+
+  test("warns when variables don't match tool input", async () => {
+    using _ = spyOnConsole("debug", "warn");
+    const client = await setupClient({
+      toolInput: { category: "electronics", page: 1, sortBy: "title" },
+    });
+
+    client.watchQuery({
+      query,
+      variables: { category: "music", page: 1, sortBy: "name" },
+    });
+
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining("useHydratedVariables"),
+      { category: "electronics", page: 1, sortBy: "title" },
+      { category: "music", page: 1, sortBy: "name" }
+    );
+  });
+
+  test("does not warn when variables match tool input", async () => {
+    using _ = spyOnConsole("debug", "warn");
+    const client = await setupClient({
+      toolInput: { category: "electronics", page: 1, sortBy: "title" },
+    });
+
+    client.watchQuery({
+      query,
+      variables: { category: "electronics", page: 1, sortBy: "title" },
+    });
+
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  test("does not warn when query has no matching @tool directive", async () => {
+    using _ = spyOnConsole("debug", "warn");
+    const client = await setupClient({
+      toolInput: { category: "electronics", page: 1, sortBy: "title" },
+    });
+
+    const queryWithoutTool = gql`
+      query Products($category: String!) {
+        products(category: $category) {
+          id
+        }
+      }
+    `;
+
+    client.watchQuery({
+      query: queryWithoutTool,
+      variables: { category: "music" },
+    });
+
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  test("warning fires at most once (subsequent calls don't re-warn)", async () => {
+    using _ = spyOnConsole("debug", "warn");
+    const client = await setupClient({
+      toolInput: { category: "electronics", page: 1, sortBy: "title" },
+    });
+
+    client.watchQuery({
+      query,
+      variables: { category: "music", page: 1, sortBy: "name" },
+    });
+    client.watchQuery({
+      query,
+      variables: { category: "music", page: 1, sortBy: "name" },
+    });
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
   });
 });
