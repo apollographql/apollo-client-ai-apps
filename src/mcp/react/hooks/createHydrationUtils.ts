@@ -30,7 +30,7 @@ type SetVariables<TState> = (
 ) => void;
 
 /** @experimental */
-export function createHydratedVariables<
+export function createHydrationUtils<
   TVariables extends OperationVariables = OperationVariables,
 >(document: TypedDocumentNode<any, TVariables> | DocumentNode) {
   const documentToolNames = getToolNamesFromDocument(document);

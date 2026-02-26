@@ -5,7 +5,7 @@ import {
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
 import { InMemoryCache, gql, type TypedDocumentNode } from "@apollo/client";
-import { createHydratedVariables } from "../createHydratedVariables.js";
+import { createHydrationUtils } from "../createHydrationUtils.js";
 import { reactive } from "../../../../react/reactive.js";
 import { ApolloClient } from "../../../core/ApolloClient.js";
 import {
@@ -48,7 +48,7 @@ test("returns tool input value when tool matches", async () => {
   });
   host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
 
-  const { useHydratedVariables } = createHydratedVariables(PRODUCTS_QUERY);
+  const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -99,7 +99,7 @@ test("returns user-provided variables when tool name does not match", async () =
   });
   host.sendToolResult(graphqlToolResult({ data: { product: null } }));
 
-  const { useHydratedVariables } = createHydratedVariables(PRODUCTS_QUERY);
+  const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -136,7 +136,7 @@ test("filters tool input not in document's variable definitions when tool matche
       }
     }
   `;
-  const { useHydratedVariables } = createHydratedVariables(query);
+  const { useHydratedVariables } = createHydrationUtils(query);
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -177,7 +177,7 @@ test("does not add user-provided variables not in document's variable definition
       }
     }
   `;
-  const { useHydratedVariables } = createHydratedVariables(query);
+  const { useHydratedVariables } = createHydrationUtils(query);
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -218,7 +218,7 @@ test("filters user-provided variables not in document's variable definitions whe
       }
     }
   `;
-  const { useHydratedVariables } = createHydratedVariables(query);
+  const { useHydratedVariables } = createHydrationUtils(query);
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -266,7 +266,7 @@ test("setVariables shallow-merges a partial update", async () => {
   });
   host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
 
-  const { useHydratedVariables } = createHydratedVariables(PRODUCTS_QUERY);
+  const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -319,7 +319,7 @@ test("setVariables supports updater function", async () => {
   });
   host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
 
-  const { useHydratedVariables } = createHydratedVariables(PRODUCTS_QUERY);
+  const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -372,7 +372,7 @@ test("setVariables ignores reactive variable keys (object form)", async () => {
   });
   host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
 
-  const { useHydratedVariables } = createHydratedVariables(PRODUCTS_QUERY);
+  const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -422,7 +422,7 @@ test("setVariables ignores reactive variable keys (callback form)", async () => 
   });
   host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
 
-  const { useHydratedVariables } = createHydratedVariables(PRODUCTS_QUERY);
+  const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -472,7 +472,7 @@ test("state variable is not reset when component re-renders with new input", asy
   });
   host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
 
-  const { useHydratedVariables } = createHydratedVariables(PRODUCTS_QUERY);
+  const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot, getCurrentSnapshot, rerender } =
@@ -546,7 +546,7 @@ test("returns tool input value for reactive variable when tool matches", async (
   });
   host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
 
-  const { useHydratedVariables } = createHydratedVariables(PRODUCTS_QUERY);
+  const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -590,7 +590,7 @@ test("reactive variable follows the provided value after it updates", async () =
   });
   host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
 
-  const { useHydratedVariables } = createHydratedVariables(PRODUCTS_QUERY);
+  const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
   using _disabledAct = disableActEnvironment();
 
@@ -682,7 +682,7 @@ test("reactive variable returns provided value when tool name does not match", a
   });
   host.sendToolResult(graphqlToolResult({ data: { product: null } }));
 
-  const { useHydratedVariables } = createHydratedVariables(PRODUCTS_QUERY);
+  const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -737,7 +737,7 @@ test("optional state variable is omitted from result when tool input omits it", 
   host.sendToolInput({ arguments: { category: "electronics" } });
   host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
 
-  const { useHydratedVariables } = createHydratedVariables(query);
+  const { useHydratedVariables } = createHydrationUtils(query);
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -783,7 +783,7 @@ test("optional reactive variable is omitted from result when tool input omits it
   host.sendToolInput({ arguments: { category: "electronics" } });
   host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
 
-  const { useHydratedVariables } = createHydratedVariables(query);
+  const { useHydratedVariables } = createHydrationUtils(query);
 
   using _disabledAct = disableActEnvironment();
 
@@ -846,7 +846,7 @@ test("handles optional variables initially omitted from user-variables when tool
   host.sendToolInput({ arguments: { category: "electronics", page: 1 } });
   host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
 
-  const { useHydratedVariables } = createHydratedVariables(query);
+  const { useHydratedVariables } = createHydrationUtils(query);
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -903,7 +903,7 @@ test("handles optional variables initially omitted from user-variables when tool
   host.sendToolInput({ arguments: { category: "electronics", page: 1 } });
   host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
 
-  const { useHydratedVariables } = createHydratedVariables(query);
+  const { useHydratedVariables } = createHydrationUtils(query);
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -949,7 +949,7 @@ test("returned variables are referentially stable between re-renders when nothin
   });
   host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
 
-  const { useHydratedVariables } = createHydratedVariables(PRODUCTS_QUERY);
+  const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
@@ -1027,7 +1027,7 @@ test("state variable is hydrated when tool name matches one of multiple @tool di
   });
   host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
 
-  const { useHydratedVariables } = createHydratedVariables(MULTI_TOOL_QUERY);
+  const { useHydratedVariables } = createHydrationUtils(MULTI_TOOL_QUERY);
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -1071,7 +1071,7 @@ test("hydrated variables are only used the first time the component mounts, then
   });
   host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
 
-  const { useHydratedVariables } = createHydratedVariables(PRODUCTS_QUERY);
+  const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
   using _disabledAct = disableActEnvironment();
   const { replaceSnapshot, render, takeRender } = createRenderStream<
@@ -1149,7 +1149,7 @@ test("hydrated variables are only used the first time the component mounts, then
   });
   host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
 
-  const { useHydratedVariables } = createHydratedVariables(PRODUCTS_QUERY);
+  const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
   using _disabledAct = disableActEnvironment();
 
@@ -1215,7 +1215,7 @@ test("hydrated variables are only used the first time the component mounts, then
 
 describe.skip("type tests", () => {
   test("TypeScript rejects variables not defined in TVariables", () => {
-    const { useHydratedVariables } = createHydratedVariables(PRODUCTS_QUERY);
+    const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
     useHydratedVariables({
       category: "test",

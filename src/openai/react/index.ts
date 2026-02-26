@@ -2,5 +2,5 @@ export { useApp } from "./hooks/useApp.js";
 export { useToolName } from "./hooks/useToolName.js";
 export { useToolMetadata } from "./hooks/useToolMetadata.js";
 export { useToolInput } from "./hooks/useToolInput.js";
-export { createHydratedVariables } from "./hooks/createHydratedVariables.js";
+export { createHydrationUtils } from "./hooks/createHydrationUtils.js";
 export { useWidgetState } from "./hooks/useWidgetState.js";

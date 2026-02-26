@@ -2,16 +2,14 @@
 default: minor
 ---
 
-# Add `createHydratedVariables` factory and `reactive` helper
+# Add `createHydrationUtils` factory and `reactive` helper
 
-Replaces `useToolInputVariables` with a new `createHydratedVariables(QUERY)` factory that returns a `useHydratedVariables` hook. The new API follows an SSR/hydration mental model: the first render uses tool input values to avoid query variable mismatches; after that, state variables are locally controlled (via `setVariables`) and reactive variables automatically follow their provided values.
-
-A companion `reactive()` helper marks specific variables as "reactive" — always following an externally-provided value (e.g. a prop from URL params) rather than being managed as internal state.
+Adds a new `createHydrationUtils(query)` factory that returns a `useHydratedVariables` hook. This hook is used to populate `variables` from tool input to ensure the data returned by your query matches what the LLM returned.
 
 ```typescript
-import { createHydratedVariables, reactive } from "@apollo/client-ai-apps/mcp";
+import { createHydrationUtils, reactive } from "@apollo/client-ai-apps/react";
 
-const { useHydratedVariables } = createHydratedVariables(QUERY);
+const { useHydratedVariables } = createHydrationUtils(QUERY);
 
 function ProductPage({ id, category }: Props) {
   const [variables, setVariables] = useHydratedVariables({

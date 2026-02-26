@@ -21,6 +21,6 @@ export const useToolName =
   missingHook<typeof import("./index.mcp.js").useToolName>("useToolName");
 
 /** @experimental */
-export const createHydratedVariables = missingHook<
-  typeof import("./index.mcp.js").createHydratedVariables
->("createHydratedVariables");
+export const createHydrationUtils = missingHook<
+  typeof import("./index.mcp.js").createHydrationUtils
+>("createHydrationUtils");
