@@ -1,9 +1,10 @@
-import { expect, test, vi, describe, beforeEach } from "vitest";
+import { expect, test, vi, describe } from "vitest";
 import { ApolloClient } from "../ApolloClient.js";
 import { ApolloLink, HttpLink, InMemoryCache, gql } from "@apollo/client";
 import { print } from "@apollo/client/utilities";
 import { ToolCallLink } from "../../link/ToolCallLink.js";
 import {
+  graphqlToolResult,
   minimalHostContextWithToolName,
   mockApplicationManifest,
   mockMcpHost,
@@ -473,7 +474,11 @@ describe("watchQuery dev warnings", () => {
     }
   `;
 
-  async function setupClient() {
+  async function setupClient({
+    toolInput,
+  }: {
+    toolInput: Record<string, unknown>;
+  }) {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       manifest: mockApplicationManifest(),
@@ -482,24 +487,17 @@ describe("watchQuery dev warnings", () => {
       hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
     });
     host.onCleanup(() => client.stop());
-    host.sendToolResult({
-      content: [],
-      structuredContent: { result: { data: { products: [] } } },
-    });
-    host.sendToolInput({
-      arguments: { category: "electronics", page: 1, sortBy: "title" },
-    });
+    host.sendToolResult(graphqlToolResult({ data: { products: [] } }));
+    host.sendToolInput({ arguments: toolInput });
     await client.connect();
     return client;
   }
 
-  beforeEach(() => {
-    vi.spyOn(console, "warn").mockImplementation(() => {});
-  });
-
   test("warns when variables don't match tool input", async () => {
-    using _ = spyOnConsole("debug");
-    const client = await setupClient();
+    using _ = spyOnConsole("debug", "warn");
+    const client = await setupClient({
+      toolInput: { category: "electronics", page: 1, sortBy: "title" },
+    });
 
     client.watchQuery({
       query,
@@ -512,8 +510,10 @@ describe("watchQuery dev warnings", () => {
   });
 
   test("does not warn when variables match tool input", async () => {
-    using _ = spyOnConsole("debug");
-    const client = await setupClient();
+    using _ = spyOnConsole("debug", "warn");
+    const client = await setupClient({
+      toolInput: { category: "electronics", page: 1, sortBy: "title" },
+    });
 
     client.watchQuery({
       query,
@@ -524,8 +524,10 @@ describe("watchQuery dev warnings", () => {
   });
 
   test("does not warn when query has no matching @tool directive", async () => {
-    using _ = spyOnConsole("debug");
-    const client = await setupClient();
+    using _ = spyOnConsole("debug", "warn");
+    const client = await setupClient({
+      toolInput: { category: "electronics", page: 1, sortBy: "title" },
+    });
 
     const queryWithoutTool = gql`
       query Products($category: String!) {
@@ -544,8 +546,10 @@ describe("watchQuery dev warnings", () => {
   });
 
   test("warning fires at most once (subsequent calls don't re-warn)", async () => {
-    using _ = spyOnConsole("debug");
-    const client = await setupClient();
+    using _ = spyOnConsole("debug", "warn");
+    const client = await setupClient({
+      toolInput: { category: "electronics", page: 1, sortBy: "title" },
+    });
 
     client.watchQuery({
       query,
