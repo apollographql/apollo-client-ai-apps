@@ -4,3 +4,4 @@ export { getToolNamesFromDocument } from "./getToolNamesFromDocument.js";
 export { cacheAsync } from "./cacheAsync.js";
 export { invariant } from "./invariant.js";
 export { promiseWithResolvers } from "./promiseWithResolvers.js";
+export { warnOnVariableMismatch } from "./warnOnVariableMismatch.js";
