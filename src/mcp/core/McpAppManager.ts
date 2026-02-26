@@ -49,7 +49,7 @@ export class McpAppManager {
       toolInput.resolve(params);
     };
 
-    await this.connectToServer();
+    await this.connectToHost();
 
     const { structuredContent, _meta } = await toolResult.promise;
     const { arguments: args } = await toolInput.promise;
@@ -93,7 +93,7 @@ export class McpAppManager {
     return result.structuredContent;
   }
 
-  private async connectToServer() {
+  private async connectToHost() {
     try {
       return await this.app.connect(
         new PostMessageTransport(window.parent, window.parent)
