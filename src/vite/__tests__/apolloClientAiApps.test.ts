@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import fs from "node:fs";
 import { gql, type DocumentNode } from "@apollo/client";
-import { print } from "@apollo/client/utilities";
+import { getMainDefinition, print } from "@apollo/client/utilities";
 import { getOperationName } from "@apollo/client/utilities/internal";
 import { vol } from "memfs";
 import { apolloClientAiApps } from "../apolloClientAiApps.js";
@@ -11,6 +11,8 @@ import type {
   ManifestWidgetSettings,
 } from "../../types/application-manifest.js";
 import { explorer } from "../utilities/config.js";
+import { invariant } from "@apollo/client/utilities/invariant";
+import { Kind } from "graphql";
 
 beforeEach(() => {
   explorer.clearCaches();
@@ -119,6 +121,114 @@ describe("operations", () => {
         },
       }
     `);
+  });
+
+  test("handles operations with fragments in the same file", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery($name: string!)
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          greeting {
+            message
+            recipient {
+              ...RecipientFragment
+            }
+          }
+        }
+
+        fragment RecipientFragment on Recipient {
+          id
+          name
+        }
+      `),
+    });
+
+    await using server = await setupServer({
+      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+    });
+    await server.listen();
+
+    const manifest = readManifestFile();
+    expect(manifest).toMatchInlineSnapshot(`
+      {
+        "appVersion": "1.0.0",
+        "csp": {
+          "connectDomains": [],
+          "frameDomains": [],
+          "redirectDomains": [],
+          "resourceDomains": [],
+        },
+        "format": "apollo-ai-app-manifest",
+        "hash": "abc",
+        "operations": [
+          {
+            "body": "query HelloWorldQuery {
+        greeting {
+          message
+          recipient {
+            ...RecipientFragment
+            __typename
+          }
+          __typename
+        }
+      }
+
+      fragment RecipientFragment on Recipient {
+        id
+        name
+        __typename
+      }",
+            "id": "1646a86ae2ff5ad75457161be5cff80f3ba5172da573a0fc796b268870119020",
+            "name": "HelloWorldQuery",
+            "prefetch": false,
+            "tools": [
+              {
+                "description": "This is an awesome tool!",
+                "name": "hello-world",
+              },
+            ],
+            "type": "query",
+            "variables": {
+              "name": "string",
+            },
+          },
+        ],
+        "resource": "http://localhost:3333",
+        "version": "1",
+      }
+    `);
+  });
+
+  test("handles operations with fragments in other files", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery($name: string!)
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          greeting {
+            message
+            recipient {
+              ...RecipientFragment
+            }
+          }
+        }
+      `),
+      "src/my-fragment.tsx": declareFragment(gql`
+        fragment RecipientFragment on Recipient {
+          id
+          name
+        }
+      `),
+    });
+
+    await using server = await setupServer({
+      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+    });
+    await server.listen();
+
+    const manifest = readManifestFile();
+    expect(manifest).toMatchInlineSnapshot();
   });
 
   test("does not write to dev application manifest file when using a build command", async () => {
@@ -1459,6 +1569,18 @@ function declareOperation(operation: DocumentNode) {
   const name = getOperationName(operation, "MY_OPERATION");
   const varName = name.replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase();
   return `const ${varName} = gql\`\n${print(operation)}\n\``;
+}
+
+function declareFragment(fragment: DocumentNode) {
+  const definition = getMainDefinition(fragment);
+  invariant(
+    definition.kind === Kind.FRAGMENT_DEFINITION,
+    "declareFragment must receive a fragment definition"
+  );
+
+  const name = definition.name.value;
+  const varName = name.replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase();
+  return `const ${varName} = gql\`\n${print(fragment)}\n\``;
 }
 
 function mockPackageJson(config?: Record<string, unknown>) {
