@@ -18,7 +18,9 @@ import {
   aiClientSymbol,
   cacheAsync,
   getToolNamesFromDocument,
+  getVariableNamesFromDocument,
   getVariablesForOperationFromToolInput,
+  warnOnVariableMismatch,
 } from "../../utilities/index.js";
 import { McpAppManager } from "./McpAppManager.js";
 
@@ -91,20 +93,25 @@ export class ApolloClient extends BaseApolloClient {
           // remounting doesn't produce spurious warnings.
           this.#toolInput = undefined;
 
-          const variables = (options.variables ?? {}) as Record<
-            string,
-            unknown
-          >;
-          const hasToolInputMismatch = Object.entries(toolInput).some(
-            ([key, value]) => !equal(variables[key], value)
-          );
+          const variableNames = getVariableNamesFromDocument(options.query);
 
-          if (hasToolInputMismatch) {
-            console.warn(
-              "This query has a @tool directive matching the current tool call, but the " +
-                "variables passed to watchQuery don't match the tool input. Use " +
-                "`useHydratedVariables` to automatically use the tool input as the initial variables."
+          if (variableNames.size > 0) {
+            const { variables } = options;
+            const toolInputVariables = Object.entries(toolInput).filter(
+              ([key]) => variableNames.has(key)
             );
+
+            const hasToolInputMismatch = toolInputVariables.some(
+              ([key, value]) => !equal(value, variables?.[key])
+            );
+
+            if (hasToolInputMismatch) {
+              warnOnVariableMismatch(
+                options.query,
+                Object.fromEntries(toolInputVariables),
+                variables
+              );
+            }
           }
         }
       }

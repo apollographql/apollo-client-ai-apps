@@ -4,7 +4,7 @@ import { getOperationName } from "@apollo/client/utilities/internal/internal.cjs
 export function warnOnVariableMismatch(
   document: DocumentNode,
   expected: OperationVariables,
-  received: OperationVariables
+  received: OperationVariables | undefined
 ) {
   const operationName = getOperationName(document, "(anonymous)");
 
