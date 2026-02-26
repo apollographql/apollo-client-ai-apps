@@ -1,5 +1,4 @@
 import { useState, useCallback, useRef, useMemo, useLayoutEffect } from "react";
-import { Kind } from "graphql";
 import type {
   DocumentNode,
   OperationVariables,
@@ -12,6 +11,7 @@ import type { Reactive } from "../../../react/reactive.js";
 import { getOperationDefinition } from "@apollo/client/utilities/internal";
 import { equal } from "@wry/equality";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import { getToolNamesFromDocument } from "../../../utilities/getToolNamesFromDocument.js";
 
 type HydratedVariablesInput<TVariables> = {
   [K in keyof TVariables]: TVariables[K] | Reactive<TVariables[K]>;
@@ -33,16 +33,8 @@ type SetVariables<TState> = (
 export function createHydratedVariables<
   TVariables extends OperationVariables = OperationVariables,
 >(document: TypedDocumentNode<any, TVariables> | DocumentNode) {
+  const documentToolNames = getToolNamesFromDocument(document);
   const operationDef = getOperationDefinition(document);
-
-  const documentToolNames = new Set(
-    operationDef?.directives
-      ?.filter((d) => d.name.value === "tool")
-      .flatMap((d) => {
-        const nameArg = d.arguments?.find((arg) => arg.name.value === "name");
-        return nameArg?.value.kind === Kind.STRING ? [nameArg.value.value] : [];
-      })
-  );
 
   const variableNames = new Set(
     operationDef?.variableDefinitions?.map((v) => v.variable.name.value) ?? []

@@ -8,11 +8,8 @@ import type {
   ObservableQuery,
   OperationVariables,
 } from "@apollo/client";
-import {
-  removeDirectivesFromDocument,
-  getOperationDefinition,
-} from "@apollo/client/utilities/internal";
-import { Kind, parse } from "graphql";
+import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
+import { parse } from "graphql";
 import { equal } from "@wry/equality";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { ApplicationManifest } from "../../types/application-manifest.js";
@@ -20,6 +17,7 @@ import { ToolCallLink } from "../link/ToolCallLink.js";
 import {
   aiClientSymbol,
   cacheAsync,
+  getToolNamesFromDocument,
   getVariablesForOperationFromToolInput,
 } from "../../utilities/index.js";
 import { McpAppManager } from "./McpAppManager.js";
@@ -85,15 +83,8 @@ export class ApolloClient extends BaseApolloClient {
 
       if (toolInput) {
         const toolName = this.appManager.toolName;
-        const operationDef = getOperationDefinition(options.query);
-        const hasMatchingTool = operationDef?.directives?.some((d) => {
-          if (d.name.value !== "tool") return false;
-          const nameArg = d.arguments?.find((arg) => arg.name.value === "name");
-          return (
-            nameArg?.value.kind === Kind.STRING &&
-            nameArg.value.value === toolName
-          );
-        });
+        const hasMatchingTool =
+          !!toolName && getToolNamesFromDocument(options.query).has(toolName);
 
         if (hasMatchingTool) {
           // Clear after first matching comparison so this only fires once and
