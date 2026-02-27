@@ -1,3 +1,11 @@
+## 0.5.4 (2026-02-27)
+
+### Fixes
+
+#### Fix build when using fragment definitions
+
+Fix an issue where fragment definitions would cause the Vite build to crash.
+
 ## 0.5.3 (2026-02-26)
 
 ### Features
