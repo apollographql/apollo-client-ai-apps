@@ -203,6 +203,11 @@ describe("operations", () => {
   test("handles operations with fragments in other files", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson(),
+      "src/first-recipient.tsx": declareFragment(gql`
+        fragment OtherRecipientFragment on Recipient {
+          name
+        }
+      `),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery($name: string!)
         @tool(name: "hello-world", description: "This is an awesome tool!") {
@@ -210,6 +215,7 @@ describe("operations", () => {
             message
             recipient {
               ...RecipientFragment
+              ...OtherRecipientFragment
             }
           }
         }
@@ -246,10 +252,16 @@ describe("operations", () => {
           message
           recipient {
             ...RecipientFragment
+            ...OtherRecipientFragment
             __typename
           }
           __typename
         }
+      }
+
+      fragment OtherRecipientFragment on Recipient {
+        name
+        __typename
       }
 
       fragment RecipientFragment on Recipient {
@@ -257,7 +269,7 @@ describe("operations", () => {
         name
         __typename
       }",
-            "id": "1646a86ae2ff5ad75457161be5cff80f3ba5172da573a0fc796b268870119020",
+            "id": "c65cb5ec2dc76bbfa992cd2a98c05ab3f909349f3f1478e608a7f16ae29bdd4a",
             "name": "HelloWorldQuery",
             "prefetch": false,
             "tools": [

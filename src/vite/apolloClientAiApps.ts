@@ -111,6 +111,8 @@ export function apolloClientAiApps(
       ],
     }).map((source) => parse(source.body));
 
+    fragments.register(...sources);
+
     cache.set(file, {
       file: file,
       hash: fileHash,
@@ -126,8 +128,6 @@ export function apolloClientAiApps(
 
     const operations: ManifestOperation[] = [];
     for (const source of sources) {
-      fragments.register(source);
-
       const operationDef = source.definitions.find(
         (d) => d.kind === Kind.OPERATION_DEFINITION
       );
