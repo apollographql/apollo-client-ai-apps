@@ -2,6 +2,7 @@ import {
   LATEST_PROTOCOL_VERSION,
   type McpUiHostCapabilities,
   type McpUiHostContext,
+  type McpUiHostContextChangedNotification,
   type McpUiToolResultNotification,
   type McpUiToolInputNotification,
 } from "@modelcontextprotocol/ext-apps";
@@ -15,6 +16,9 @@ import { invariant, promiseWithResolvers } from "../../../utilities/index.js";
 export interface MockMcpHost extends Disposable {
   sendToolResult(params: McpUiToolResultNotification["params"]): Promise<void>;
   sendToolInput(params: McpUiToolInputNotification["params"]): Promise<void>;
+  sendHostContextChanged(
+    params: McpUiHostContextChangedNotification["params"]
+  ): Promise<void>;
   mockToolCall(
     name: string,
     handler: (params: CallToolRequest["params"]) => CallToolResult
@@ -163,6 +167,14 @@ export async function mockMcpHost(
       window.postMessage({
         jsonrpc: "2.0",
         method: "ui/notifications/tool-input",
+        params,
+      });
+    },
+    async sendHostContextChanged(params) {
+      await initialized;
+      window.postMessage({
+        jsonrpc: "2.0",
+        method: "ui/notifications/host-context-changed",
         params,
       });
     },
