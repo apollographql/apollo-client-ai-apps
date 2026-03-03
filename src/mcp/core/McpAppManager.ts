@@ -1,4 +1,8 @@
-import { App, PostMessageTransport } from "@modelcontextprotocol/ext-apps";
+import {
+  App,
+  PostMessageTransport,
+  type McpUiHostContextChangedNotification,
+} from "@modelcontextprotocol/ext-apps";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { ApplicationManifest } from "../../types/application-manifest";
 import type { FormattedExecutionResult } from "graphql";
@@ -19,6 +23,10 @@ export class McpAppManager {
   #toolMetadata: ApolloMcpServerApps.CallToolResult["_meta"] | undefined;
   #toolInput: Record<string, unknown> | undefined;
 
+  #hostContextCallbacks = new Set<
+    (params: McpUiHostContextChangedNotification["params"]) => void
+  >();
+
   constructor(manifest: ApplicationManifest) {
     this.app = new App({ name: manifest.name, version: manifest.appVersion });
   }
@@ -35,6 +43,16 @@ export class McpAppManager {
     return this.#toolInput;
   }
 
+  onHostContextChanged(
+    cb: (params: McpUiHostContextChangedNotification["params"]) => void
+  ) {
+    this.#hostContextCallbacks.add(cb);
+
+    return () => {
+      this.#hostContextCallbacks.delete(cb);
+    };
+  }
+
   connect = cacheAsync(async () => {
     let toolResult = promiseWithResolvers<ApolloMcpServerApps.CallToolResult>();
     let toolInput = promiseWithResolvers<Parameters<App["ontoolinput"]>[0]>();
@@ -47,6 +65,10 @@ export class McpAppManager {
 
     this.app.ontoolinput = (params) => {
       toolInput.resolve(params);
+    };
+
+    this.app.onhostcontextchanged = (params) => {
+      this.#hostContextCallbacks.forEach((cb) => cb(params));
     };
 
     await this.connectToHost();
