@@ -40,6 +40,7 @@ export const ApolloClientAiAppsConfigSchema = z.strictObject({
       frameDomains: z.array(z.string()).exactOptional(),
       redirectDomains: z.array(z.string()).exactOptional(),
       resourceDomains: z.array(z.string()).exactOptional(),
+      baseUriDomains: z.array(z.string()).exactOptional(),
     })
   ),
   widgetSettings: z.exactOptional(

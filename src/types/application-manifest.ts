@@ -48,6 +48,7 @@ export type ManifestExtraInput = {
 };
 
 export type ManifestCsp = {
+  baseUriDomains: string[];
   connectDomains: string[];
   frameDomains: string[];
   redirectDomains: string[];

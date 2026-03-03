@@ -203,6 +203,7 @@ export function apolloClientAiApps(
       operations,
       resource,
       csp: {
+        baseUriDomains: appsConfig.csp?.baseUriDomains ?? [],
         connectDomains: appsConfig.csp?.connectDomains ?? [],
         frameDomains: appsConfig.csp?.frameDomains ?? [],
         redirectDomains: appsConfig.csp?.redirectDomains ?? [],
