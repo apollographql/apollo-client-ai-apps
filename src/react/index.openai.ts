@@ -1,6 +1,7 @@
 export * from "./index.js";
 export {
   useApp,
+  useHostContext,
   useToolInput,
   createHydrationUtils,
   useToolMetadata,

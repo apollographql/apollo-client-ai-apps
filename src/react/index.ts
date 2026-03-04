@@ -9,6 +9,9 @@ export type { Reactive } from "./reactive.js";
 export const useApp =
   missingHook<typeof import("./index.mcp.js").useApp>("useApp");
 
+export const useHostContext =
+  missingHook<typeof import("./index.mcp.js").useHostContext>("useHostContext");
+
 export const useToolInput =
   missingHook<typeof import("./index.mcp.js").useToolInput>("useToolInput");
 
