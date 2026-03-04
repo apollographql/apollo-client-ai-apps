@@ -29,6 +29,7 @@ export function mockApplicationManifest(
     ],
     resource: "index.html",
     csp: {
+      baseUriDomains: [],
       resourceDomains: [],
       connectDomains: [],
       frameDomains: [],
