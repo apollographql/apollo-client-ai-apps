@@ -77,7 +77,6 @@ export function apolloClientAiApps(
   const { devTarget = targets.length === 1 ? targets[0] : undefined } = options;
   const cache = new Map<string, FileCache>();
 
-  let packageJson!: Record<string, any>;
   let config!: ResolvedConfig;
 
   const fragments = createFragmentRegistry();
@@ -193,6 +192,7 @@ export function apolloClientAiApps(
       ) as { mcp?: string; openai?: string };
     }
 
+    const packageJson = readPackageJson();
     const manifest: ApplicationManifest = {
       format: "apollo-ai-app-manifest",
       version: "1",
@@ -240,9 +240,6 @@ export function apolloClientAiApps(
   return {
     name: "@apollo/client-ai-apps/vite",
     async buildStart() {
-      // Read package.json on start
-      packageJson = JSON.parse(fs.readFileSync("package.json", "utf-8"));
-
       // Scan all files on startup
       const files = await glob("./src/**/*.{ts,tsx,js,jsx}", { fs });
 
@@ -259,19 +256,28 @@ export function apolloClientAiApps(
     configResolved(resolvedConfig) {
       config = resolvedConfig;
     },
-    configEnvironment(name, { build }) {
+    async configEnvironment(name, { build }) {
       if (!targets.includes(name as any)) return;
+
+      const appsConfig = await getAppsConfig();
+      const appName = appsConfig.name ?? readPackageJson().name;
+
+      if (!appName) {
+        console.warn(
+          "Could not determine app name from config. This might result in the incorrect build location."
+        );
+      }
 
       return {
         build: {
-          outDir: path.join(build?.outDir ?? "dist", name),
+          outDir: path.join(build?.outDir ?? "dist", appName ?? "", name),
         },
       };
     },
     configureServer(server) {
       server.watcher.on("change", async (file) => {
         if (file.endsWith("package.json")) {
-          packageJson = JSON.parse(fs.readFileSync("package.json", "utf-8"));
+          readPackageJson.resetCache();
           await generateManifest();
         } else if (file.match(/\.?apollo-client-ai-apps\.config\.\w+$/)) {
           explorer.clearCaches();
@@ -503,6 +509,21 @@ function getResourceFromConfig(
 
   return typeof config === "string" ? config : config[target];
 }
+
+function readPackageJson(): Record<string, any> {
+  if (readPackageJson.cache) {
+    return readPackageJson.cache;
+  }
+
+  return (readPackageJson.cache = JSON.parse(
+    fs.readFileSync("package.json", "utf-8")
+  ));
+}
+
+readPackageJson.cache = undefined as Record<string, any> | undefined;
+readPackageJson.resetCache = () => {
+  readPackageJson.cache = undefined;
+};
 
 const ToolDirectiveSchema = z.strictObject({
   name: z.stringFormat("toolName", (value) => value.indexOf(" ") === -1, {
