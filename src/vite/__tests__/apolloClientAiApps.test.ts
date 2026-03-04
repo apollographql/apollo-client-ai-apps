@@ -6,13 +6,11 @@ import { getOperationName } from "@apollo/client/utilities/internal";
 import { vol } from "memfs";
 import { apolloClientAiApps } from "../apolloClientAiApps.js";
 import { buildApp, setupServer } from "./utilities/build.js";
-import type {
-  ApplicationManifest,
-  ManifestWidgetSettings,
-} from "../../types/application-manifest.js";
+import type { ApplicationManifest } from "../../types/application-manifest.js";
 import { explorer } from "../utilities/config.js";
 import { invariant } from "@apollo/client/utilities/invariant";
 import { Kind } from "graphql";
+import type { ApolloClientAiAppsConfig } from "../../config/types.js";
 
 beforeEach(() => {
   explorer.clearCaches();
@@ -29,12 +27,19 @@ describe("operations", () => {
               invoked: "Tested global!",
             },
           },
+          csp: {
+            baseUriDomains: ["https://base.example.com"],
+            connectDomains: ["https://connect.example.com"],
+            frameDomains: ["https://frame.example.com"],
+            redirectDomains: ["https://redirect.example.com"],
+            resourceDomains: ["https://resource.example.com"],
+          },
           widgetSettings: {
             description: "Test",
             domain: "https://example.com",
             prefersBorder: true,
-          } satisfies ManifestWidgetSettings,
-        },
+          },
+        } satisfies ApolloClientAiAppsConfig.Config,
       }),
       "src/my-component.tsx": declareOperation(gql`
         query HelloWorldQuery($name: string!)
@@ -70,10 +75,21 @@ describe("operations", () => {
       {
         "appVersion": "1.0.0",
         "csp": {
-          "connectDomains": [],
-          "frameDomains": [],
-          "redirectDomains": [],
-          "resourceDomains": [],
+          "baseUriDomains": [
+            "https://base.example.com",
+          ],
+          "connectDomains": [
+            "https://connect.example.com",
+          ],
+          "frameDomains": [
+            "https://frame.example.com",
+          ],
+          "redirectDomains": [
+            "https://redirect.example.com",
+          ],
+          "resourceDomains": [
+            "https://resource.example.com",
+          ],
         },
         "format": "apollo-ai-app-manifest",
         "hash": "abc",
@@ -154,6 +170,7 @@ describe("operations", () => {
       {
         "appVersion": "1.0.0",
         "csp": {
+          "baseUriDomains": [],
           "connectDomains": [],
           "frameDomains": [],
           "redirectDomains": [],
@@ -238,6 +255,7 @@ describe("operations", () => {
       {
         "appVersion": "1.0.0",
         "csp": {
+          "baseUriDomains": [],
           "connectDomains": [],
           "frameDomains": [],
           "redirectDomains": [],
@@ -329,6 +347,7 @@ describe("operations", () => {
       {
         "appVersion": "1.0.0",
         "csp": {
+          "baseUriDomains": [],
           "connectDomains": [],
           "frameDomains": [],
           "redirectDomains": [],
@@ -363,6 +382,7 @@ describe("operations", () => {
       {
         "appVersion": "1.0.0",
         "csp": {
+          "baseUriDomains": [],
           "connectDomains": [],
           "frameDomains": [],
           "redirectDomains": [],
@@ -410,6 +430,7 @@ describe("operations", () => {
       {
         "appVersion": "1.0.0",
         "csp": {
+          "baseUriDomains": [],
           "connectDomains": [],
           "frameDomains": [],
           "redirectDomains": [],
@@ -491,6 +512,7 @@ describe("operations", () => {
       {
         "appVersion": "1.0.0",
         "csp": {
+          "baseUriDomains": [],
           "connectDomains": [],
           "frameDomains": [],
           "redirectDomains": [],
@@ -566,6 +588,7 @@ describe("@prefetch", () => {
       {
         "appVersion": "1.0.0",
         "csp": {
+          "baseUriDomains": [],
           "connectDomains": [],
           "frameDomains": [],
           "redirectDomains": [],
