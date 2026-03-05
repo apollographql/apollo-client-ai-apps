@@ -90,7 +90,10 @@ export class McpAppManager {
     this.#toolInput = args;
 
     return {
-      ...structuredContent,
+      structuredContent: {
+        ...structuredContent,
+        ..._meta?.structuredContent,
+      },
       toolName: this.toolName,
       args,
     };
