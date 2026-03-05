@@ -100,9 +100,14 @@ export class McpAppManager {
     this.#toolMetadata = window.openai.toolResponseMetadata;
 
     return {
-      ...structuredContent,
+      structuredContent: {
+        ...structuredContent,
+        ...(
+          window.openai.toolResponseMetadata as ApolloMcpServerApps.Meta | null
+        )?.structuredContent,
+      },
       toolName: this.toolName,
-      args: this.toolInput,
+      args: this.#toolInput,
     };
   });
 

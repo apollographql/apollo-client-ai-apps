@@ -2,6 +2,7 @@ import { expect, test, describe, vi } from "vitest";
 import { ApolloClient } from "../ApolloClient.js";
 import { parse } from "graphql";
 import { ApolloLink, HttpLink, InMemoryCache, gql } from "@apollo/client";
+import { print } from "@apollo/client/utilities";
 import { ToolCallLink } from "../../link/ToolCallLink.js";
 import {
   graphqlToolResult,
@@ -397,6 +398,252 @@ describe("prefetchData", () => {
         },
       }
     `);
+  });
+});
+
+test("reads result data from toolResponseMetadata.structuredContent", async () => {
+  stubOpenAiGlobals({
+    toolInput: { id: "1" },
+    toolResponseMetadata: {
+      structuredContent: {
+        result: {
+          data: {
+            product: { id: "1", title: "Pen", __typename: "Product" },
+          },
+        },
+      },
+    },
+  });
+  using _ = spyOnConsole("debug");
+
+  const query = gql`
+    query Product($id: ID!) {
+      product(id: $id) @private {
+        id
+        title
+        __typename
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    manifest: mockApplicationManifest({
+      operations: [
+        {
+          id: "c43af26552874026c3fb346148c5795896aa2f3a872410a0a2621cffee25291c",
+          name: "Product",
+          type: "query",
+          body: print(query),
+          variables: { id: "ID" },
+          prefetch: false,
+          tools: [{ name: "GetProduct", description: "Get a product" }],
+        },
+      ],
+    }),
+  });
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GetProduct"),
+  });
+  host.onCleanup(() => client.stop());
+
+  host.sendToolInput({ arguments: { id: "1" } });
+  host.sendToolResult({
+    content: [],
+    structuredContent: {},
+  });
+
+  await client.connect();
+
+  expect(client.extract()).toEqual({
+    "Product:1": {
+      __typename: "Product",
+      id: "1",
+      title: "Pen",
+    },
+    ROOT_QUERY: {
+      __typename: "Query",
+      'product({"id":"1"})@private': { __ref: "Product:1" },
+    },
+  });
+});
+
+test("merges prefetch from structuredContent and result from toolResponseMetadata.structuredContent", async () => {
+  stubOpenAiGlobals({
+    toolInput: { id: "2" },
+    toolResponseMetadata: {
+      structuredContent: {
+        result: {
+          data: {
+            product: { id: "2", title: "iPad", __typename: "Product" },
+          },
+        },
+      },
+    },
+  });
+  using _ = spyOnConsole("debug");
+
+  const prefetchQuery = gql`
+    query TopProducts {
+      topProducts {
+        id
+        title
+        __typename
+      }
+    }
+  `;
+
+  const query = gql`
+    query Product($id: ID!) {
+      product(id: $id) @private {
+        id
+        title
+        __typename
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    manifest: mockApplicationManifest({
+      operations: [
+        {
+          id: "1",
+          name: "TopProducts",
+          body: print(prefetchQuery),
+          type: "query",
+          variables: {},
+          prefetch: true,
+          prefetchID: "__anonymous",
+          tools: [
+            {
+              name: "TopProducts",
+              description: "Shows the currently highest rated products.",
+            },
+          ],
+        },
+        {
+          id: "2",
+          name: "Product",
+          body: print(query),
+          type: "query",
+          variables: { id: "ID" },
+          prefetch: false,
+          tools: [{ name: "GetProduct", description: "Get a product" }],
+        },
+      ],
+    }),
+  });
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GetProduct"),
+  });
+  host.onCleanup(() => client.stop());
+
+  host.sendToolInput({ arguments: { id: "2" } });
+  host.sendToolResult({
+    content: [],
+    structuredContent: {
+      prefetch: {
+        __anonymous: {
+          data: {
+            topProducts: [{ id: "1", title: "iPhone", __typename: "Product" }],
+          },
+        },
+      },
+    },
+  });
+
+  await client.connect();
+
+  expect(client.extract()).toEqual({
+    "Product:1": {
+      __typename: "Product",
+      id: "1",
+      title: "iPhone",
+    },
+    "Product:2": {
+      __typename: "Product",
+      id: "2",
+      title: "iPad",
+    },
+    ROOT_QUERY: {
+      __typename: "Query",
+      topProducts: [{ __ref: "Product:1" }],
+      'product({"id":"2"})@private': { __ref: "Product:2" },
+    },
+  });
+});
+
+test("toolResponseMetadata.structuredContent wins over structuredContent", async () => {
+  stubOpenAiGlobals({
+    toolInput: { id: "1" },
+    toolResponseMetadata: {
+      structuredContent: {
+        result: {
+          data: {
+            product: { id: "1", title: "Meta title", __typename: "Product" },
+          },
+        },
+      },
+    },
+  });
+  using _ = spyOnConsole("debug");
+
+  const query = gql`
+    query Product($id: ID!) {
+      product(id: $id) {
+        id
+        title @private
+        __typename
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    manifest: mockApplicationManifest({
+      operations: [
+        {
+          id: "1",
+          name: "Product",
+          body: print(query),
+          type: "query",
+          variables: { id: "ID" },
+          prefetch: false,
+          tools: [{ name: "GetProduct", description: "Get a product" }],
+        },
+      ],
+    }),
+  });
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GetProduct"),
+  });
+  host.onCleanup(() => client.stop());
+
+  host.sendToolInput({ arguments: { id: "1" } });
+  host.sendToolResult({
+    content: [],
+    structuredContent: {
+      result: {
+        data: {
+          product: { id: "1", __typename: "Product" },
+        },
+      },
+    },
+  });
+
+  await client.connect();
+
+  expect(client.extract()).toEqual({
+    "Product:1": {
+      __typename: "Product",
+      id: "1",
+      "title@private": "Meta title",
+    },
+    ROOT_QUERY: {
+      __typename: "Query",
+      'product({"id":"1"})': { __ref: "Product:1" },
+    },
   });
 });
 
