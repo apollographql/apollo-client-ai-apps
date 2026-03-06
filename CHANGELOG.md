@@ -1,3 +1,60 @@
+## 0.6.0 (2026-03-06)
+
+### Breaking Changes
+
+#### Added a new required `appsOutDir` option to the `apolloClientAiApps` Vite plugin
+
+The `apolloClientAiApps` Vite plugin now requires an `appsOutDir` option that controls where build output is written. The value must end with `apps` as the final path segment (e.g. `"dist/apps"`).
+
+```ts
+apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" });
+```
+
+The plugin will now write the application manifest to `<appsOutDir>/<appName>/.application-manifest.json`, where `appName` is taken from the `name` field in your `apollo-client-ai-apps` config or `package.json`. Previously, the output location was derived from `build.outDir` in your Vite config. Setting `build.outDir` alongside this plugin will now emit a warning that it is ignored.
+
+This option replaces `build.outDir`. Setting `build.outDir` now emits a warning and the value is ignored. To migrate, please move the path from `build.outDir` to the `appsOutDir` option in the `apolloClientAiApps` plugin.
+
+```diff
+// vite.config.ts
+export default defineConfig({
+- build: {
+-   outDir: "../../apps",
+- },
+  plugins: [
+    apolloClientAiApps({
+      targets: ["mcp"],
++     appsOutDir: "../../apps" ,
+    }),
+  ],
+});
+```
+
+### Features
+
+#### Add `baseUriDomains` to CSP config
+
+Adds support for configuring `baseUriDomains` in CSP settings. Only available for MCP apps.
+
+#### Add a `useHostContext` hook
+
+Adds a new `useHostContext` hook that returns the current host context from the MCP host.
+
+```typescript
+import { useHostContext } from "@apollo/client-ai-apps/react";
+
+function MyComponent() {
+  const hostContext = useHostContext();
+
+  // ...
+}
+```
+
+### Fixes
+
+#### `@modelcontextprotocol/ext-apps` is now a required peer dependency
+
+`@modelcontextprotocol/ext-apps` is now a required peer dependency and must be installed along with this library.
+
 ## 0.5.4 (2026-02-27)
 
 ### Fixes
