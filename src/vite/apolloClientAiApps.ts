@@ -880,6 +880,10 @@ const processQueryLink = new ApolloLink((operation) => {
         getDirectiveArgument("extraInputs", directive),
         Kind.LIST
       ),
+      extraOutputs: maybeGetArgumentValue(
+        getDirectiveArgument("extraOutputs", directive),
+        Kind.OBJECT
+      ),
       labels: maybeGetArgumentValue(
         getDirectiveArgument("labels", directive),
         Kind.OBJECT
@@ -1050,5 +1054,6 @@ const ToolDirectiveSchema = z.strictObject({
       })
     )
   ),
+  extraOutputs: z.optional(z.record(z.string(), z.unknown())),
   labels: ApolloClientAiAppsConfigSchema.shape.labels.optional(),
 });
