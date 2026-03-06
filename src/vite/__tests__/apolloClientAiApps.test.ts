@@ -929,6 +929,54 @@ describe("@tool validation", () => {
       `[Error: Error when parsing directive values: unexpected type 'FloatValue']`
     );
   });
+
+  test("errors when multiple @tool directives are used and one is missing a name", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "tool-a", description: "Tool A")
+        @tool(description: "Tool B") {
+          helloWorld
+        }
+      `),
+    });
+
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
+      `[Error: Operations with multiple @tool directives must provide a 'name' argument on each @tool]`
+    );
+  });
+
+  test("errors when multiple @tool directives are used and one is missing a description", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "tool-a", description: "Tool A")
+        @tool(name: "tool-b") {
+          helloWorld
+        }
+      `),
+    });
+
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
+      `[Error: Operations with multiple @tool directives must provide a 'description' argument on each @tool]`
+    );
+  });
 });
 
 describe("config validation", () => {

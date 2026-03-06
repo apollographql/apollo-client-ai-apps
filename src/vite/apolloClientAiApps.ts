@@ -401,53 +401,62 @@ const processQueryLink = new ApolloLink((operation) => {
   // TODO: For now, you can only have 1 operation marked as prefetch. In the future, we'll likely support more than 1, and the "prefetchId" will be defined on the `@prefetch` itself as an argument
   const prefetchID = prefetch ? "__anonymous" : undefined;
 
-  const tools = directives
-    ?.filter((d) => d.name.value === "tool")
-    .map((directive) => {
-      const nameArg = getDirectiveArgument("name", directive);
-      const descriptionArg = getDirectiveArgument("description", directive);
+  const toolDirectives =
+    directives?.filter((d) => d.name.value === "tool") ?? [];
 
-      let name: string;
-      if (nameArg) {
-        name = getArgumentValue(nameArg, Kind.STRING);
-      } else {
-        invariant(
-          definition.name?.value,
-          `Anonymous operations cannot use @tool without providing a 'name' argument`
-        );
-        name = definition.name.value;
-      }
+  const tools = toolDirectives.map((directive) => {
+    const nameArg = getDirectiveArgument("name", directive);
+    const descriptionArg = getDirectiveArgument("description", directive);
 
-      let description: string;
-      if (descriptionArg) {
-        description = getArgumentValue(descriptionArg, Kind.STRING);
-      } else {
-        invariant(
-          definition.description?.value,
-          `Operations using @tool without a 'description' argument must have a description on the operation definition`
-        );
-        description = definition.description.value;
-      }
+    let name: string;
+    if (nameArg) {
+      name = getArgumentValue(nameArg, Kind.STRING);
+    } else {
+      invariant(
+        toolDirectives.length === 1,
+        `Operations with multiple @tool directives must provide a 'name' argument on each @tool`
+      );
+      invariant(
+        definition.name?.value,
+        `Anonymous operations cannot use @tool without providing a 'name' argument`
+      );
+      name = definition.name.value;
+    }
 
-      const result = ToolDirectiveSchema.safeParse({
-        name,
-        description: description,
-        extraInputs: maybeGetArgumentValue(
-          getDirectiveArgument("extraInputs", directive),
-          Kind.LIST
-        ),
-        labels: maybeGetArgumentValue(
-          getDirectiveArgument("labels", directive),
-          Kind.OBJECT
-        ),
-      });
+    let description: string;
+    if (descriptionArg) {
+      description = getArgumentValue(descriptionArg, Kind.STRING);
+    } else {
+      invariant(
+        toolDirectives.length === 1,
+        `Operations with multiple @tool directives must provide a 'description' argument on each @tool`
+      );
+      invariant(
+        definition.description?.value,
+        `Operations using @tool without a 'description' argument must have a description on the operation definition`
+      );
+      description = definition.description.value;
+    }
 
-      if (result.error) {
-        throw z.prettifyError(result.error);
-      }
-
-      return result.data;
+    const result = ToolDirectiveSchema.safeParse({
+      name,
+      description,
+      extraInputs: maybeGetArgumentValue(
+        getDirectiveArgument("extraInputs", directive),
+        Kind.LIST
+      ),
+      labels: maybeGetArgumentValue(
+        getDirectiveArgument("labels", directive),
+        Kind.OBJECT
+      ),
     });
+
+    if (result.error) {
+      throw z.prettifyError(result.error);
+    }
+
+    return result.data;
+  });
 
   // TODO: Make this object satisfy the `ManifestOperation` type. Currently
   // it errors because we need more validation on a few of these fields
