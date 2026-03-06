@@ -404,15 +404,34 @@ const processQueryLink = new ApolloLink((operation) => {
   const tools = directives
     ?.filter((d) => d.name.value === "tool")
     .map((directive) => {
+      const nameArg = getDirectiveArgument("name", directive);
+      const descriptionArg = getDirectiveArgument("description", directive);
+
+      let name: string;
+      if (nameArg) {
+        name = getArgumentValue(nameArg, Kind.STRING);
+      } else {
+        invariant(
+          definition.name?.value,
+          `Anonymous operations cannot use @tool without providing a 'name' argument`
+        );
+        name = definition.name.value;
+      }
+
+      let description: string;
+      if (descriptionArg) {
+        description = getArgumentValue(descriptionArg, Kind.STRING);
+      } else {
+        invariant(
+          definition.description?.value,
+          `Operations using @tool without a 'description' argument must have a description on the operation definition`
+        );
+        description = definition.description.value;
+      }
+
       const result = ToolDirectiveSchema.safeParse({
-        name: getArgumentValue(
-          getDirectiveArgument("name", directive, { required: true }),
-          Kind.STRING
-        ),
-        description: getArgumentValue(
-          getDirectiveArgument("description", directive, { required: true }),
-          Kind.STRING
-        ),
+        name,
+        description: description,
         extraInputs: maybeGetArgumentValue(
           getDirectiveArgument("extraInputs", directive),
           Kind.LIST
