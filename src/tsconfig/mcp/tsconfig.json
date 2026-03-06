@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "allowArbitraryExtensions": true,
+    "resolveJsonModule": true,
     "customConditions": ["mcp"],
     "moduleSuffixes": [".mcp", ""]
   }

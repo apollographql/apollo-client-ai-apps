@@ -244,6 +244,10 @@ export function apolloClientAiApps(
 
     // Always write to the dev location so that the app can bundle the manifest content
     fs.writeFileSync(".application-manifest.json", JSON.stringify(manifest));
+    fs.writeFileSync(
+      ".application-manifest.d.json.ts",
+      `import type { ApplicationManifest } from "@apollo/client-ai-apps";\ndeclare const manifest: ApplicationManifest;\nexport default manifest;\n`
+    );
   }
 
   return {
