@@ -100,7 +100,7 @@
     "build:src": "tsc --project tsconfig.src.build.json",
     "build:vite": "tsc --project tsconfig.vite.build.json",
     "copy-ts-configs": "copyfiles -u 1 \"src/tsconfig/*/tsconfig.json\" dist",
-    "clean": "rimraf dist",
+    "clean": "rimraf dist *.tgz",
     "test": "vitest",
     "changeset": "knope document-change",
     "format": "prettier --write .",
