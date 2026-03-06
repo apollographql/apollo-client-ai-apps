@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { spyOnConsole } from "../../testing/internal/index.js";
 import fs from "node:fs";
 import { gql, type DocumentNode } from "@apollo/client";
 import { getMainDefinition, print } from "@apollo/client/utilities";
@@ -66,7 +67,9 @@ describe("operations", () => {
     });
 
     await using server = await setupServer({
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
     await server.listen();
 
@@ -97,6 +100,7 @@ describe("operations", () => {
           "toolInvocation/invoked": "Tested global!",
           "toolInvocation/invoking": "Testing global...",
         },
+        "name": "my-app",
         "operations": [
           {
             "body": "query HelloWorldQuery($name: string!) {
@@ -161,7 +165,9 @@ describe("operations", () => {
     });
 
     await using server = await setupServer({
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
     await server.listen();
 
@@ -178,6 +184,7 @@ describe("operations", () => {
         },
         "format": "apollo-ai-app-manifest",
         "hash": "abc",
+        "name": "my-app",
         "operations": [
           {
             "body": "query HelloWorldQuery {
@@ -246,7 +253,9 @@ describe("operations", () => {
     });
 
     await using server = await setupServer({
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
     await server.listen();
 
@@ -263,6 +272,7 @@ describe("operations", () => {
         },
         "format": "apollo-ai-app-manifest",
         "hash": "abc",
+        "name": "my-app",
         "operations": [
           {
             "body": "query HelloWorldQuery {
@@ -321,7 +331,9 @@ describe("operations", () => {
 
     await buildApp({
       mode: "production",
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
 
     const manifest = readManifestFile();
@@ -338,7 +350,9 @@ describe("operations", () => {
     });
 
     await using server = await setupServer({
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
     await server.listen();
 
@@ -355,6 +369,7 @@ describe("operations", () => {
         },
         "format": "apollo-ai-app-manifest",
         "hash": "abc",
+        "name": "my-app",
         "operations": [],
         "resource": "http://localhost:3333",
         "version": "1",
@@ -373,7 +388,9 @@ describe("operations", () => {
     });
 
     await using server = await setupServer({
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
     await server.listen();
 
@@ -390,6 +407,7 @@ describe("operations", () => {
         },
         "format": "apollo-ai-app-manifest",
         "hash": "abc",
+        "name": "my-app",
         "operations": [
           {
             "body": "query HelloWorldQuery {
@@ -421,7 +439,9 @@ describe("operations", () => {
     });
 
     await using server = await setupServer({
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
     await server.listen();
 
@@ -438,6 +458,7 @@ describe("operations", () => {
         },
         "format": "apollo-ai-app-manifest",
         "hash": "abc",
+        "name": "my-app",
         "operations": [
           {
             "body": "mutation HelloWorldQuery {
@@ -475,7 +496,9 @@ describe("operations", () => {
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -503,7 +526,9 @@ describe("operations", () => {
     });
 
     await using server = await setupServer({
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
     await server.listen();
 
@@ -520,6 +545,7 @@ describe("operations", () => {
         },
         "format": "apollo-ai-app-manifest",
         "hash": "abc",
+        "name": "my-app",
         "operations": [
           {
             "body": "query HelloWorldQuery {
@@ -579,7 +605,9 @@ describe("@prefetch", () => {
     });
 
     await using server = await setupServer({
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
     await server.listen();
 
@@ -596,6 +624,7 @@ describe("@prefetch", () => {
         },
         "format": "apollo-ai-app-manifest",
         "hash": "abc",
+        "name": "my-app",
         "operations": [
           {
             "body": "query HelloWorldQuery {
@@ -635,7 +664,9 @@ describe("@prefetch", () => {
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -657,7 +688,9 @@ describe("@tool validation", () => {
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -677,7 +710,9 @@ describe("@tool validation", () => {
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -698,7 +733,9 @@ describe("@tool validation", () => {
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -721,7 +758,9 @@ describe("@tool validation", () => {
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -741,7 +780,9 @@ describe("@tool validation", () => {
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -762,7 +803,9 @@ describe("@tool validation", () => {
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -787,7 +830,9 @@ describe("@tool validation", () => {
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -815,7 +860,9 @@ describe("config validation", () => {
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -844,7 +891,9 @@ describe("config validation", () => {
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -873,7 +922,9 @@ describe("config validation", () => {
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -897,7 +948,9 @@ describe("config validation", () => {
     });
 
     await using server = await setupServer({
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
     await server.listen();
 
@@ -925,7 +978,9 @@ describe("config validation", () => {
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -953,7 +1008,9 @@ describe("config validation", () => {
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -984,7 +1041,9 @@ describe("config validation", () => {
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -1012,7 +1071,9 @@ describe("config validation", () => {
 
     await expect(async () => {
       await using server = await setupServer({
-        plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -1035,7 +1096,9 @@ describe("config validation", () => {
     });
 
     await using server = await setupServer({
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
     await server.listen();
 
@@ -1064,7 +1127,9 @@ describe("entry points", () => {
 
     await using server = await setupServer({
       mode: "staging",
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
     await server.listen();
 
@@ -1093,7 +1158,13 @@ describe("entry points", () => {
 
     await using server = await setupServer({
       mode: "staging",
-      plugins: [apolloClientAiApps({ targets: ["mcp"], devTarget: "mcp" })],
+      plugins: [
+        apolloClientAiApps({
+          targets: ["mcp"],
+          devTarget: "mcp",
+          appsOutDir: "dist/apps",
+        }),
+      ],
     });
     await server.listen();
 
@@ -1114,7 +1185,9 @@ describe("entry points", () => {
 
     await using server = await setupServer({
       server: { https: {}, port: 5678 },
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
     await server.listen();
 
@@ -1135,7 +1208,9 @@ describe("entry points", () => {
 
     await using server = await setupServer({
       server: { port: 5678, host: "0.0.0.0" },
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
     await server.listen();
 
@@ -1162,7 +1237,9 @@ describe("entry points", () => {
 
     await buildApp({
       mode: "staging",
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
 
     const manifest = readManifestFile();
@@ -1191,7 +1268,12 @@ describe("entry points", () => {
 
     await buildApp({
       mode: "staging",
-      plugins: [apolloClientAiApps({ targets: ["mcp", "openai"] })],
+      plugins: [
+        apolloClientAiApps({
+          targets: ["mcp", "openai"],
+          appsOutDir: "dist/apps",
+        }),
+      ],
     });
 
     const manifest = readManifestFile();
@@ -1220,7 +1302,12 @@ describe("entry points", () => {
 
     await buildApp({
       mode: "staging",
-      plugins: [apolloClientAiApps({ targets: ["mcp", "openai"] })],
+      plugins: [
+        apolloClientAiApps({
+          targets: ["mcp", "openai"],
+          appsOutDir: "dist/apps",
+        }),
+      ],
     });
 
     const manifest = readManifestFile();
@@ -1251,7 +1338,9 @@ describe("entry points", () => {
 
     await buildApp({
       mode: "staging",
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
 
     const manifest = readManifestFile();
@@ -1273,7 +1362,9 @@ describe("entry points", () => {
 
     await buildApp({
       mode: "production",
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
 
     const manifest = readManifestFile();
@@ -1293,7 +1384,12 @@ describe("entry points", () => {
 
     await buildApp({
       mode: "production",
-      plugins: [apolloClientAiApps({ targets: ["mcp", "openai"] })],
+      plugins: [
+        apolloClientAiApps({
+          targets: ["mcp", "openai"],
+          appsOutDir: "dist/apps",
+        }),
+      ],
     });
 
     const manifest = readManifestFile();
@@ -1318,7 +1414,9 @@ describe("entry points", () => {
       async () =>
         await buildApp({
           mode: "staging",
-          plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+          plugins: [
+            apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+          ],
         })
     ).rejects.toThrowError(
       `[@apollo/client-ai-apps/vite] No entry point found for mode "staging". Entry points other than "development" and "production" must be defined in package.json file.`
@@ -1338,11 +1436,15 @@ describe("entry points", () => {
 
     await buildApp({
       mode: "production",
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
 
     expect(vol.existsSync(".application-manifest.json")).toBe(true);
-    expect(vol.existsSync("dist/.application-manifest.json")).toBe(true);
+    expect(vol.existsSync("dist/apps/my-app/.application-manifest.json")).toBe(
+      true
+    );
   });
 
   test("writes to both locations when running in build mode with multiple targets", async () => {
@@ -1358,11 +1460,90 @@ describe("entry points", () => {
 
     await buildApp({
       mode: "production",
-      plugins: [apolloClientAiApps({ targets: ["mcp", "openai"] })],
+      plugins: [
+        apolloClientAiApps({
+          targets: ["mcp", "openai"],
+          appsOutDir: "dist/apps",
+        }),
+      ],
     });
 
     expect(vol.existsSync(".application-manifest.json")).toBe(true);
-    expect(vol.existsSync("dist/.application-manifest.json")).toBe(true);
+    expect(vol.existsSync("dist/apps/my-app/.application-manifest.json")).toBe(
+      true
+    );
+  });
+});
+
+describe("appsOutDir", () => {
+  test("errors when last segment is not `apps`", () => {
+    expect(() =>
+      apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/output" })
+    ).toThrowError(
+      "`appsOutDir` must end with `apps` as the final path segment (e.g. `path/to/apps`)."
+    );
+  });
+
+  test("accepts trailing slash", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+    });
+
+    await expect(
+      buildApp({
+        mode: "production",
+        build: { write: false },
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps/" }),
+        ],
+      })
+    ).resolves.not.toThrowError();
+  });
+
+  test("warns when `build.outDir` is set", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+    });
+
+    using _ = spyOnConsole("warn");
+
+    await buildApp({
+      mode: "production",
+      build: { outDir: "custom-out", write: false },
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
+    });
+
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "`build.outDir` is set in your Vite config but will be ignored"
+      )
+    );
+  });
+
+  test("places output under `appsOutDir`", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          helloWorld
+        }
+      `),
+    });
+
+    await buildApp({
+      mode: "production",
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
+    });
+
+    expect(vol.existsSync("dist/apps/my-app/.application-manifest.json")).toBe(
+      true
+    );
+    expect(vol.existsSync(".application-manifest.json")).toBe(true);
   });
 });
 
@@ -1410,7 +1591,9 @@ export default config;
 
     await buildApp({
       mode: "production",
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
 
     const manifest = readManifestFile();
@@ -1446,7 +1629,9 @@ export default config;
 
     await buildApp({
       mode: "production",
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
 
     const manifest = readManifestFile();
@@ -1480,7 +1665,9 @@ describe("file watching", () => {
     });
 
     await using server = await setupServer({
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
     await server.listen();
 
@@ -1518,7 +1705,9 @@ describe("html transforms", () => {
       server: {
         origin: "http://localhost:3000",
       },
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
 
     const html = `<html><head><script type="module" src="/@vite/client"></script></head><body><script module src="/assets/main.ts?t=12345"></script></body></html>`;
@@ -1542,7 +1731,9 @@ describe("html transforms", () => {
       server: {
         port: 3000,
       },
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
 
     await server.listen();
@@ -1570,7 +1761,9 @@ window.$RefreshSig$ = () => (type) => type;</script></head></html>`;
       server: {
         origin: "http://localhost:3000",
       },
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
 
     const html = `<html><head>    <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
@@ -1596,7 +1789,9 @@ window.$RefreshSig$ = () => (type) => type;</script></head></html>`;
       server: {
         port: 3000,
       },
-      plugins: [apolloClientAiApps({ targets: ["mcp"] })],
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
     });
 
     await server.listen();
@@ -1627,7 +1822,7 @@ window.$RefreshSig$ = () => (type) => type;</script></head></html>`;
         origin: "http://localhost:3000",
       },
       plugins: [
-        apolloClientAiApps({ targets: ["mcp"] }),
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
         {
           name: "capture-html",
           transformIndexHtml: {
@@ -1666,7 +1861,7 @@ function declareFragment(fragment: DocumentNode) {
 }
 
 function mockPackageJson(config?: Record<string, unknown>) {
-  return JSON.stringify({ version: "1.0.0", ...config });
+  return JSON.stringify({ version: "1.0.0", name: "my-app", ...config });
 }
 
 function readManifestFile(
