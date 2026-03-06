@@ -97,6 +97,7 @@ describe("operations", () => {
           "toolInvocation/invoked": "Tested global!",
           "toolInvocation/invoking": "Testing global...",
         },
+        "name": "my-app",
         "operations": [
           {
             "body": "query HelloWorldQuery($name: string!) {
@@ -178,6 +179,7 @@ describe("operations", () => {
         },
         "format": "apollo-ai-app-manifest",
         "hash": "abc",
+        "name": "my-app",
         "operations": [
           {
             "body": "query HelloWorldQuery {
@@ -263,6 +265,7 @@ describe("operations", () => {
         },
         "format": "apollo-ai-app-manifest",
         "hash": "abc",
+        "name": "my-app",
         "operations": [
           {
             "body": "query HelloWorldQuery {
@@ -355,6 +358,7 @@ describe("operations", () => {
         },
         "format": "apollo-ai-app-manifest",
         "hash": "abc",
+        "name": "my-app",
         "operations": [],
         "resource": "http://localhost:3333",
         "version": "1",
@@ -390,6 +394,7 @@ describe("operations", () => {
         },
         "format": "apollo-ai-app-manifest",
         "hash": "abc",
+        "name": "my-app",
         "operations": [
           {
             "body": "query HelloWorldQuery {
@@ -438,6 +443,7 @@ describe("operations", () => {
         },
         "format": "apollo-ai-app-manifest",
         "hash": "abc",
+        "name": "my-app",
         "operations": [
           {
             "body": "mutation HelloWorldQuery {
@@ -520,6 +526,7 @@ describe("operations", () => {
         },
         "format": "apollo-ai-app-manifest",
         "hash": "abc",
+        "name": "my-app",
         "operations": [
           {
             "body": "query HelloWorldQuery {
@@ -596,6 +603,7 @@ describe("@prefetch", () => {
         },
         "format": "apollo-ai-app-manifest",
         "hash": "abc",
+        "name": "my-app",
         "operations": [
           {
             "body": "query HelloWorldQuery {
@@ -1666,7 +1674,7 @@ function declareFragment(fragment: DocumentNode) {
 }
 
 function mockPackageJson(config?: Record<string, unknown>) {
-  return JSON.stringify({ version: "1.0.0", ...config });
+  return JSON.stringify({ version: "1.0.0", name: "my-app", ...config });
 }
 
 function readManifestFile(

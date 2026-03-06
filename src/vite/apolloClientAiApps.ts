@@ -193,6 +193,13 @@ export function apolloClientAiApps(
     }
 
     const packageJson = readPackageJson();
+    const appName = appsConfig.name ?? packageJson.name;
+
+    invariant(
+      appName,
+      "Error generating application manifest. Could not determine app name. Set `name` in your apollo-client-ai-apps config or `package.json`."
+    );
+
     const manifest: ApplicationManifest = {
       format: "apollo-ai-app-manifest",
       version: "1",
@@ -262,11 +269,10 @@ export function apolloClientAiApps(
       const appsConfig = await getAppsConfig();
       const appName = appsConfig.name ?? readPackageJson().name;
 
-      if (!appName) {
-        console.warn(
-          "Could not determine app name from config. This might result in the incorrect build location."
-        );
-      }
+      invariant(
+        appName,
+        "Could not determine app name. Set `name` in your apollo-client-ai-apps config or `package.json`."
+      );
 
       return {
         build: {
