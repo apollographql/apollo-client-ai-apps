@@ -33,7 +33,6 @@ export async function buildApp(
     ...config,
     build: {
       emptyOutDir: false,
-      outDir: "dist",
       ...config.build,
       rollupOptions: {
         input: config.build?.rollupOptions?.input ?? "virtual:entry",

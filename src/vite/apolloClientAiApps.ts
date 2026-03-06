@@ -38,6 +38,7 @@ export declare namespace apolloClientAiApps {
   export interface Options {
     targets: Target[];
     devTarget?: Target | undefined;
+    appsOutDir: string;
   }
 }
 
@@ -74,7 +75,10 @@ export function apolloClientAiApps(
   options: apolloClientAiApps.Options
 ): Plugin {
   const targets = Array.from(new Set(options.targets));
-  const { devTarget = targets.length === 1 ? targets[0] : undefined } = options;
+  const {
+    devTarget = targets.length === 1 ? targets[0] : undefined,
+    appsOutDir,
+  } = options;
   const cache = new Map<string, FileCache>();
 
   let config!: ResolvedConfig;
@@ -89,6 +93,11 @@ export function apolloClientAiApps(
   invariant(
     targets.every(isValidTarget),
     `All targets must be one of: ${VALID_TARGETS.join(", ")}`
+  );
+
+  invariant(
+    path.basename(path.normalize(appsOutDir)) === "apps",
+    "`appsOutDir` must end with `apps` as the final path segment (e.g. `path/to/apps`)."
   );
 
   const client = new ApolloClient({
@@ -226,14 +235,7 @@ export function apolloClientAiApps(
       manifest.labels = appsConfig.labels;
     }
 
-    // We create mcp and openai environments in order to write to
-    // subdirectories, but we want the manifest to be in the root outDir. If we
-    // are running in a different environment, we'll put it in the configured
-    // outDir directly instead.
-    const outDir =
-      environment?.name === "mcp" || environment?.name === "openai" ?
-        path.resolve(config.build.outDir, "../")
-      : config.build.outDir;
+    const outDir = path.join(appsOutDir, appName);
 
     // Always write to build directory so the MCP server picks it up
     const dest = path.resolve(root, outDir, ".application-manifest.json");
@@ -276,7 +278,7 @@ export function apolloClientAiApps(
 
       return {
         build: {
-          outDir: path.join(build?.outDir ?? "dist", appName ?? "", name),
+          outDir: path.join(appsOutDir, appName, name),
         },
       };
     },
@@ -295,7 +297,14 @@ export function apolloClientAiApps(
       });
     },
 
-    config(_, { command }) {
+    config(userConfig, { command }) {
+      if (userConfig.build?.outDir) {
+        console.warn(
+          "[@apollo/client-ai-apps/vite] `build.outDir` is set in your Vite config but will be " +
+            "ignored. Use `appsOutDir` in the plugin options to control the output location."
+        );
+      }
+
       if (command === "serve") {
         invariant(
           isValidTarget(devTarget) || targets.length === 1,
