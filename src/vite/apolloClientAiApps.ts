@@ -247,10 +247,10 @@ export function apolloClientAiApps(
       // Always write to build directory so the MCP server picks it up
       const dest = path.resolve(root, outDir, ".application-manifest.json");
       fs.mkdirSync(path.dirname(dest), { recursive: true });
-      fs.writeFileSync(dest, JSON.stringify(manifest));
+      fs.writeFileSync(dest, manifestContents);
 
       // Always write to the dev location so that the app can bundle the manifest content
-      fs.writeFileSync(".application-manifest.json", JSON.stringify(manifest));
+      fs.writeFileSync(".application-manifest.json", manifestContents);
     }
 
     const manifestTypesFilepath = ".application-manifest.d.json.ts";
