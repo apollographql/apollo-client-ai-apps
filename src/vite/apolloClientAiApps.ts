@@ -72,9 +72,9 @@ interface FileCache {
   sources: DocumentNode[];
 }
 
-function generateTypes(toolNames: string[], outFile: string) {
-  const dest = path.resolve(root, outFile);
-  fs.mkdirSync(path.dirname(dest), { recursive: true });
+function md5(contents: string) {
+  return createHash("md5").update(contents).digest("hex");
+}
 
   if (toolNames.length === 0) {
     fs.writeFileSync(
@@ -131,7 +131,7 @@ export function apolloClientAiApps(
 
     if (!code.includes("gql")) return;
 
-    const fileHash = createHash("md5").update(code).digest("hex");
+    const fileHash = md5(code);
     if (cache.get(file)?.hash === fileHash) return;
     const sources = gqlPluckFromCodeStringSync(file, code, {
       modules: [
