@@ -676,11 +676,11 @@ describe("@prefetch", () => {
 });
 
 describe("@tool validation", () => {
-  test("errors when tool name is not provided", async () => {
+  test("errors when tool name is not provided on anonymous operation", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
-        query HelloWorldQuery @tool {
+        query @tool {
           helloWorld
         }
       `),
@@ -694,11 +694,11 @@ describe("@tool validation", () => {
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
-      `[Error: 'name' argument must be supplied for @tool]`
+      `[Error: Anonymous operations cannot use @tool without providing a 'name' argument]`
     );
   });
 
-  test("errors when tool description is not provided", async () => {
+  test("errors when tool description is not provided and operation has no description", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
@@ -716,8 +716,98 @@ describe("@tool validation", () => {
       });
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
-      `[Error: 'description' argument must be supplied for @tool]`
+      `[Error: Operations using @tool without a 'description' argument must have a description on the operation definition]`
     );
+  });
+
+  test("uses operation name as tool name when name is omitted from @tool", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery @tool(description: "A greeting tool") {
+          helloWorld
+        }
+      `),
+    });
+
+    await using server = await setupServer({
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
+    });
+    await server.listen();
+
+    const manifest = readManifestFile();
+    expect(manifest.operations[0].tools).toMatchInlineSnapshot(`
+      [
+        {
+          "description": "A greeting tool",
+          "name": "HelloWorldQuery",
+        },
+      ]
+    `);
+  });
+
+  test("uses operation description as tool description when description is omitted from @tool", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      "src/my-component.tsx": declareOperation(gql`
+        """
+        A greeting tool
+        """
+        query HelloWorldQuery @tool(name: "hello-world") {
+          helloWorld
+        }
+      `),
+    });
+
+    await using server = await setupServer({
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
+    });
+    await server.listen();
+
+    const manifest = readManifestFile();
+    expect(manifest.operations[0].tools).toMatchInlineSnapshot(`
+      [
+        {
+          "description": "A greeting tool",
+          "name": "hello-world",
+        },
+      ]
+    `);
+  });
+
+  test("uses operation name and description when both are omitted from @tool", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      "src/my-component.tsx": declareOperation(gql`
+        """
+        A greeting tool
+        """
+        query HelloWorldQuery @tool {
+          helloWorld
+        }
+      `),
+    });
+
+    await using server = await setupServer({
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
+    });
+    await server.listen();
+
+    const manifest = readManifestFile();
+    expect(manifest.operations[0].tools).toMatchInlineSnapshot(`
+      [
+        {
+          "description": "A greeting tool",
+          "name": "HelloWorldQuery",
+        },
+      ]
+    `);
   });
 
   test("errors when tool name contains spaces", async () => {
@@ -837,6 +927,54 @@ describe("@tool validation", () => {
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
       `[Error: Error when parsing directive values: unexpected type 'FloatValue']`
+    );
+  });
+
+  test("errors when multiple @tool directives are used and one is missing a name", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "tool-a", description: "Tool A")
+        @tool(description: "Tool B") {
+          helloWorld
+        }
+      `),
+    });
+
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
+      `[Error: Operations with multiple @tool directives must provide a 'name' argument on each @tool]`
+    );
+  });
+
+  test("errors when multiple @tool directives are used and one is missing a description", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "tool-a", description: "Tool A")
+        @tool(name: "tool-b") {
+          helloWorld
+        }
+      `),
+    });
+
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
+      `[Error: Operations with multiple @tool directives must provide a 'description' argument on each @tool]`
     );
   });
 });
