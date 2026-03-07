@@ -282,7 +282,7 @@ export function apolloClientAiApps(
     configResolved(resolvedConfig) {
       config = resolvedConfig;
     },
-    async configEnvironment(name, { build }) {
+    async configEnvironment(name) {
       if (!targets.includes(name as any)) return;
 
       const appsConfig = await getAppsConfig();
