@@ -82,6 +82,7 @@ export function apolloClientAiApps(
   const cache = new Map<string, FileCache>();
 
   let config!: ResolvedConfig;
+  let manifestHash: string | undefined;
 
   const fragments = createFragmentRegistry();
 
@@ -236,18 +237,30 @@ export function apolloClientAiApps(
     }
 
     const outDir = path.join(appsOutDir, appName);
+    const manifestContents = JSON.stringify(manifest);
 
-    // Always write to build directory so the MCP server picks it up
-    const dest = path.resolve(root, outDir, ".application-manifest.json");
-    fs.mkdirSync(path.dirname(dest), { recursive: true });
-    fs.writeFileSync(dest, JSON.stringify(manifest));
+    const hash = createHash("md5").update(manifestContents).digest("hex");
 
-    // Always write to the dev location so that the app can bundle the manifest content
-    fs.writeFileSync(".application-manifest.json", JSON.stringify(manifest));
-    fs.writeFileSync(
-      ".application-manifest.d.json.ts",
-      `import type { ApplicationManifest } from "@apollo/client-ai-apps";\ndeclare const manifest: ApplicationManifest;\nexport default manifest;\n`
-    );
+    if (hash !== manifestHash) {
+      manifestHash = hash;
+
+      // Always write to build directory so the MCP server picks it up
+      const dest = path.resolve(root, outDir, ".application-manifest.json");
+      fs.mkdirSync(path.dirname(dest), { recursive: true });
+      fs.writeFileSync(dest, JSON.stringify(manifest));
+
+      // Always write to the dev location so that the app can bundle the manifest content
+      fs.writeFileSync(".application-manifest.json", JSON.stringify(manifest));
+    }
+
+    const manifestTypesFilepath = ".application-manifest.d.json.ts";
+    if (!fs.existsSync(manifestTypesFilepath)) {
+      fs.writeFileSync(
+        manifestTypesFilepath,
+        `import type { ApplicationManifest } from "@apollo/client-ai-apps";\ndeclare const manifest: ApplicationManifest;\nexport default manifest;\n`,
+        "utf8"
+      );
+    }
   }
 
   return {
