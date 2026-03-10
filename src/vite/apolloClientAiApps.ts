@@ -39,7 +39,6 @@ export declare namespace apolloClientAiApps {
     targets: Target[];
     devTarget?: Target | undefined;
     appsOutDir: string;
-    typesOutFile?: string | undefined;
   }
 }
 
@@ -103,8 +102,8 @@ export function apolloClientAiApps(
   const {
     devTarget = targets.length === 1 ? targets[0] : undefined,
     appsOutDir,
-    typesOutFile = "src/apollo-ai-apps.d.ts",
   } = options;
+  const typesOutFile = ".apollo-client-ai-apps/types/register.d.ts";
   const cache = new Map<string, FileCache>();
 
   let config!: ResolvedConfig;
