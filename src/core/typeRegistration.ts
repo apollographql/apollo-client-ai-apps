@@ -12,7 +12,7 @@ export type ToolInput =
   : RegisteredToolInputs[keyof RegisteredToolInputs];
 
 type ToolInfoFromInputs<T extends Record<string, unknown>> = {
-  [K in keyof T]: { toolName: K; toolInput: T[K] | undefined };
+  [K in keyof T]: { toolName: K; toolInput: T[K] };
 }[keyof T];
 
 export type ToolInfo =
