@@ -362,12 +362,13 @@ export function apolloClientAiApps(
     const manifestContents = JSON.stringify(manifest);
 
     // Always write to build directory so the MCP server picks it up
-    const dest = path.resolve(root, outDir, ".application-manifest.json");
-    fs.mkdirSync(path.dirname(dest), { recursive: true });
-    fs.writeFileSync(dest, manifestContents);
+    writeFileSync(
+      path.resolve(root, outDir, ".application-manifest.json"),
+      manifestContents
+    );
 
     // Always write to the dev location so that the app can bundle the manifest content
-    fs.writeFileSync(".application-manifest.json", manifestContents);
+    writeFileSync(".application-manifest.json", manifestContents);
 
     if (schema) {
       const opTypesContent = await generateOperationTypes(schema, sources);
@@ -375,12 +376,13 @@ export function apolloClientAiApps(
 
       if (currentOpTypesHash !== operationTypesHash) {
         operationTypesHash = currentOpTypesHash;
-        const dest = path.resolve(
-          root,
-          ".apollo-client-ai-apps/types/operation-types.d.ts"
+        writeFileSync(
+          path.resolve(
+            root,
+            ".apollo-client-ai-apps/types/operation-types.d.ts"
+          ),
+          opTypesContent
         );
-        fs.mkdirSync(path.dirname(dest), { recursive: true });
-        fs.writeFileSync(dest, opTypesContent);
       }
     }
 
@@ -389,20 +391,17 @@ export function apolloClientAiApps(
 
     if (currentTypesHash !== typesHash) {
       typesHash = currentTypesHash;
-      const dest = path.resolve(
-        root,
-        ".apollo-client-ai-apps/types/register.d.ts"
+      writeFileSync(
+        path.resolve(root, ".apollo-client-ai-apps/types/register.d.ts"),
+        typesFileContents
       );
-      fs.mkdirSync(path.dirname(dest), { recursive: true });
-      fs.writeFileSync(dest, typesFileContents);
     }
 
     const manifestTypesFilepath = ".application-manifest.d.json.ts";
     if (!fs.existsSync(manifestTypesFilepath)) {
-      fs.writeFileSync(
+      writeFileSync(
         manifestTypesFilepath,
-        `import type { ApplicationManifest } from "@apollo/client-ai-apps";\ndeclare const manifest: ApplicationManifest;\nexport default manifest;\n`,
-        "utf8"
+        `import type { ApplicationManifest } from "@apollo/client-ai-apps";\ndeclare const manifest: ApplicationManifest;\nexport default manifest;\n`
       );
     }
   }
@@ -728,6 +727,11 @@ readPackageJson.cache = undefined as Record<string, any> | undefined;
 readPackageJson.resetCache = () => {
   readPackageJson.cache = undefined;
 };
+
+function writeFileSync(filepath: string, content: string) {
+  fs.mkdirSync(path.dirname(filepath), { recursive: true });
+  fs.writeFileSync(filepath, content, "utf-8");
+}
 
 const ToolDirectiveSchema = z.strictObject({
   name: z.stringFormat("toolName", (value) => value.indexOf(" ") === -1, {
