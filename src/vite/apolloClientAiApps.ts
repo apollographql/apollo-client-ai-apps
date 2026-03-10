@@ -360,12 +360,11 @@ export function apolloClientAiApps(
       manifest.labels = appsConfig.labels;
     }
 
-    const outDir = path.join(appsOutDir, appName);
     const manifestContents = JSON.stringify(manifest);
 
     // Always write to build directory so the MCP server picks it up
     writeFileSync(
-      path.resolve(root, outDir, ".application-manifest.json"),
+      path.resolve(root, appsOutDir, appName, ".application-manifest.json"),
       manifestContents
     );
 
