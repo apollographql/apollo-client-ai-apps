@@ -203,8 +203,10 @@ export function apolloClientAiApps(
   const cache = new Map<string, FileCache>();
 
   let config!: ResolvedConfig;
-  let typesHash: string | undefined;
-  let operationTypesHash: string | undefined;
+  const hashes: Record<"types" | "operationTypes", string | undefined> = {
+    types: undefined,
+    operationTypes: undefined,
+  };
 
   const fragments = createFragmentRegistry();
 
@@ -374,8 +376,8 @@ export function apolloClientAiApps(
       const opTypesContent = await generateOperationTypes(schema, sources);
       const currentOpTypesHash = md5(opTypesContent);
 
-      if (currentOpTypesHash !== operationTypesHash) {
-        operationTypesHash = currentOpTypesHash;
+      if (currentOpTypesHash !== hashes.operationTypes) {
+        hashes.operationTypes = currentOpTypesHash;
         writeFileSync(
           path.resolve(
             root,
@@ -389,8 +391,8 @@ export function apolloClientAiApps(
     const typesFileContents = getRegisteredTypeContents({ operations, schema });
     const currentTypesHash = md5(typesFileContents);
 
-    if (currentTypesHash !== typesHash) {
-      typesHash = currentTypesHash;
+    if (currentTypesHash !== hashes.types) {
+      hashes.types = currentTypesHash;
       writeFileSync(
         path.resolve(root, ".apollo-client-ai-apps/types/register.d.ts"),
         typesFileContents
