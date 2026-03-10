@@ -1611,6 +1611,71 @@ describe("entry points", () => {
       true
     );
   });
+
+  test("generates .application-manifest.d.json.ts at root in build mode", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          helloWorld
+        }
+      `),
+    });
+
+    await buildApp({
+      mode: "production",
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
+    });
+
+    expect(vol.existsSync(".application-manifest.d.json.ts")).toBe(true);
+  });
+
+  test("generates .application-manifest.d.json.ts at root in serve mode", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          helloWorld
+        }
+      `),
+    });
+
+    await using server = await setupServer({
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
+    });
+    await server.listen();
+
+    expect(vol.existsSync(".application-manifest.d.json.ts")).toBe(true);
+  });
+
+  test("does not write .application-manifest.json.d.ts to appsOutDir", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(name: "hello-world", description: "This is an awesome tool!") {
+          helloWorld
+        }
+      `),
+    });
+
+    await buildApp({
+      mode: "production",
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
+    });
+
+    expect(
+      vol.existsSync("dist/apps/my-app/.application-manifest.json.d.ts")
+    ).toBe(false);
+  });
 });
 
 describe("appsOutDir", () => {

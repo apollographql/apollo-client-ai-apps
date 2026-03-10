@@ -236,14 +236,24 @@ export function apolloClientAiApps(
     }
 
     const outDir = path.join(appsOutDir, appName);
+    const manifestContents = JSON.stringify(manifest);
 
     // Always write to build directory so the MCP server picks it up
     const dest = path.resolve(root, outDir, ".application-manifest.json");
     fs.mkdirSync(path.dirname(dest), { recursive: true });
-    fs.writeFileSync(dest, JSON.stringify(manifest));
+    fs.writeFileSync(dest, manifestContents);
 
     // Always write to the dev location so that the app can bundle the manifest content
-    fs.writeFileSync(".application-manifest.json", JSON.stringify(manifest));
+    fs.writeFileSync(".application-manifest.json", manifestContents);
+
+    const manifestTypesFilepath = ".application-manifest.d.json.ts";
+    if (!fs.existsSync(manifestTypesFilepath)) {
+      fs.writeFileSync(
+        manifestTypesFilepath,
+        `import type { ApplicationManifest } from "@apollo/client-ai-apps";\ndeclare const manifest: ApplicationManifest;\nexport default manifest;\n`,
+        "utf8"
+      );
+    }
   }
 
   return {
@@ -265,7 +275,7 @@ export function apolloClientAiApps(
     configResolved(resolvedConfig) {
       config = resolvedConfig;
     },
-    async configEnvironment(name, { build }) {
+    async configEnvironment(name) {
       if (!targets.includes(name as any)) return;
 
       const appsConfig = await getAppsConfig();
