@@ -1,5 +1,9 @@
 export interface Register {}
 
+/**
+ * @deprecated Please use the `ToolInput` type instead. `ToolName` will be
+ * removed in the next major version.
+ */
 export type ToolName =
   Register extends { toolName: infer T extends string } ? T : string;
 
@@ -7,6 +11,10 @@ type RegisteredToolInputs =
   Register extends { toolInputs: infer T extends Record<string, unknown> } ? T
   : never;
 
+/**
+ * @deprecated Please use the `ToolInput` type instead. `ToolInput` will be
+ * removed in the next major version.
+ */
 export type ToolInput =
   [RegisteredToolInputs] extends [never] ? Record<string, unknown>
   : RegisteredToolInputs[keyof RegisteredToolInputs];
