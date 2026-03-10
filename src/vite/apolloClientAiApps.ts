@@ -103,7 +103,6 @@ export function apolloClientAiApps(
     devTarget = targets.length === 1 ? targets[0] : undefined,
     appsOutDir,
   } = options;
-  const typesOutFile = ".apollo-client-ai-apps/types/register.d.ts";
   const cache = new Map<string, FileCache>();
 
   let config!: ResolvedConfig;
@@ -280,7 +279,10 @@ export function apolloClientAiApps(
     if (currentTypesHash !== typesHash) {
       typesHash = currentTypesHash;
 
-      const dest = path.resolve(root, typesOutFile);
+      const dest = path.resolve(
+        root,
+        ".apollo-client-ai-apps/types/register.d.ts"
+      );
       fs.mkdirSync(path.dirname(dest), { recursive: true });
       fs.writeFileSync(dest, typesFileContents);
     }
