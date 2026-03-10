@@ -401,7 +401,10 @@ export function apolloClientAiApps(
     if (!fs.existsSync(manifestTypesFilepath)) {
       writeFileSync(
         manifestTypesFilepath,
-        `import type { ApplicationManifest } from "@apollo/client-ai-apps";\ndeclare const manifest: ApplicationManifest;\nexport default manifest;\n`
+        `import type { ApplicationManifest } from "@apollo/client-ai-apps";
+declare const manifest: ApplicationManifest;
+export default manifest;
+`
       );
     }
   }
