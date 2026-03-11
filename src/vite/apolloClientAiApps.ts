@@ -200,8 +200,6 @@ export function apolloClientAiApps(
     appsOutDir,
     schema,
   } = options;
-  const cache = new Map<string, FileCache>();
-
   let config!: ResolvedConfig;
 
   const fragments = createFragmentRegistry();
@@ -228,7 +226,7 @@ export function apolloClientAiApps(
 
   let sources: DocumentNode[] = [];
 
-  function recomputeSources() {
+  function recomputeSources(cache: Map<string, FileCache>) {
     sources = Array.from(cache.values()).flatMap((entry) => entry.sources);
   }
 
@@ -287,7 +285,7 @@ export function apolloClientAiApps(
     if (!code.includes("gql")) return;
 
     const fileHash = md5(code);
-    if (cache.get(file)?.hash === fileHash) return;
+    if (processFile.cache.get(file)?.hash === fileHash) return;
     const sources = gqlPluckFromCodeStringSync(file, code, {
       modules: [
         { name: "graphql-tag", identifier: "gql" },
@@ -297,14 +295,16 @@ export function apolloClientAiApps(
 
     fragments.register(...sources);
 
-    cache.set(file, {
+    processFile.cache.set(file, {
       file: file,
       hash: fileHash,
       sources,
     });
 
-    recomputeSources();
+    recomputeSources(processFile.cache);
   }
+
+  processFile.cache = new Map<string, FileCache>();
 
   async function generateManifest(environment?: Environment) {
     const appsConfig = await getAppsConfig();
