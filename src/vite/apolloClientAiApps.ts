@@ -111,7 +111,6 @@ declare module "@apollo/client-ai-apps" {
 `.trimStart();
   }
 
-  // Build toolInputs map: collect variable type names and compose per-tool types
   const importedTypes: string[] = [];
   const toolInputEntries: string[] = [];
 
