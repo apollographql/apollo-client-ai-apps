@@ -3,3 +3,8 @@
  * provided.
  */
 export const aiClientSymbol = Symbol.for("apollo.aiClient");
+
+/**
+ * The current version of the apollo-client-ai-apps package.
+ */
+export const PACKAGE_VERSION = "0.6.0";
