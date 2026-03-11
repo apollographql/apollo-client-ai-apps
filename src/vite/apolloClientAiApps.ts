@@ -566,6 +566,12 @@ export function apolloClientAiApps(
     let flagSchemaBuildError: false | Error = false;
     const operations = await getManifestOperations();
 
+    if (operations === generateTypesFiles.cache) {
+      return;
+    }
+
+    generateTypesFiles.cache = operations;
+
     if (schema) {
       try {
         const opTypesContent = await generateOperationTypes(
@@ -609,6 +615,8 @@ export function apolloClientAiApps(
       { cache: true }
     );
   }
+
+  generateTypesFiles.cache = [] as ManifestOperation[] | undefined;
 
   return {
     name: "@apollo/client-ai-apps/vite",
