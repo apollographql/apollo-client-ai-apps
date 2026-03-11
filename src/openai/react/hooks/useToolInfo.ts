@@ -5,7 +5,7 @@ export function useToolInfo(): ToolInfo | undefined {
   const appManager = useApolloClient()["appManager"];
   const toolName = appManager.toolName;
 
-  if (toolName === undefined) {
+  if (!toolName) {
     return;
   }
 
