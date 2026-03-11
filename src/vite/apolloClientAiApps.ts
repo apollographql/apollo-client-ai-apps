@@ -24,7 +24,6 @@ import {
 } from "./utilities/graphql.js";
 import type {
   ApplicationManifest,
-  ManifestExtraInput,
   ManifestOperation,
 } from "../types/application-manifest";
 import { invariant } from "../utilities/invariant.js";
@@ -33,6 +32,13 @@ import type { ApolloClientAiAppsConfig } from "../config/index.js";
 import { ApolloClientAiAppsConfigSchema } from "../config/schema.js";
 import { z } from "zod";
 import { createFragmentRegistry } from "@apollo/client/cache";
+import {
+  buildImportStatement,
+  buildPropertySignature,
+  buildKeywordLiteral,
+  printRecast,
+  type TSInterfaceBody,
+} from "./utilities/recast.js";
 
 const b = recast.types.builders;
 
@@ -94,53 +100,6 @@ function buildHeaderComment() {
   );
 }
 
-// Type that tracks any reference to a type literal so that we can create an AST
-// node from it
-type SupportedLiteralTypes = ManifestExtraInput["type"];
-
-function buildTSKeyword(type: SupportedLiteralTypes) {
-  switch (type) {
-    case "string":
-      return b.tsStringKeyword();
-    case "boolean":
-      return b.tsBooleanKeyword();
-    case "number":
-      return b.tsNumberKeyword();
-    default: {
-      const _: never = type;
-      throw new Error(`Unexpected input type: ${_}`);
-    }
-  }
-}
-
-function buildImportStatement(
-  specifiers: string[],
-  source: string,
-  importKind: "type" | "value" = "value"
-) {
-  return b.importDeclaration(
-    specifiers.map((s) => b.importSpecifier(b.identifier(s))),
-    b.stringLiteral(source),
-    importKind
-  );
-}
-
-type TSTypeAnnotation = Parameters<typeof b.tsTypeAnnotation>[0];
-
-function buildPropertySignature(
-  keyName: string,
-  value: TSTypeAnnotation,
-  optional = false
-) {
-  return b.tsPropertySignature(
-    b.identifier(keyName),
-    b.tsTypeAnnotation(value),
-    optional
-  );
-}
-
-type TSInterfaceBody = Parameters<typeof b.tsInterfaceBody>[0];
-
 function buildAmbientModuleDeclaration(registerInterfaceBody: TSInterfaceBody) {
   const interfaceDeclaration = b.tsInterfaceDeclaration(
     b.identifier("Register"),
@@ -154,13 +113,6 @@ function buildAmbientModuleDeclaration(registerInterfaceBody: TSInterfaceBody) {
   moduleDeclaration.declare = true;
 
   return moduleDeclaration;
-}
-
-function printRecast(program: Parameters<typeof b.program>[0]) {
-  return recast.prettyPrint(b.file(b.program(program)), {
-    tabWidth: 2,
-    quote: "double",
-  }).code;
 }
 
 function getRegisteredTypeContents({
@@ -217,7 +169,11 @@ function getRegisteredTypeContents({
 
       if (tool.extraInputs && tool.extraInputs.length > 0) {
         const extraInputsType = tool.extraInputs.map((ei) => {
-          return buildPropertySignature(ei.name, buildTSKeyword(ei.type), true);
+          return buildPropertySignature(
+            ei.name,
+            buildKeywordLiteral(ei.type),
+            true
+          );
         });
 
         typeExpression = b.tsIntersectionType([
