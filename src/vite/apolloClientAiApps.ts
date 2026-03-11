@@ -424,8 +424,7 @@ export default manifest;
 
       // We don't want to do this here on builds cause it just gets overwritten anyways. We'll call it on writeBundle instead.
       if (config.command === "serve") {
-        await generateManifest();
-        await generateTypesFiles();
+        await Promise.all([generateManifest(), generateTypesFiles()]);
       }
     },
     configResolved(resolvedConfig) {
@@ -458,8 +457,7 @@ export default manifest;
           await generateManifest();
         } else if (file.match(/\.(jsx?|tsx?)$/)) {
           await processFile(file);
-          await generateManifest();
-          await generateTypesFiles();
+          await Promise.all([generateManifest(), generateTypesFiles()]);
         }
       });
     },
@@ -532,8 +530,7 @@ export default manifest;
       );
     },
     async writeBundle() {
-      await generateManifest();
-      await generateTypesFiles();
+      await Promise.all([generateManifest(), generateTypesFiles()]);
     },
   } satisfies Plugin;
 }
