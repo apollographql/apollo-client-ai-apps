@@ -1963,7 +1963,7 @@ describe("tool input types", () => {
       };
 
       export type Mutation = {
-        __typename?: 'Mutation';
+        __typename: 'Mutation';
         createTodo?: Maybe<Todo>;
         deleteTodo?: Maybe<Scalars['Boolean']['output']>;
       };
@@ -1980,7 +1980,7 @@ describe("tool input types", () => {
       };
 
       export type Query = {
-        __typename?: 'Query';
+        __typename: 'Query';
         todo?: Maybe<Todo>;
       };
 
@@ -1990,7 +1990,7 @@ describe("tool input types", () => {
       };
 
       export type Todo = {
-        __typename?: 'Todo';
+        __typename: 'Todo';
         description?: Maybe<Scalars['String']['output']>;
         id: Scalars['ID']['output'];
         title: Scalars['String']['output'];
@@ -2002,7 +2002,7 @@ describe("tool input types", () => {
       }>;
 
 
-      export type CreateTodoMutation = { __typename?: 'Mutation', createTodo?: { __typename: 'Todo', id: string } | null };
+      export type CreateTodoMutation = { __typename: 'Mutation', createTodo?: { __typename: 'Todo', id: string } | null };
       "
     `);
   });
@@ -2123,7 +2123,7 @@ describe("tool input types", () => {
       };
 
       export type Mutation = {
-        __typename?: 'Mutation';
+        __typename: 'Mutation';
         createTodo?: Maybe<Todo>;
         deleteTodo?: Maybe<Scalars['Boolean']['output']>;
       };
@@ -2140,7 +2140,7 @@ describe("tool input types", () => {
       };
 
       export type Query = {
-        __typename?: 'Query';
+        __typename: 'Query';
         todo?: Maybe<Todo>;
       };
 
@@ -2150,7 +2150,7 @@ describe("tool input types", () => {
       };
 
       export type Todo = {
-        __typename?: 'Todo';
+        __typename: 'Todo';
         description?: Maybe<Scalars['String']['output']>;
         id: Scalars['ID']['output'];
         title: Scalars['String']['output'];
@@ -2162,7 +2162,7 @@ describe("tool input types", () => {
       }>;
 
 
-      export type CreateTodoMutation = { __typename?: 'Mutation', createTodo?: { __typename: 'Todo', id: string, title: string } | null };
+      export type CreateTodoMutation = { __typename: 'Mutation', createTodo?: { __typename: 'Todo', id: string, title: string } | null };
 
       export type TodoFragmentFragment = { __typename: 'Todo', title: string };
       "

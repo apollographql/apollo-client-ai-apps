@@ -38,6 +38,7 @@ import {
   printRecast,
   type TSInterfaceBody,
 } from "./utilities/recast.js";
+import type { TypeScriptDocumentsPluginConfig } from "@graphql-codegen/typescript-operations";
 
 const b = recast.types.builders;
 
@@ -221,6 +222,9 @@ async function generateOperationTypes(
       generates: {
         "operation-types.d.ts": {
           plugins: ["typescript", "typescript-operations"],
+          config: {
+            nonOptionalTypename: true,
+          } satisfies TypeScriptDocumentsPluginConfig,
         },
       },
       silent: true,
