@@ -67,7 +67,6 @@ export function devTarget(target: string | undefined) {
 }
 
 interface FileCache {
-  file: string;
   hash: string;
   sources: DocumentNode[];
 }
@@ -295,12 +294,7 @@ export function apolloClientAiApps(
 
     fragments.register(...sources);
 
-    processFile.cache.set(file, {
-      file: file,
-      hash: fileHash,
-      sources,
-    });
-
+    processFile.cache.set(file, { hash: fileHash, sources });
     recomputeSources(processFile.cache);
   }
 
