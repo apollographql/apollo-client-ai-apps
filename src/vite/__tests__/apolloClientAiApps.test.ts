@@ -777,6 +777,11 @@ describe("@tool validation", () => {
         },
       ]
     `);
+    expect(manifest.operations[0].body).toMatchInlineSnapshot(`
+      "query HelloWorldQuery {
+        helloWorld
+      }"
+    `);
   });
 
   test("uses operation name and description when both are omitted from @tool", async () => {
@@ -807,6 +812,11 @@ describe("@tool validation", () => {
           "name": "HelloWorldQuery",
         },
       ]
+    `);
+    expect(manifest.operations[0].body).toMatchInlineSnapshot(`
+      "query HelloWorldQuery {
+        helloWorld
+      }"
     `);
   });
 
