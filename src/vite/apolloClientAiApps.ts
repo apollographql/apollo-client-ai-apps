@@ -167,7 +167,7 @@ function getRegisteredTypeContents({
         | recast.types.namedTypes.TSTypeReference
         | recast.types.namedTypes.TSIntersectionType = variablesTypeRef;
 
-      if (tool.extraInputs && tool.extraInputs.length > 0) {
+      if (tool.extraInputs?.length) {
         const extraInputsType = tool.extraInputs.map((ei) => {
           return buildPropertySignature(
             ei.name,
