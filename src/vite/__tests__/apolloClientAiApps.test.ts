@@ -1949,10 +1949,6 @@ describe("tool input types", () => {
       export type Maybe<T> = T | null;
       export type InputMaybe<T> = Maybe<T>;
       export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-      export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
-      export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-      export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
-      export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
       /** All built-in and custom scalars, mapped to their actual values */
       export type Scalars = {
         ID: { input: string; output: string; }
@@ -1962,47 +1958,10 @@ describe("tool input types", () => {
         Float: { input: number; output: number; }
       };
 
-      export type Mutation = {
-        __typename: 'Mutation';
-        createTodo?: Maybe<Todo>;
-        deleteTodo?: Maybe<Scalars['Boolean']['output']>;
-      };
-
-
-      export type MutationCreateTodoArgs = {
-        description?: InputMaybe<Scalars['String']['input']>;
-        title: Scalars['String']['input'];
-      };
-
-
-      export type MutationDeleteTodoArgs = {
-        id: Scalars['ID']['input'];
-      };
-
-      export type Query = {
-        __typename: 'Query';
-        todo?: Maybe<Todo>;
-      };
-
-
-      export type QueryTodoArgs = {
-        id: Scalars['ID']['input'];
-      };
-
-      export type Todo = {
-        __typename: 'Todo';
-        description?: Maybe<Scalars['String']['output']>;
-        id: Scalars['ID']['output'];
-        title: Scalars['String']['output'];
-      };
-
       export type CreateTodoVariables = Exact<{
         title: Scalars['String']['input'];
         description?: InputMaybe<Scalars['String']['input']>;
       }>;
-
-
-      export type CreateTodo = { createTodo?: { __typename: 'Todo', id: string } | null };
       "
     `);
   });
@@ -2109,10 +2068,6 @@ describe("tool input types", () => {
       export type Maybe<T> = T | null;
       export type InputMaybe<T> = Maybe<T>;
       export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-      export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
-      export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-      export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
-      export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
       /** All built-in and custom scalars, mapped to their actual values */
       export type Scalars = {
         ID: { input: string; output: string; }
@@ -2122,49 +2077,10 @@ describe("tool input types", () => {
         Float: { input: number; output: number; }
       };
 
-      export type Mutation = {
-        __typename: 'Mutation';
-        createTodo?: Maybe<Todo>;
-        deleteTodo?: Maybe<Scalars['Boolean']['output']>;
-      };
-
-
-      export type MutationCreateTodoArgs = {
-        description?: InputMaybe<Scalars['String']['input']>;
-        title: Scalars['String']['input'];
-      };
-
-
-      export type MutationDeleteTodoArgs = {
-        id: Scalars['ID']['input'];
-      };
-
-      export type Query = {
-        __typename: 'Query';
-        todo?: Maybe<Todo>;
-      };
-
-
-      export type QueryTodoArgs = {
-        id: Scalars['ID']['input'];
-      };
-
-      export type Todo = {
-        __typename: 'Todo';
-        description?: Maybe<Scalars['String']['output']>;
-        id: Scalars['ID']['output'];
-        title: Scalars['String']['output'];
-      };
-
       export type CreateTodoVariables = Exact<{
         title: Scalars['String']['input'];
         description?: InputMaybe<Scalars['String']['input']>;
       }>;
-
-
-      export type CreateTodo = { createTodo?: { __typename: 'Todo', id: string, title: string } | null };
-
-      export type TodoFragment = { __typename: 'Todo', title: string };
       "
     `);
   });
