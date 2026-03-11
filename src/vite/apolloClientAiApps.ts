@@ -203,10 +203,6 @@ export function apolloClientAiApps(
   const cache = new Map<string, FileCache>();
 
   let config!: ResolvedConfig;
-  const hashes: Record<"types" | "operationTypes", string | undefined> = {
-    types: undefined,
-    operationTypes: undefined,
-  };
 
   const fragments = createFragmentRegistry();
 
@@ -373,30 +369,21 @@ export function apolloClientAiApps(
 
     if (schema) {
       const opTypesContent = await generateOperationTypes(schema, sources);
-      const currentOpTypesHash = md5(opTypesContent);
 
-      if (currentOpTypesHash !== hashes.operationTypes) {
-        hashes.operationTypes = currentOpTypesHash;
-        writeFileSync(
-          path.resolve(
-            root,
-            ".apollo-client-ai-apps/types/operation-types.d.ts"
-          ),
-          opTypesContent
-        );
-      }
+      writeFileSync(
+        path.resolve(root, ".apollo-client-ai-apps/types/operation-types.d.ts"),
+        opTypesContent,
+        { cache: true }
+      );
     }
 
     const typesFileContents = getRegisteredTypeContents({ operations, schema });
-    const currentTypesHash = md5(typesFileContents);
 
-    if (currentTypesHash !== hashes.types) {
-      hashes.types = currentTypesHash;
-      writeFileSync(
-        path.resolve(root, ".apollo-client-ai-apps/types/register.d.ts"),
-        typesFileContents
-      );
-    }
+    writeFileSync(
+      path.resolve(root, ".apollo-client-ai-apps/types/register.d.ts"),
+      typesFileContents,
+      { cache: true }
+    );
 
     const manifestTypesFilepath = ".application-manifest.d.json.ts";
     if (!fs.existsSync(manifestTypesFilepath)) {
@@ -732,10 +719,30 @@ readPackageJson.resetCache = () => {
   readPackageJson.cache = undefined;
 };
 
-function writeFileSync(filepath: string, content: string) {
-  fs.mkdirSync(path.dirname(filepath), { recursive: true });
-  fs.writeFileSync(filepath, content, "utf-8");
+function writeFileSync(
+  filepath: string,
+  content: string,
+  options: { cache?: boolean } = {}
+) {
+  function writeFile() {
+    fs.mkdirSync(path.dirname(filepath), { recursive: true });
+    fs.writeFileSync(filepath, content, "utf-8");
+  }
+
+  if (!options.cache) {
+    return writeFile();
+  }
+
+  const hash = md5(content);
+  const cachedHash = writeFileSync.cache.get(filepath);
+
+  if (hash !== cachedHash || !fs.existsSync(filepath)) {
+    writeFileSync.cache.set(filepath, hash);
+    writeFile();
+  }
 }
+
+writeFileSync.cache = new Map<string, string>();
 
 const ToolDirectiveSchema = z.strictObject({
   name: z.stringFormat("toolName", (value) => value.indexOf(" ") === -1, {
