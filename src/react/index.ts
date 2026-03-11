@@ -12,6 +12,10 @@ export const useApp =
 export const useHostContext =
   missingHook<typeof import("./index.mcp.js").useHostContext>("useHostContext");
 
+/**
+ * @deprecated Please use the `useToolInfo` hook. `useToolInput` will be removed
+ * in the next major version.
+ */
 export const useToolInput =
   missingHook<typeof import("./index.mcp.js").useToolInput>("useToolInput");
 
@@ -20,8 +24,15 @@ export const useToolMetadata =
     "useToolMetadata"
   );
 
+/**
+ * @deprecated Please use the `useToolInfo` hook. `useToolName` will be removed
+ * in the next major version.
+ */
 export const useToolName =
   missingHook<typeof import("./index.mcp.js").useToolName>("useToolName");
+
+export const useToolInfo =
+  missingHook<typeof import("./index.mcp.js").useToolInfo>("useToolInfo");
 
 /** @experimental */
 export const createHydrationUtils = missingHook<

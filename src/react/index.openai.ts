@@ -3,6 +3,7 @@ export {
   useApp,
   useHostContext,
   useToolInput,
+  useToolInfo,
   createHydrationUtils,
   useToolMetadata,
   useToolName,
