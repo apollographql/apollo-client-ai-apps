@@ -226,6 +226,7 @@ async function generateOperationTypes(
           plugins: ["typescript", "typescript-operations"],
           config: {
             nonOptionalTypename: true,
+            skipTypeNameForRoot: true,
           } satisfies TypeScriptDocumentsPluginConfig,
         },
       },

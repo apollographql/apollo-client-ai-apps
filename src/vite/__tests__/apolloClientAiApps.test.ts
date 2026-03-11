@@ -2002,7 +2002,7 @@ describe("tool input types", () => {
       }>;
 
 
-      export type CreateTodoMutation = { __typename: 'Mutation', createTodo?: { __typename: 'Todo', id: string } | null };
+      export type CreateTodoMutation = { createTodo?: { __typename: 'Todo', id: string } | null };
       "
     `);
   });
@@ -2162,7 +2162,7 @@ describe("tool input types", () => {
       }>;
 
 
-      export type CreateTodoMutation = { __typename: 'Mutation', createTodo?: { __typename: 'Todo', id: string, title: string } | null };
+      export type CreateTodoMutation = { createTodo?: { __typename: 'Todo', id: string, title: string } | null };
 
       export type TodoFragmentFragment = { __typename: 'Todo', title: string };
       "
