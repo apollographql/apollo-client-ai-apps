@@ -2346,6 +2346,8 @@ describe("tool input types", () => {
   });
 
   test("generates register.d.ts with error message when schema build fails in dev mode", async () => {
+    using _ = spyOnConsole("error");
+
     vol.fromJSON({
       "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
@@ -2355,8 +2357,6 @@ describe("tool input types", () => {
         }
       `),
     });
-
-    using consoleSpy = spyOnConsole("error");
 
     await using server = await setupServer({
       plugins: [
@@ -2369,7 +2369,7 @@ describe("tool input types", () => {
     });
     await server.listen();
 
-    expect(consoleSpy.error).toHaveBeenCalledOnce();
+    expect(console.error).toHaveBeenCalledOnce();
 
     const content = fs.readFileSync(
       ".apollo-client-ai-apps/types/register.d.ts",
