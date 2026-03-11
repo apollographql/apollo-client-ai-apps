@@ -143,12 +143,7 @@ function getRegisteredTypeContents({
           buildPropertySignature("toolName", typeAnnotation),
           buildPropertySignature(
             "toolInputs",
-            b.tsTypeLiteral([
-              b.tsPropertySignature(
-                b.stringLiteral(message),
-                b.tsTypeAnnotation(typeAnnotation)
-              ),
-            ])
+            b.tsTypeLiteral([buildPropertySignature(message, typeAnnotation)])
           ),
         ]),
       ])
@@ -216,12 +211,7 @@ function getRegisteredTypeContents({
         ]);
       }
 
-      toolInputsValue.push(
-        b.tsPropertySignature(
-          b.stringLiteral(tool.name),
-          b.tsTypeAnnotation(typeExpression)
-        )
-      );
+      toolInputsValue.push(buildPropertySignature(tool.name, typeExpression));
     }
   }
 

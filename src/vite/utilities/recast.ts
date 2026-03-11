@@ -18,6 +18,7 @@ export function buildImportStatement(
 }
 
 type TSTypeAnnotation = Parameters<typeof b.tsTypeAnnotation>[0];
+const VALID_IDENTIFIER = /^[$_a-zA-Z][a-zA-Z0-9_$]*$/;
 
 export function buildPropertySignature(
   keyName: string,
@@ -25,7 +26,9 @@ export function buildPropertySignature(
   optional = false
 ) {
   return b.tsPropertySignature(
-    b.identifier(keyName),
+    VALID_IDENTIFIER.test(keyName) ?
+      b.identifier(keyName)
+    : b.stringLiteral(keyName),
     b.tsTypeAnnotation(value),
     optional
   );

@@ -2025,7 +2025,7 @@ describe("tool input types", () => {
         interface Register {
           toolName: "CreateTodo";
           toolInputs: {
-            "CreateTodo": CreateTodoMutationVariables;
+            CreateTodo: CreateTodoMutationVariables;
           };
         }
       }"
@@ -2074,7 +2074,7 @@ describe("tool input types", () => {
         interface Register {
           toolName: "CreateTodo";
           toolInputs: {
-            "CreateTodo": CreateTodoMutationVariables;
+            CreateTodo: CreateTodoMutationVariables;
           };
         }
       }"
@@ -2163,7 +2163,7 @@ describe("tool input types", () => {
         interface Register {
           toolName: "DeleteTodo";
           toolInputs: {
-            "DeleteTodo": DeleteTodoMutationVariables;
+            DeleteTodo: DeleteTodoMutationVariables;
           };
         }
       }"
@@ -2181,6 +2181,11 @@ describe("tool input types", () => {
           extraInputs: [
             { name: "priority", type: "string", description: "Priority" }
             { name: "urgent", type: "boolean", description: "Is urgent?" }
+            {
+              name: "odd-name"
+              type: "boolean"
+              description: "Test of odd name"
+            }
           ]
         ) {
           createTodo(title: $title) {
@@ -2215,9 +2220,10 @@ describe("tool input types", () => {
         interface Register {
           toolName: "CreateTodo";
           toolInputs: {
-            "CreateTodo": CreateTodoMutationVariables & {
+            CreateTodo: CreateTodoMutationVariables & {
               priority?: string;
               urgent?: boolean;
+              "odd-name"?: boolean;
             };
           };
         }
@@ -2264,8 +2270,8 @@ describe("tool input types", () => {
         interface Register {
           toolName: "CreateTodo" | "AddTask";
           toolInputs: {
-            "CreateTodo": CreateTodoMutationVariables;
-            "AddTask": CreateTodoMutationVariables;
+            CreateTodo: CreateTodoMutationVariables;
+            AddTask: CreateTodoMutationVariables;
           };
         }
       }"
