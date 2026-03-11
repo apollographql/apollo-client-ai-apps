@@ -5,6 +5,19 @@ const b = recast.types.builders;
 
 export type TSInterfaceBody = Parameters<typeof b.tsInterfaceBody>[0];
 
+/**
+ * Builds an import statement with named imports.
+ *
+ * @example
+ *
+ * ```ts
+ * buildImportStatement(
+ *   ["a", "b"],
+ *   "./path",
+ * );
+ * // => import { a, b } from "./path";
+ * ```
+ */
 export function buildImportStatement(
   specifiers: string[],
   source: string,
@@ -20,6 +33,20 @@ export function buildImportStatement(
 type TSTypeAnnotation = Parameters<typeof b.tsTypeAnnotation>[0];
 const VALID_IDENTIFIER = /^[$_a-zA-Z][a-zA-Z0-9_$]*$/;
 
+/**
+ * Builds a key/value pair for use in a type. Automatically quotes the key if it
+ * contains invalid JavaScript identifier characters.
+ *
+ * @example
+ *
+ * ```ts
+ * buildPropertySignature(
+ *   "key"
+ *   b.tsLiteralType(b.tsStringKeyword())
+ * );
+ * // => key: string
+ * ```
+ */
 export function buildPropertySignature(
   keyName: string,
   value: TSTypeAnnotation,
@@ -38,6 +65,18 @@ export function buildPropertySignature(
 // node from it
 type SupportedLiteralTypes = ManifestExtraInput["type"];
 
+/**
+ * Returns a TypeScript literal type from a string.
+ *
+ * @example
+ * ```ts
+ * buildKeywordLiteral("string");
+ * // => string
+ *
+ * buildKeywordLiteral("number");
+ * // => number
+ * ````
+ */
 export function buildKeywordLiteral(type: SupportedLiteralTypes) {
   switch (type) {
     case "string":
@@ -53,6 +92,9 @@ export function buildKeywordLiteral(type: SupportedLiteralTypes) {
   }
 }
 
+/**
+ * Pretty prints the TypeScript AST into a code string.
+ */
 export function printRecast(ast: recast.types.ASTNode) {
   return recast.prettyPrint(ast, { tabWidth: 2, quote: "double" }).code;
 }
