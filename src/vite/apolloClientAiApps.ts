@@ -118,10 +118,42 @@ function getVariablesTypeName(operation: ManifestOperation) {
 function getRegisteredTypeContents({
   operations,
   schema,
+  flagSchemaBuildError = false,
 }: {
   operations: ManifestOperation[];
   schema: string | undefined;
+  flagSchemaBuildError?: false | Error;
 }) {
+  if (flagSchemaBuildError) {
+    const message = `[@apollo/client-ai-apps/vite]: There was an error building generated types. See the vite build output for more details.\n\n${flagSchemaBuildError.message}`;
+
+    const importBaseStatement = buildImportStatement(
+      [],
+      "@apollo/client-ai-apps"
+    );
+    importBaseStatement.comments = [buildHeaderComment()];
+
+    const typeAnnotation = b.tsLiteralType(b.stringLiteral(message));
+
+    return printRecast(
+      b.program([
+        importBaseStatement,
+        buildAmbientModuleDeclaration([
+          buildPropertySignature("toolName", typeAnnotation),
+          buildPropertySignature(
+            "toolInputs",
+            b.tsTypeLiteral([
+              b.tsPropertySignature(
+                b.stringLiteral(message),
+                b.tsTypeAnnotation(typeAnnotation)
+              ),
+            ])
+          ),
+        ]),
+      ])
+    );
+  }
+
   const toolNames = operations.flatMap((op) => op.tools.map((t) => t.name));
 
   if (toolNames.length === 0) {
@@ -531,28 +563,46 @@ export function apolloClientAiApps(
   }
 
   async function generateTypesFiles() {
+    let flagSchemaBuildError: false | Error = false;
+
     if (schema) {
-      const manifestOperations = await getManifestOperations();
-      const opTypesContent = await generateOperationTypes(
-        schema,
-        manifestOperations.map((op) => op.body)
-      );
+      try {
+        const manifestOperations = await getManifestOperations();
+        const opTypesContent = await generateOperationTypes(
+          schema,
+          manifestOperations.map((op) => op.body)
+        );
 
-      const rootTypeNames = new Set(
-        manifestOperations.flatMap((op) =>
-          op.tools.length > 0 ? [getVariablesTypeName(op)] : []
-        )
-      );
+        const rootTypeNames = new Set(
+          manifestOperations.flatMap((op) =>
+            op.tools.length > 0 ? [getVariablesTypeName(op)] : []
+          )
+        );
 
-      writeFileSync(
-        path.resolve(root, ".apollo-client-ai-apps/types/operation-types.d.ts"),
-        filterOperationTypes(opTypesContent, rootTypeNames),
-        { cache: true }
-      );
+        writeFileSync(
+          path.resolve(
+            root,
+            ".apollo-client-ai-apps/types/operation-types.d.ts"
+          ),
+          filterOperationTypes(opTypesContent, rootTypeNames),
+          { cache: true }
+        );
+      } catch (e) {
+        if (config.command === "build") {
+          throw e;
+        }
+
+        flagSchemaBuildError = e as Error;
+        console.error("[@apollo/client-ai-apps/vite]:", e);
+      }
     }
 
     const operations = await getManifestOperations();
-    const typesFileContents = getRegisteredTypeContents({ operations, schema });
+    const typesFileContents = getRegisteredTypeContents({
+      operations,
+      schema,
+      flagSchemaBuildError,
+    });
 
     writeFileSync(
       path.resolve(root, ".apollo-client-ai-apps/types/register.d.ts"),
