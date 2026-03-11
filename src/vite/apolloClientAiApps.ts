@@ -1,6 +1,5 @@
 import {
   defaultClientConditions,
-  type Environment,
   type Plugin,
   type ResolvedConfig,
 } from "vite";
