@@ -1,3 +1,126 @@
+## 0.6.1 (2026-03-11)
+
+### Features
+
+#### Add `useToolInfo` hook
+
+A new `useToolInfo()` hook is now available that combines `useToolName()` and `useToolInput()` into a single hook. `useToolInfo` is more type-safe and automatically narrows the `toolInput` type based on the `toolName`.
+
+```typescript
+// With toolInputs registered for "CreateTodo" and "DeleteTodo":
+const info = useToolInfo();
+// info: { toolName: "CreateTodo"; toolInput: CreateTodoInput }
+//     | { toolName: "DeleteTodo"; toolInput: DeleteTodoInput }
+//     | undefined
+
+if (info?.toolName === "CreateTodo") {
+  // info.toolInput is narrowed to `CreateTodoInput`
+  doSomething(info.toolInput.title);
+}
+```
+
+As a result, `useToolName()` and `useToolInput()` are now deprecated in favor of `useToolInfo()`. These hooks will be removed with the next major version.
+
+#### Generate a TypeScript definition file for `.application-manifest.json`
+
+The Vite plugin now generates a `.application-manifest.json.d.ts` TypeScript declaration file next to `.application-manifest.json`. This file declares the manifest as `ApplicationManifest`, so TypeScript infers the correct type automatically when you import it.
+
+This removes the need to type cast the `manifest` when initializing `ApolloClient`:
+
+```typescript
+// before
+import manifest from "./.application-manifest.json";
+
+const client = new ApolloClient({
+  manifest: manifest as ApplicationManifest, // cast required
+});
+
+// after
+import manifest from "./.application-manifest.json";
+
+const client = new ApolloClient({
+  manifest, // type is inferred as ApplicationManifest
+});
+```
+
+> [!NOTE]
+> This requires the TypeScript `allowArbitraryExtensions` option. Please ensure your `tsconfig.json` extends one of the provided `tsconfig`, or add these compiler options manually:
+
+```json
+{
+  "compilerOptions": {
+    "allowArbitraryExtensions": true,
+    "resolveJsonModule": true
+  }
+}
+```
+
+#### Add type-safe tool names
+
+The Vite plugin now generates a `.apollo-client-ai-apps/types/register.d.ts` TypeScript declaration file. This file contains a union of all tool names found in your app's `@tool` directives.
+
+This means the `useToolName()` hook now provides the precise union of tool names instead of `string | undefined`:
+
+```typescript
+// before
+const toolName = useToolName(); // string | undefined
+
+// after (with @tool directives on "CreateTodo", "DeleteTodo", "UpdateTodo")
+const toolName = useToolName(); // "CreateTodo" | "DeleteTodo" | "UpdateTodo" | undefined
+```
+
+The generated file is written to `.apollo-client-ai-apps/types/register.d.ts` and is kept up to date as you edit your operations. Add this path to your `tsconfig.json` `include` to ensure these types are included:
+
+```json
+{
+  "include": ["src", ".apollo-client-ai-apps/types"]
+}
+```
+
+You might also consider adding `.apollo-client-ai-apps/` to your `.gitignore` since it is fully generated.
+
+The `ToolName` type is exported from `@apollo/client-ai-apps` if you need access to the available tool names for your own utilities.
+
+#### `@tool` `name` and `description` arguments are now optional
+
+The `name` and `description` arguments on the `@tool` directive are now optional. When omitted, they fall back to the operation name and description respectively.
+
+```graphql
+## name defaults to "HelloWorldQuery", description defaults to the operation description
+"""
+Say hello to the world.
+"""
+query HelloWorldQuery @tool {
+  helloWorld
+}
+```
+
+Tool `name` and `description` are still enforced and must be set either by the operation or the `@tool` arguments. An anonymous operation or an operation that omits the description while using a bare `@tool` directive fails validation.
+
+When an operation has multiple `@tool` directives, `name` and `description` must still be provided explicitly on each directive to avoid ambiguity.
+
+```graphql
+## ✅ Valid — each @tool has an explicit name and description
+query ProductsQuery
+@tool(name: "list-products", description: "List all products")
+@tool(name: "search-products", description: "Search products by keyword") {
+  products {
+    id
+    title
+  }
+}
+
+## ❌ Error — missing name on second @tool when multiple are present
+query ProductsQuery
+@tool(name: "list-products", description: "List all products")
+@tool(description: "Search products") {
+  products {
+    id
+    title
+  }
+}
+```
+
 ## 0.6.0 (2026-03-06)
 
 ### Breaking Changes
