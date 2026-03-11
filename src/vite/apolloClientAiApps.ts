@@ -127,7 +127,7 @@ function getRegisteredTypeContents({
   if (toolNames.length === 0) {
     const emptyExport = b.exportNamedDeclaration(null);
     emptyExport.comments = [buildHeaderComment()];
-    return printRecast([emptyExport]);
+    return printRecast(b.program([emptyExport]));
   }
 
   const importBaseStatement = buildImportStatement(
@@ -142,10 +142,12 @@ function getRegisteredTypeContents({
   );
 
   if (!schema) {
-    return printRecast([
-      importBaseStatement,
-      buildAmbientModuleDeclaration([toolNameProp]),
-    ]);
+    return printRecast(
+      b.program([
+        importBaseStatement,
+        buildAmbientModuleDeclaration([toolNameProp]),
+      ])
+    );
   }
 
   const importedVariableTypes = new Set<string>();
@@ -190,18 +192,20 @@ function getRegisteredTypeContents({
     }
   }
 
-  return printRecast([
-    importBaseStatement,
-    buildImportStatement(
-      Array.from(importedVariableTypes),
-      "./operation-types.js",
-      "type"
-    ),
-    buildAmbientModuleDeclaration([
-      toolNameProp,
-      buildPropertySignature("toolInputs", b.tsTypeLiteral(toolInputsValue)),
-    ]),
-  ]);
+  return printRecast(
+    b.program([
+      importBaseStatement,
+      buildImportStatement(
+        Array.from(importedVariableTypes),
+        "./operation-types.js",
+        "type"
+      ),
+      buildAmbientModuleDeclaration([
+        toolNameProp,
+        buildPropertySignature("toolInputs", b.tsTypeLiteral(toolInputsValue)),
+      ]),
+    ])
+  );
 }
 
 async function generateOperationTypes(
@@ -303,7 +307,7 @@ function filterOperationTypes(
     return name === undefined || reachable.has(name);
   });
 
-  return recast.print(ast).code;
+  return printRecast(ast);
 }
 
 export function apolloClientAiApps(
@@ -518,11 +522,9 @@ export function apolloClientAiApps(
         b.identifier("manifest")
       );
 
-      const content = printRecast([
-        manifestImport,
-        manifestDeclaration,
-        exportDefault,
-      ]);
+      const content = printRecast(
+        b.program([manifestImport, manifestDeclaration, exportDefault])
+      );
 
       writeFileSync(manifestTypesFilepath, content);
     }

@@ -50,9 +50,6 @@ export function buildKeywordLiteral(type: SupportedLiteralTypes) {
   }
 }
 
-export function printRecast(program: Parameters<typeof b.program>[0]) {
-  return recast.prettyPrint(b.file(b.program(program)), {
-    tabWidth: 2,
-    quote: "double",
-  }).code;
+export function printRecast(ast: recast.types.ASTNode) {
+  return recast.prettyPrint(ast, { tabWidth: 2, quote: "double" }).code;
 }
