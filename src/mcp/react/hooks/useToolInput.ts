@@ -6,5 +6,5 @@ import { useApolloClient } from "./useApolloClient.js";
  * in the next major version.
  */
 export function useToolInput(): ToolInput | undefined {
-  return useApolloClient()["appManager"].toolInput as ToolInput | undefined;
+  return useApolloClient()["appManager"].toolInput;
 }
