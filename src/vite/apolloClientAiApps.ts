@@ -426,18 +426,6 @@ export function apolloClientAiApps(
     // Always write to the dev location so that the app can bundle the manifest content
     writeFileSync(".application-manifest.json", manifestContents);
 
-    function buildImportStatement(
-      specifiers: string[],
-      source: string,
-      importKind?: "type" | "value"
-    ) {
-      b.importDeclaration(
-        specifiers.map((s) => b.importSpecifier(b.identifier(s))),
-        b.stringLiteral(source),
-        importKind
-      );
-    }
-
     const manifestTypesFilepath = ".application-manifest.d.json.ts";
     if (!fs.existsSync(manifestTypesFilepath)) {
       const manifestImport = b.importDeclaration(
