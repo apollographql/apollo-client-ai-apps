@@ -564,17 +564,17 @@ export function apolloClientAiApps(
 
   async function generateTypesFiles() {
     let flagSchemaBuildError: false | Error = false;
+    const operations = await getManifestOperations();
 
     if (schema) {
       try {
-        const manifestOperations = await getManifestOperations();
         const opTypesContent = await generateOperationTypes(
           schema,
-          manifestOperations.map((op) => op.body)
+          operations.map((op) => op.body)
         );
 
         const rootTypeNames = new Set(
-          manifestOperations.flatMap((op) =>
+          operations.flatMap((op) =>
             op.tools.length > 0 ? [getVariablesTypeName(op)] : []
           )
         );
@@ -597,7 +597,6 @@ export function apolloClientAiApps(
       }
     }
 
-    const operations = await getManifestOperations();
     const typesFileContents = getRegisteredTypeContents({
       operations,
       schema,
