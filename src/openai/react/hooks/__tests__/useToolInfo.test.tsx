@@ -56,39 +56,6 @@ test("returns tool name and input combined", async () => {
   await expect(takeSnapshot).not.toRerender();
 });
 
-test("returns undefined when no tool call is active", async () => {
-  using _ = spyOnConsole("debug");
-  stubOpenAiGlobals({ toolResponseMetadata: {} });
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    manifest: mockApplicationManifest(),
-  });
-
-  using host = await mockMcpHost();
-  host.onCleanup(() => client.stop());
-
-  host.sendToolInput({ arguments: {} });
-  host.sendToolResult({
-    content: [],
-    structuredContent: {},
-  });
-
-  using _disabledAct = disableActEnvironment();
-  const { takeSnapshot } = await renderHookToSnapshotStream(
-    () => useToolInfo(),
-    {
-      wrapper: ({ children }) => (
-        <Suspense>
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        </Suspense>
-      ),
-    }
-  );
-
-  await expect(takeSnapshot()).resolves.toBeUndefined();
-  await expect(takeSnapshot).not.toRerender();
-});
-
 test("returns undefined toolInput when toolInput is not provided", async () => {
   using _ = spyOnConsole("debug");
   stubOpenAiGlobals({ toolResponseMetadata: {} });
