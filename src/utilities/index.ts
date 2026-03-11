@@ -1,8 +1,11 @@
-export { aiClientSymbol } from "./constants.js";
+export { aiClientSymbol, PACKAGE_VERSION } from "./constants.js";
 export { getVariablesForOperationFromToolInput } from "./getVariablesForOperationFromToolInput.js";
 export { getToolNamesFromDocument } from "./getToolNamesFromDocument.js";
 export { getVariableNamesFromDocument } from "./getVariableNamesFromDocument.js";
 export { cacheAsync } from "./cacheAsync.js";
+export type { CacheAsyncOptions } from "./cacheAsync.js";
 export { invariant } from "./invariant.js";
 export { promiseWithResolvers } from "./promiseWithResolvers.js";
 export { warnOnVariableMismatch } from "./warnOnVariableMismatch.js";
+export { retry } from "./retry.js";
+export type { RetryOptions } from "./retry.js";

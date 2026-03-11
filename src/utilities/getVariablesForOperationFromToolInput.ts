@@ -6,6 +6,25 @@ import type { ManifestOperation } from "../types/application-manifest.js";
 // want to only include keys that are defined as part of the operation in case
 // additional input was provided to the tool.
 
+function coerceVariable(value: unknown, typeName: string): unknown {
+  const baseType = typeName.replace(/[!\[\]]/g, "");
+
+  switch (baseType) {
+    case "Int":
+    case "Float": {
+      const num = Number(value);
+      return Number.isNaN(num) ? value : num;
+    }
+    case "Boolean":
+      if (typeof value === "string") {
+        return value.toLowerCase() === "true";
+      }
+      return value;
+    default:
+      return value;
+  }
+}
+
 /** @internal */
 export function getVariablesForOperationFromToolInput(
   operation: ManifestOperation,
@@ -15,11 +34,11 @@ export function getVariablesForOperationFromToolInput(
     return {};
   }
 
-  const variableNames = new Set(Object.keys(operation.variables));
+  const variableTypes = operation.variables;
 
   return Object.keys(toolInput).reduce((obj, key) => {
-    if (variableNames.has(key)) {
-      obj[key] = toolInput[key];
+    if (key in variableTypes) {
+      obj[key] = coerceVariable(toolInput[key], variableTypes[key]);
     }
 
     return obj;
