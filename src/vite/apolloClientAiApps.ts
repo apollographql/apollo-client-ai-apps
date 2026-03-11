@@ -10,6 +10,7 @@ import * as recast from "recast";
 import typescriptParser from "recast/parsers/typescript.js";
 import { ApolloClient, ApolloLink, type DocumentNode } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client";
+import { equal } from "@wry/equality";
 import { gqlPluckFromCodeStringSync } from "@graphql-tools/graphql-tag-pluck";
 import { glob } from "glob";
 import { print } from "@apollo/client/utilities";
@@ -437,12 +438,20 @@ export function apolloClientAiApps(
 
     const fileHash = md5(code);
     if (processFile.cache.get(file)?.hash === fileHash) return;
+
     const sources = gqlPluckFromCodeStringSync(file, code, {
       modules: [
         { name: "graphql-tag", identifier: "gql" },
         { name: "@apollo/client", identifier: "gql" },
       ],
     }).map((source) => parse(source.body));
+
+    const previousSources = processFile.cache.get(file)?.sources;
+
+    if (previousSources && equal(sources, previousSources)) {
+      processFile.cache.set(file, { hash: fileHash, sources: previousSources });
+      return;
+    }
 
     fragments.register(...sources);
 
