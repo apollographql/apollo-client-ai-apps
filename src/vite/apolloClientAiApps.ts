@@ -109,6 +109,12 @@ function buildAmbientModuleDeclaration(registerInterfaceBody: TSInterfaceBody) {
   return moduleDeclaration;
 }
 
+function getVariablesTypeName(operation: ManifestOperation) {
+  const { name, type } = operation;
+
+  return `${name}${type.charAt(0).toUpperCase()}${type.slice(1)}Variables`;
+}
+
 function getRegisteredTypeContents({
   operations,
   schema,
@@ -146,7 +152,7 @@ function getRegisteredTypeContents({
   const toolInputsValue: recast.types.namedTypes.TSPropertySignature[] = [];
 
   for (const operation of operations) {
-    const variablesTypeName = `${operation.name}Variables`;
+    const variablesTypeName = getVariablesTypeName(operation);
 
     if (operation.tools.length) {
       importedVariableTypes.add(variablesTypeName);
@@ -218,7 +224,6 @@ async function generateOperationTypes(
           config: {
             nonOptionalTypename: true,
             skipTypeNameForRoot: true,
-            omitOperationSuffix: true,
           } satisfies TypeScriptDocumentsPluginConfig,
         },
       },
@@ -533,7 +538,7 @@ export function apolloClientAiApps(
 
       const rootTypeNames = new Set(
         manifestOperations.flatMap((op) =>
-          op.tools.length > 0 ? [`${op.name}Variables`] : []
+          op.tools.length > 0 ? [getVariablesTypeName(op)] : []
         )
       );
 
