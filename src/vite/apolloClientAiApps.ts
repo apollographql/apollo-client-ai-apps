@@ -300,7 +300,7 @@ export function apolloClientAiApps(
 
   processFile.cache = new Map<string, FileCache>();
 
-  async function generateManifest(environment?: Environment) {
+  async function generateManifest() {
     const appsConfig = await getAppsConfig();
     const operations = await getManifestOperations();
 
@@ -428,7 +428,7 @@ export default manifest;
 
       // We don't want to do this here on builds cause it just gets overwritten anyways. We'll call it on writeBundle instead.
       if (config.command === "serve") {
-        await generateManifest(this.environment);
+        await generateManifest();
         await generateTypesFiles();
       }
     },
@@ -536,7 +536,7 @@ export default manifest;
       );
     },
     async writeBundle() {
-      await generateManifest(this.environment);
+      await generateManifest();
       await generateTypesFiles();
     },
   } satisfies Plugin;
