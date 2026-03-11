@@ -7,7 +7,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import fs from "node:fs";
 import * as recast from "recast";
-import typescriptParser from "recast/parsers/typescript";
+import typescriptParser from "recast/parsers/typescript.js";
 import { ApolloClient, ApolloLink, type DocumentNode } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client";
 import { gqlPluckFromCodeStringSync } from "@graphql-tools/graphql-tag-pluck";
