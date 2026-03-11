@@ -1,7 +1,7 @@
 export interface Register {}
 
 /**
- * @deprecated Please use the `ToolInput` type instead. `ToolName` will be
+ * @deprecated Please use the `ToolInfo` type instead. `ToolName` will be
  * removed in the next major version.
  */
 export type ToolName =
@@ -12,7 +12,7 @@ type RegisteredToolInputs =
   : never;
 
 /**
- * @deprecated Please use the `ToolInput` type instead. `ToolInput` will be
+ * @deprecated Please use the `ToolInfo` type instead. `ToolInput` will be
  * removed in the next major version.
  */
 export type ToolInput =
