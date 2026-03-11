@@ -14,7 +14,7 @@ const info = useToolInfo();
 //     | undefined
 
 if (info?.toolName === "CreateTodo") {
-  // info.toolInput is narrowed to CreateTodoInput here
+  // info.toolInput is narrowed to `CreateTodoInput`
   doSomething(info.toolInput.title);
 }
 ```
