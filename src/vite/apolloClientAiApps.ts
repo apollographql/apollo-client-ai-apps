@@ -157,9 +157,11 @@ function getRegisteredTypeContents({
       operation.type
     );
 
-    for (const tool of operation.tools) {
+    if (operation.tools.length) {
       importedVariableTypes.add(variablesTypeName);
+    }
 
+    for (const tool of operation.tools) {
       const variablesTypeRef = b.tsTypeReference(
         b.identifier(variablesTypeName)
       );
