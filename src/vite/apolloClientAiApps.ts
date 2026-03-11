@@ -226,6 +226,61 @@ export function apolloClientAiApps(
     link: processQueryLink,
   });
 
+  let sources: DocumentNode[] = [];
+
+  function recomputeSources() {
+    sources = Array.from(cache.values()).flatMap((entry) => entry.sources);
+  }
+
+  async function getManifestOperations() {
+    if (sources === getManifestOperations.cache.sources) {
+      return getManifestOperations.cache.manifestOperations;
+    }
+
+    const manifestOperations = [];
+    for (const source of sources) {
+      const operationDef = source.definitions.find(
+        (d) => d.kind === Kind.OPERATION_DEFINITION
+      );
+
+      if (!operationDef) continue;
+
+      switch (operationDef.operation) {
+        case OperationTypeNode.QUERY: {
+          const result = await client.query<ManifestOperation>({
+            query: source,
+            fetchPolicy: "no-cache",
+          });
+
+          manifestOperations.push(result.data!);
+          break;
+        }
+        case OperationTypeNode.MUTATION: {
+          const result = await client.mutate<ManifestOperation>({
+            mutation: source,
+            fetchPolicy: "no-cache",
+          });
+
+          manifestOperations.push(result.data!);
+          break;
+        }
+        default:
+          throw new Error(
+            `Found unsupported operation type '${operationDef.operation}'. Only queries and mutations are supported.`
+          );
+      }
+    }
+
+    getManifestOperations.cache = { sources, manifestOperations };
+
+    return manifestOperations;
+  }
+
+  getManifestOperations.cache = {
+    sources,
+    manifestOperations: [] as ManifestOperation[],
+  };
+
   async function processFile(file: string) {
     const code = fs.readFileSync(file, "utf-8");
 
@@ -247,47 +302,13 @@ export function apolloClientAiApps(
       hash: fileHash,
       sources,
     });
+
+    recomputeSources();
   }
 
   async function generateManifest(environment?: Environment) {
     const appsConfig = await getAppsConfig();
-    const sources = Array.from(cache.values()).flatMap(
-      (entry) => entry.sources
-    );
-
-    const operations: ManifestOperation[] = [];
-    for (const source of sources) {
-      const operationDef = source.definitions.find(
-        (d) => d.kind === Kind.OPERATION_DEFINITION
-      );
-
-      if (!operationDef) continue;
-
-      switch (operationDef.operation) {
-        case OperationTypeNode.QUERY: {
-          const result = await client.query<ManifestOperation>({
-            query: source,
-            fetchPolicy: "no-cache",
-          });
-
-          operations.push(result.data!);
-          break;
-        }
-        case OperationTypeNode.MUTATION: {
-          const result = await client.mutate<ManifestOperation>({
-            mutation: source,
-            fetchPolicy: "no-cache",
-          });
-
-          operations.push(result.data!);
-          break;
-        }
-        default:
-          throw new Error(
-            `Found unsupported operation type '${operationDef.operation}'. Only queries and mutations are supported.`
-          );
-      }
-    }
+    const operations = await getManifestOperations();
 
     invariant(
       operations.filter((o) => o.prefetch).length <= 1,
@@ -367,24 +388,6 @@ export function apolloClientAiApps(
     // Always write to the dev location so that the app can bundle the manifest content
     writeFileSync(".application-manifest.json", manifestContents);
 
-    if (schema) {
-      const opTypesContent = await generateOperationTypes(schema, sources);
-
-      writeFileSync(
-        path.resolve(root, ".apollo-client-ai-apps/types/operation-types.d.ts"),
-        opTypesContent,
-        { cache: true }
-      );
-    }
-
-    const typesFileContents = getRegisteredTypeContents({ operations, schema });
-
-    writeFileSync(
-      path.resolve(root, ".apollo-client-ai-apps/types/register.d.ts"),
-      typesFileContents,
-      { cache: true }
-    );
-
     const manifestTypesFilepath = ".application-manifest.d.json.ts";
     if (!fs.existsSync(manifestTypesFilepath)) {
       writeFileSync(
@@ -395,6 +398,27 @@ export default manifest;
 `
       );
     }
+  }
+
+  async function generateTypesFiles() {
+    if (schema) {
+      const opTypesContent = await generateOperationTypes(schema, sources);
+
+      writeFileSync(
+        path.resolve(root, ".apollo-client-ai-apps/types/operation-types.d.ts"),
+        opTypesContent,
+        { cache: true }
+      );
+    }
+
+    const operations = await getManifestOperations();
+    const typesFileContents = getRegisteredTypeContents({ operations, schema });
+
+    writeFileSync(
+      path.resolve(root, ".apollo-client-ai-apps/types/register.d.ts"),
+      typesFileContents,
+      { cache: true }
+    );
   }
 
   return {
@@ -411,6 +435,7 @@ export default manifest;
       // We don't want to do this here on builds cause it just gets overwritten anyways. We'll call it on writeBundle instead.
       if (config.command === "serve") {
         await generateManifest(this.environment);
+        await generateTypesFiles();
       }
     },
     configResolved(resolvedConfig) {
@@ -444,6 +469,7 @@ export default manifest;
         } else if (file.match(/\.(jsx?|tsx?)$/)) {
           await processFile(file);
           await generateManifest();
+          await generateTypesFiles();
         }
       });
     },
@@ -517,6 +543,7 @@ export default manifest;
     },
     async writeBundle() {
       await generateManifest(this.environment);
+      await generateTypesFiles();
     },
   } satisfies Plugin;
 }
