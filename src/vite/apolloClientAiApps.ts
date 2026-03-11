@@ -116,19 +116,22 @@ declare module "@apollo/client-ai-apps" {
   const toolInputEntries: string[] = [];
 
   for (const operation of operations) {
-    const varTypeName = getVariableTypeName(operation.name, operation.type);
+    const variablesTypeName = getVariableTypeName(
+      operation.name,
+      operation.type
+    );
 
     for (const tool of operation.tools) {
-      if (!importedTypes.includes(varTypeName)) {
-        importedTypes.push(varTypeName);
+      if (!importedTypes.includes(variablesTypeName)) {
+        importedTypes.push(variablesTypeName);
       }
 
-      let typeExpr = varTypeName;
+      let typeExpr = variablesTypeName;
       if (tool.extraInputs && tool.extraInputs.length > 0) {
         const extraFields = tool.extraInputs
           .map((ei) => `${ei.name}?: ${ei.type}`)
           .join("; ");
-        typeExpr = `${varTypeName} & { ${extraFields} }`;
+        typeExpr = `${variablesTypeName} & { ${extraFields} }`;
       }
 
       toolInputEntries.push(`      "${tool.name}": ${typeExpr};`);
