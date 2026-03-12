@@ -16,7 +16,7 @@ import { glob } from "glob";
 import { print } from "@apollo/client/utilities";
 import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
 import { of } from "rxjs";
-import { Kind, OperationTypeNode, parse } from "graphql";
+import { Kind, OperationTypeNode, parse, visit } from "graphql";
 import {
   getArgumentValue,
   getDirectiveArgument,
@@ -805,7 +805,9 @@ export function apolloClientAiApps(
 
 const processQueryLink = new ApolloLink((operation) => {
   const body = print(
-    removeManifestDirectives(sortTopLevelDefinitions(operation.query))
+    removeOperationDescription(
+      removeManifestDirectives(sortTopLevelDefinitions(operation.query))
+    )
   );
   const name = operation.operationName;
   const definition = operation.query.definitions.find(
@@ -897,6 +899,14 @@ const processQueryLink = new ApolloLink((operation) => {
     data: { id, name, type, body, variables, prefetch, prefetchID, tools },
   });
 });
+
+function removeOperationDescription(doc: DocumentNode): DocumentNode {
+  return visit(doc, {
+    OperationDefinition(node) {
+      return { ...node, description: undefined };
+    },
+  });
+}
 
 function removeManifestDirectives(doc: DocumentNode) {
   return removeDirectivesFromDocument(
