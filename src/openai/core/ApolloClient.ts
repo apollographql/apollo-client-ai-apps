@@ -7,7 +7,7 @@ import type {
   OperationVariables,
 } from "@apollo/client";
 import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
-import { parse } from "graphql";
+import { parse, visit } from "graphql";
 import { equal } from "@wry/equality";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { ApplicationManifest } from "../../types/application-manifest.js";
@@ -50,10 +50,16 @@ export class ApolloClient extends BaseApolloClient {
       link,
       // Strip out the prefetch/tool directives so they don't get sent with the operation to the server
       documentTransform: new DocumentTransform((document) => {
-        return removeDirectivesFromDocument(
+        const serverDocument = removeDirectivesFromDocument(
           [{ name: "prefetch" }, { name: "tool" }],
           document
         )!;
+
+        return visit(serverDocument, {
+          OperationDefinition(node) {
+            return { ...node, description: undefined };
+          },
+        });
       }).concat(options.documentTransform ?? DocumentTransform.identity()),
     });
 
