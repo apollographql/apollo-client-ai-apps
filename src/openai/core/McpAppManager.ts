@@ -67,6 +67,17 @@ export class McpAppManager {
 
     await this.connectToHost();
 
+    // After a page refresh, OpenAI does not re-send `ui/notifications/tool-result`.
+    // Instead, the tool result is available immediately via `window.openai.toolOutput`.
+    // If it's already set, resolve the promise now rather than waiting for the
+    // notification that will never arrive.
+    if (window.openai.toolOutput !== null) {
+      toolResult.resolve({
+        structuredContent: window.openai.toolOutput,
+        content: [],
+      });
+    }
+
     const { structuredContent } = await toolResult.promise;
 
     this.#toolName = this.app.getHostContext()?.toolInfo?.tool.name;

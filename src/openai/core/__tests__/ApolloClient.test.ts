@@ -400,6 +400,66 @@ describe("prefetchData", () => {
   });
 });
 
+test("connects using window.openai.toolOutput when tool-result notification is not sent", async () => {
+  stubOpenAiGlobals({
+    toolOutput: {
+      result: {
+        data: {
+          product: {
+            id: "1",
+            title: "Pen",
+            rating: 5,
+            price: 1.0,
+            description: "Awesome pen",
+            images: [],
+            __typename: "Product",
+          },
+        },
+      },
+    },
+    toolInput: { id: "1" },
+  });
+  using _ = spyOnConsole("debug");
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    manifest: mockApplicationManifest(),
+  });
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GetProduct"),
+  });
+  host.onCleanup(() => client.stop());
+
+  host.sendToolInput({ arguments: { id: "1" } });
+  // No host.sendToolResult() — simulates page reload where ChatGPT does not
+  // re-send the tool-result notification
+
+  await client.connect();
+
+  // Flush pending setImmediate callbacks (e.g. ResizeObserver in happy-dom)
+  // before `using host` disposes and closes the app connection.
+  await new Promise((resolve) => setImmediate(resolve));
+
+  expect(client.extract()).toMatchInlineSnapshot(`
+    {
+      "Product:1": {
+        "__typename": "Product",
+        "description": "Awesome pen",
+        "id": "1",
+        "images": [],
+        "price": 1,
+        "rating": 5,
+        "title": "Pen",
+      },
+      "ROOT_QUERY": {
+        "__typename": "Query",
+        "product({"id":"1"})": {
+          "__ref": "Product:1",
+        },
+      },
+    }
+  `);
+});
+
 describe("custom links", () => {
   test("allows for custom links provided to the constructor", async () => {
     stubOpenAiGlobals();
