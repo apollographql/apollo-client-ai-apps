@@ -690,10 +690,7 @@ export function apolloClientAiApps(
         await processFile(fullPath);
       }
 
-      // We don't want to do this here on builds cause it just gets overwritten anyways. We'll call it on writeBundle instead.
-      if (config.command === "serve") {
-        await Promise.all([generateManifest(), generateTypesFiles()]);
-      }
+      await Promise.all([generateManifest(), generateTypesFiles()]);
     },
     configResolved(resolvedConfig) {
       config = resolvedConfig;
@@ -796,9 +793,6 @@ export function apolloClientAiApps(
           // src="/src/..."
           .replace(/(src=["'])\/([^"']+)/gi, `$1${baseUrl}/$2`)
       );
-    },
-    async writeBundle() {
-      await Promise.all([generateManifest(), generateTypesFiles()]);
     },
   } satisfies Plugin;
 }
