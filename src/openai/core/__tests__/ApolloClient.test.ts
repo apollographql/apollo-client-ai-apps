@@ -92,6 +92,62 @@ describe("Client Basics", () => {
   });
 });
 
+test("merges _meta.structuredContent into result for @private fields", async () => {
+  stubOpenAiGlobals();
+  using _ = spyOnConsole("debug");
+  const manifest = mockApplicationManifest();
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    manifest,
+  });
+  using host = await mockMcpHost();
+
+  const query = gql`
+    query Product {
+      id
+      title @private
+    }
+  `;
+
+  host.onCleanup(() => client.stop());
+
+  host.sendToolInput({});
+  host.sendToolResult({
+    content: [],
+    structuredContent: {},
+  });
+
+  host.mockToolCall("execute", () => ({
+    content: [],
+    structuredContent: {},
+    _meta: {
+      structuredContent: {
+        data: {
+          product: {
+            id: "1",
+            title: "Private Pen",
+            __typename: "Product",
+          },
+        },
+      },
+    },
+  }));
+
+  await client.connect();
+
+  await expect(
+    client.query({ query, variables: { id: "1" } })
+  ).resolves.toStrictEqual({
+    data: {
+      product: {
+        __typename: "Product",
+        id: "1",
+        title: "Private Pen",
+      },
+    },
+  });
+});
+
 describe("prefetchData", () => {
   test("caches tool response when data is provided", async () => {
     stubOpenAiGlobals({ toolInput: { id: 1 } });
