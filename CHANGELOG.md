@@ -1,3 +1,15 @@
+## 0.6.3 (2026-03-13)
+
+### Fixes
+
+#### Fix ChatGPT page reload getting stuck
+
+Fixes an issue where reloading the page in ChatGPT would cause the app to get stuck indefinitely. After a reload, ChatGPT does not re-send the `ui/notifications/tool-result` notification, so the app is stuck waiting for an event that would never arrive.
+
+#### Fix issue with operation description on executed queries
+
+Fixes an issue where a query executed by the client through the Apollo MCP Server `execute` tool maintained operation descriptions on the query.
+
 ## 0.6.2 (2026-03-12)
 
 ### Fixes
