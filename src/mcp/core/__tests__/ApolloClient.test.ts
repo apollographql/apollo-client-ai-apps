@@ -464,6 +464,248 @@ test("creates a default ToolCallLink when no link is provided", () => {
   }).not.toThrow();
 });
 
+test("reads result data from _meta.structuredContent", async () => {
+  using _ = spyOnConsole("debug");
+
+  const query = gql`
+    query Product($id: ID!) {
+      product(id: $id) @private {
+        id
+        title
+        __typename
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    manifest: mockApplicationManifest({
+      operations: [
+        {
+          id: "1",
+          name: "Product",
+          body: print(query),
+          type: "query",
+          prefetch: false,
+          variables: { id: "ID" },
+          tools: [{ name: "GetProduct", description: "Get a product" }],
+        },
+      ],
+    }),
+  });
+
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GetProduct"),
+  });
+  host.onCleanup(() => client.stop());
+
+  host.sendToolResult({
+    content: [],
+    structuredContent: {},
+    _meta: {
+      toolName: "GetProduct",
+      structuredContent: {
+        result: {
+          data: {
+            product: { id: "1", title: "Pen", __typename: "Product" },
+          },
+        },
+      },
+    },
+  });
+  host.sendToolInput({ arguments: { id: "1" } });
+
+  await client.connect();
+
+  expect(client.extract()).toEqual({
+    "Product:1": {
+      __typename: "Product",
+      id: "1",
+      title: "Pen",
+    },
+    ROOT_QUERY: {
+      __typename: "Query",
+      'product({"id":"1"})@private': {
+        __ref: "Product:1",
+      },
+    },
+  });
+});
+
+test("merges prefetch from structuredContent and result from _meta.structuredContent", async () => {
+  using _ = spyOnConsole("debug");
+
+  const prefetchQuery = gql`
+    query TopProducts {
+      topProducts {
+        id
+        title
+        __typename
+      }
+    }
+  `;
+
+  const query = gql`
+    query Product($id: ID!) {
+      product(id: $id) @private {
+        id
+        title
+        __typename
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    manifest: mockApplicationManifest({
+      operations: [
+        {
+          id: "1",
+          name: "TopProducts",
+          body: print(prefetchQuery),
+          type: "query",
+          prefetch: true,
+          prefetchID: "__anonymous",
+          variables: {},
+          tools: [{ name: "TopProducts", description: "Shows top products" }],
+        },
+        {
+          id: "2",
+          name: "Product",
+          body: print(query),
+          type: "query",
+          prefetch: false,
+          variables: { id: "ID" },
+          tools: [{ name: "GetProduct", description: "Get a product" }],
+        },
+      ],
+    }),
+  });
+
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GetProduct"),
+  });
+  host.onCleanup(() => client.stop());
+
+  host.sendToolResult({
+    content: [],
+    structuredContent: {
+      prefetch: {
+        __anonymous: {
+          data: {
+            topProducts: [{ id: "1", title: "iPhone", __typename: "Product" }],
+          },
+        },
+      },
+    },
+    _meta: {
+      toolName: "GetProduct",
+      structuredContent: {
+        result: {
+          data: {
+            product: { id: "2", title: "iPad", __typename: "Product" },
+          },
+        },
+      },
+    },
+  });
+  host.sendToolInput({ arguments: { id: "2" } });
+
+  await client.connect();
+
+  expect(client.extract()).toEqual({
+    "Product:1": {
+      __typename: "Product",
+      id: "1",
+      title: "iPhone",
+    },
+    "Product:2": {
+      __typename: "Product",
+      id: "2",
+      title: "iPad",
+    },
+    ROOT_QUERY: {
+      __typename: "Query",
+      topProducts: [{ __ref: "Product:1" }],
+      'product({"id":"2"})@private': { __ref: "Product:2" },
+    },
+  });
+});
+
+test("_meta.structuredContent wins over structuredContent", async () => {
+  using _ = spyOnConsole("debug");
+
+  const query = gql`
+    query Product($id: ID!) {
+      product(id: $id) {
+        id
+        title @private
+        __typename
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    manifest: mockApplicationManifest({
+      operations: [
+        {
+          id: "1",
+          name: "Product",
+          body: print(query),
+          type: "query",
+          prefetch: false,
+          variables: { id: "ID" },
+          tools: [{ name: "GetProduct", description: "Get a product" }],
+        },
+      ],
+    }),
+  });
+
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GetProduct"),
+  });
+  host.onCleanup(() => client.stop());
+
+  host.sendToolResult({
+    content: [],
+    structuredContent: {
+      result: {
+        data: {
+          product: { id: "1", __typename: "Product" },
+        },
+      },
+    },
+    _meta: {
+      toolName: "GetProduct",
+      structuredContent: {
+        result: {
+          data: {
+            product: { id: "1", title: "Meta title", __typename: "Product" },
+          },
+        },
+      },
+    },
+  });
+  host.sendToolInput({ arguments: { id: "1" } });
+
+  await client.connect();
+
+  expect(client.extract()).toEqual({
+    "Product:1": {
+      __typename: "Product",
+      id: "1",
+      "title@private": "Meta title",
+    },
+    ROOT_QUERY: {
+      __typename: "Query",
+      'product({"id":"1"})': {
+        __ref: "Product:1",
+      },
+    },
+  });
+});
+
 describe("watchQuery dev warnings", () => {
   const query = gql`
     query Products($category: String!, $page: Int!, $sortBy: String!)

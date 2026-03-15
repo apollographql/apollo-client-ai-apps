@@ -4,11 +4,12 @@ import type { FormattedExecutionResult } from "graphql";
 export namespace ApolloMcpServerApps {
   export interface Meta {
     toolName: string;
+    structuredContent?: ApolloMcpServerApps.StructuredContent;
     [x: string]: unknown;
   }
 
   export interface StructuredContent {
-    result: FormattedExecutionResult;
+    result?: FormattedExecutionResult;
     prefetch?: Record<string, FormattedExecutionResult>;
     toolName?: string;
     [x: string]: unknown;

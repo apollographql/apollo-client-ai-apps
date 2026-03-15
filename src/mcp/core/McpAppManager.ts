@@ -13,6 +13,7 @@ import type { ApolloMcpServerApps } from "../../core/types";
 
 type ExecuteQueryCallToolResult = Omit<CallToolResult, "structuredContent"> & {
   structuredContent: FormattedExecutionResult;
+  _meta?: { structuredContent?: FormattedExecutionResult };
 };
 
 /** @internal */
@@ -90,7 +91,10 @@ export class McpAppManager {
     this.#toolInput = args;
 
     return {
-      ...structuredContent,
+      structuredContent: {
+        ...structuredContent,
+        ..._meta?.structuredContent,
+      },
       toolName: this.toolName,
       args,
     };
@@ -112,7 +116,10 @@ export class McpAppManager {
       arguments: { query: print(query), variables },
     })) as ExecuteQueryCallToolResult;
 
-    return result.structuredContent;
+    return {
+      ...result.structuredContent,
+      ...result._meta?.structuredContent,
+    };
   }
 
   private async connectToHost() {
