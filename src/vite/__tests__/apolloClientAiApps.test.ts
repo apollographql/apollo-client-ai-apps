@@ -143,6 +143,35 @@ describe("operations", () => {
     `);
   });
 
+  test("writes extraOutputs to the manifest", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(
+          name: "hello-world"
+          description: "This is an awesome tool!"
+          extraOutputs: { foo: "bar", nested: { label: "count" } }
+        ) {
+          helloWorld
+        }
+      `),
+    });
+
+    await using server = await setupServer({
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
+    });
+    await server.listen();
+
+    const manifest = readManifestFile();
+    expect(manifest.operations[0].tools[0].extraOutputs).toEqual({
+      foo: "bar",
+      nested: { label: "count" },
+    });
+  });
+
   test("handles operations with fragments in the same file", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson(),
@@ -887,6 +916,33 @@ describe("@tool validation", () => {
       await server.listen();
     }).rejects.toThrowErrorMatchingInlineSnapshot(
       `[Error: Expected argument 'description' to be of type 'StringValue' but found 'BooleanValue' instead.]`
+    );
+  });
+
+  test("errors when extraOutputs is not an object", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery
+        @tool(
+          name: "hello-world"
+          description: "hello"
+          extraOutputs: [1, 2, 3]
+        ) {
+          helloWorld
+        }
+      `),
+    });
+
+    await expect(async () => {
+      await using server = await setupServer({
+        plugins: [
+          apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+        ],
+      });
+      await server.listen();
+    }).rejects.toThrowErrorMatchingInlineSnapshot(
+      `[Error: Expected argument 'extraOutputs' to be of type 'ObjectValue' but found 'ListValue' instead.]`
     );
   });
 
