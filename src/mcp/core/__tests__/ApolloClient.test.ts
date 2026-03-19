@@ -898,47 +898,6 @@ test("serves tool result data on no-cache query without calling execute tool", a
   expect(execute).not.toHaveBeenCalled();
 });
 
-test("holds queries initiated before tool result arrives and resolves with tool result data", async () => {
-  using _ = spyOnConsole("debug");
-  const query = gql`
-    query Product($id: ID!)
-    @tool(name: "GetProduct", description: "Get a product") {
-      product(id: $id) {
-        id
-        title
-        __typename
-      }
-    }
-  `;
-
-  const data = {
-    product: { id: "1", title: "Pen", __typename: "Product" },
-  };
-
-  const { client, host } = await setup({ query });
-  using _host = host;
-
-  const execute = vi.fn();
-  host.mockToolCall("execute", execute);
-
-  // Send tool input first so connect() resolves, but don't send tool result yet
-  host.sendToolInput({ arguments: { id: "1" } });
-
-  await client.connect();
-
-  // Start query before tool result arrives to check if it is queued correctly
-  const promise = client.query({
-    query,
-    variables: { id: "1" },
-    fetchPolicy: "network-only",
-  });
-
-  host.sendToolResult({ structuredContent: { result: { data } } });
-
-  await expect(promise).resolves.toStrictEqual({ data });
-  expect(execute).not.toHaveBeenCalled();
-});
-
 test("serves hydrated query from tool result while other pending network-only queries call execute", async () => {
   using _ = spyOnConsole("debug");
 
@@ -983,6 +942,13 @@ test("serves hydrated query from tool result while other pending network-only qu
     },
   }));
   host.mockToolCall("execute", execute);
+  host.sendToolResult({
+    structuredContent: {
+      result: {
+        data: { product: { id: "1", title: "Pen", __typename: "Product" } },
+      },
+    },
+  });
   host.sendToolInput({ arguments: { id: "1" } });
 
   await client.connect();
@@ -998,98 +964,12 @@ test("serves hydrated query from tool result while other pending network-only qu
     fetchPolicy: "network-only",
   });
 
-  host.sendToolResult({
-    structuredContent: {
-      result: {
-        data: { product: { id: "1", title: "Pen", __typename: "Product" } },
-      },
-    },
-  });
-
   await expect(productPromise).resolves.toStrictEqual({
     data: { product: { id: "1", title: "Pen", __typename: "Product" } },
   });
   await expect(cartPromise).resolves.toStrictEqual({
     data: { cart: { id: "1", __typename: "Cart" } },
   });
-  expect(execute).toHaveBeenCalledOnce();
-});
-
-test("serves hydrated query after tool result while earlier-queued non-matching query calls execute", async () => {
-  using _ = spyOnConsole("debug");
-
-  const productQuery = gql`
-    query Product($id: ID!)
-    @tool(name: "GetProduct", description: "Get a product") {
-      product(id: $id) {
-        id
-        title
-        __typename
-      }
-    }
-  `;
-
-  const cartQuery = gql`
-    query Cart @tool(name: "GetCart", description: "Get the cart") {
-      cart {
-        id
-        __typename
-      }
-    }
-  `;
-
-  const productOperation = parseManifestOperation(productQuery);
-  const cartOperation = parseManifestOperation(cartQuery);
-
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    manifest: mockApplicationManifest({
-      operations: [productOperation, cartOperation],
-    }),
-  });
-
-  using host = await mockMcpHost({
-    hostContext: minimalHostContextWithToolName("GetProduct"),
-  });
-  host.onCleanup(() => client.stop());
-
-  const execute = vi.fn(() => ({
-    structuredContent: {
-      data: { cart: { id: "1", __typename: "Cart" } },
-    },
-  }));
-  host.mockToolCall("execute", execute);
-  host.sendToolInput({ arguments: { id: "1" } });
-
-  await client.connect();
-
-  const cartPromise = client.query({
-    query: cartQuery,
-    fetchPolicy: "network-only",
-  });
-
-  host.sendToolResult({
-    structuredContent: {
-      result: {
-        data: { product: { id: "1", title: "Pen", __typename: "Product" } },
-      },
-    },
-  });
-
-  await expect(cartPromise).resolves.toStrictEqual({
-    data: { cart: { id: "1", __typename: "Cart" } },
-  });
-
-  await expect(
-    client.query({
-      query: productQuery,
-      variables: { id: "1" },
-      fetchPolicy: "network-only",
-    })
-  ).resolves.toStrictEqual({
-    data: { product: { id: "1", title: "Pen", __typename: "Product" } },
-  });
-
   expect(execute).toHaveBeenCalledOnce();
 });
 

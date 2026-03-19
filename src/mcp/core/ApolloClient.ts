@@ -136,57 +136,50 @@ export class ApolloClient extends BaseApolloClient {
   }
 
   connect = cacheAsync(async () => {
-    // Blocks on MCP handshake + tool input only (not tool result).
-    // Suspense releases here, allowing the app to render with toolInput/toolName.
-    await this.appManager.connect();
+    const { structuredContent, toolName, args } =
+      await this.appManager.connect();
 
-    this.#toolInput = this.appManager.toolInput;
+    this.#toolInput = args;
 
-    // When the tool result arrives asynchronously, write to cache and unblock
-    // HydrationLink so any pending queries (including network-only/cache-and-network)
-    // are served from tool result data rather than triggering a real tool call.
-    this.appManager.toolResultPromise.then(({ structuredContent, _meta }) => {
-      const toolName =
-        this.appManager.toolName ??
-        _meta?.toolName ??
-        structuredContent.toolName;
-      const args = this.appManager.toolInput!;
-      const hydrations: HydrationData[] = [];
+    const hydrations: HydrationData[] = [];
 
-      this.manifest.operations.forEach((operation) => {
-        if (
-          operation.prefetchID &&
-          structuredContent.prefetch?.[operation.prefetchID]
-        ) {
-          const data = structuredContent.prefetch[operation.prefetchID]
-            .data as Record<string, unknown>;
-          this.writeQuery({ query: parse(operation.body), data });
+    this.manifest.operations.forEach((operation) => {
+      if (
+        operation.prefetchID &&
+        structuredContent.prefetch?.[operation.prefetchID]
+      ) {
+        this.writeQuery({
+          query: parse(operation.body),
+          data: structuredContent.prefetch[operation.prefetchID].data as Record<
+            string,
+            unknown
+          >,
+        });
+      }
+
+      if (operation.tools.find((tool) => tool.name === toolName)) {
+        if (structuredContent.result?.data) {
+          const variables = getVariablesForOperationFromToolInput(
+            operation,
+            args
+          );
+          const result = structuredContent.result;
+          this.writeQuery({
+            query: parse(operation.body),
+            data: result.data,
+            variables,
+          });
+
+          hydrations.push({
+            operationName: operation.name,
+            result,
+            variables,
+          });
         }
-
-        if (operation.tools.find((tool) => tool.name === toolName)) {
-          if (structuredContent.result?.data) {
-            const variables = getVariablesForOperationFromToolInput(
-              operation,
-              args
-            );
-            const result = structuredContent.result;
-            this.writeQuery({
-              query: parse(operation.body),
-              data: result.data,
-              variables,
-            });
-
-            hydrations.push({
-              operationName: operation.name,
-              result,
-              variables,
-            });
-          }
-        }
-      });
-
-      this.#toolHydrationLink.complete(hydrations);
+      }
     });
+
+    this.#toolHydrationLink.complete(hydrations);
   });
 }
 
