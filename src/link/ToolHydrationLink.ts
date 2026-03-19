@@ -14,6 +14,8 @@ interface PendingEntry {
   resolve: () => void;
 }
 
+type OperationKey = string & { __type: "PendingKey" };
+
 /**
  * @internal
  * Holds requests until the client is fully hydrated after a tool call. It is
@@ -24,11 +26,11 @@ interface PendingEntry {
 export class ToolHydrationLink extends ApolloLink {
   #hydrated = false;
   #pending: PendingEntry[] = [];
-  #hydratedOperations = new Map<string, FormattedExecutionResult>();
+  #operations = new Map<OperationKey, FormattedExecutionResult>();
 
   complete(operations: HydrationData[]): void {
-    for (const { operationName, result, variables } of operations) {
-      this.#hydratedOperations.set(makeKey(operationName, variables), result);
+    for (const operation of operations) {
+      this.#operations.set(getKey(operation), operation.result);
     }
     this.#hydrated = true;
 
@@ -42,8 +44,20 @@ export class ToolHydrationLink extends ApolloLink {
     operation: ApolloLink.Operation,
     forward: ApolloLink.ForwardFunction
   ): Observable<ApolloLink.Result> {
+    const maybeSendToTerminatingLink = (): Observable<ApolloLink.Result> => {
+      const key = getKey(operation);
+      const result = this.#operations.get(key);
+
+      if (result !== undefined) {
+        this.#operations.delete(key);
+        return of(result);
+      }
+
+      return forward(operation);
+    };
+
     if (this.#hydrated) {
-      return this.#tryServeHydrated(operation, forward);
+      return maybeSendToTerminatingLink();
     }
 
     return new Observable((observer) => {
@@ -51,7 +65,7 @@ export class ToolHydrationLink extends ApolloLink {
       const entry: PendingEntry = {
         resolve: () => {
           if (!active) return;
-          this.#tryServeHydrated(operation, forward).subscribe(observer);
+          maybeSendToTerminatingLink().subscribe(observer);
         },
       };
       this.#pending.push(entry);
@@ -63,26 +77,14 @@ export class ToolHydrationLink extends ApolloLink {
       };
     });
   }
-
-  #tryServeHydrated(
-    operation: ApolloLink.Operation,
-    forward: ApolloLink.ForwardFunction
-  ): Observable<ApolloLink.Result> {
-    const key = makeKey(operation.operationName, operation.variables);
-    const result = this.#hydratedOperations.get(key);
-
-    if (result !== undefined) {
-      this.#hydratedOperations.delete(key);
-      return of(result);
-    }
-
-    return forward(operation);
-  }
 }
 
-function makeKey(
-  operationName: string | undefined,
-  variables?: OperationVariables
-): string {
-  return `${operationName}:${canonicalStringify(variables ?? {})}`;
+function getKey({
+  operationName,
+  variables,
+}: {
+  operationName: string | undefined;
+  variables?: OperationVariables;
+}): OperationKey {
+  return `${operationName}:${canonicalStringify(variables ?? {})}` as OperationKey;
 }
