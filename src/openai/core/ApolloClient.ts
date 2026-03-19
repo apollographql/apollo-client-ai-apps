@@ -38,10 +38,10 @@ export class ApolloClient extends BaseApolloClient {
   readonly [aiClientSymbol] = true;
 
   #toolInput: Record<string, unknown> | undefined;
-  #hydrationLink: ToolHydrationLink;
+  #toolHydrationLink: ToolHydrationLink;
 
   constructor(options: ApolloClient.Options) {
-    const hydrationLink = new ToolHydrationLink();
+    const toolHydrationLink = new ToolHydrationLink();
     const link = options.link ?? new ToolCallLink();
 
     if (__DEV__) {
@@ -50,7 +50,7 @@ export class ApolloClient extends BaseApolloClient {
 
     super({
       ...options,
-      link: hydrationLink.concat(link),
+      link: toolHydrationLink.concat(link),
       // Strip out the prefetch/tool directives so they don't get sent with the operation to the server
       documentTransform: new DocumentTransform((document) => {
         const serverDocument = removeDirectivesFromDocument(
@@ -66,13 +66,13 @@ export class ApolloClient extends BaseApolloClient {
       }).concat(options.documentTransform ?? DocumentTransform.identity()),
     });
 
-    this.#hydrationLink = hydrationLink;
+    this.#toolHydrationLink = toolHydrationLink;
     this.manifest = options.manifest;
     this.appManager = new McpAppManager(this.manifest);
   }
 
   setLink(newLink: ApolloLink): void {
-    super.setLink(this.#hydrationLink.concat(newLink));
+    super.setLink(this.#toolHydrationLink.concat(newLink));
   }
 
   stop() {
@@ -164,7 +164,7 @@ export class ApolloClient extends BaseApolloClient {
             variables,
           });
 
-          this.#hydrationLink.hydrate(operation, {
+          this.#toolHydrationLink.hydrate(operation, {
             result: structuredContent.result,
             variables,
           });
@@ -172,7 +172,7 @@ export class ApolloClient extends BaseApolloClient {
       }
     });
 
-    this.#hydrationLink.complete();
+    this.#toolHydrationLink.complete();
   });
 }
 
