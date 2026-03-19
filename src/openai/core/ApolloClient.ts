@@ -20,7 +20,6 @@ import {
   warnOnVariableMismatch,
 } from "../../utilities/index.js";
 import { ToolHydrationLink } from "../../link/ToolHydrationLink.js";
-import type { HydrationData } from "../../link/ToolHydrationLink.js";
 import { McpAppManager } from "./McpAppManager.js";
 import { getVariableNamesFromDocument } from "../../utilities/getVariableNamesFromDocument.js";
 
@@ -140,12 +139,6 @@ export class ApolloClient extends BaseApolloClient {
 
     this.#toolInput = args;
 
-    // For OpenAI, connect() already blocks on the full tool result (due to
-    // unreliable tool-input notifications from ChatGPT). We call completeHydration()
-    // synchronously here so HydrationLink is already in "hydrated" state before
-    // Suspense releases and any useQuery runs.
-    const hydrations: HydrationData[] = [];
-
     this.manifest.operations.forEach((operation) => {
       if (
         operation.prefetchID &&
@@ -170,7 +163,8 @@ export class ApolloClient extends BaseApolloClient {
             data: structuredContent.result.data,
             variables,
           });
-          hydrations.push({
+
+          this.#hydrationLink.hydrate({
             operationName: operation.name,
             result: structuredContent.result,
             variables,
@@ -179,7 +173,7 @@ export class ApolloClient extends BaseApolloClient {
       }
     });
 
-    this.#hydrationLink.complete(hydrations);
+    this.#hydrationLink.complete();
   });
 }
 

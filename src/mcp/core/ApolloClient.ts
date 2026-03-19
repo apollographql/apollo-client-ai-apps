@@ -23,7 +23,6 @@ import {
   warnOnVariableMismatch,
 } from "../../utilities/index.js";
 import { ToolHydrationLink } from "../../link/ToolHydrationLink.js";
-import type { HydrationData } from "../../link/ToolHydrationLink.js";
 import { McpAppManager } from "./McpAppManager.js";
 
 export declare namespace ApolloClient {
@@ -141,8 +140,6 @@ export class ApolloClient extends BaseApolloClient {
 
     this.#toolInput = args;
 
-    const hydrations: HydrationData[] = [];
-
     this.manifest.operations.forEach((operation) => {
       if (
         operation.prefetchID &&
@@ -170,7 +167,7 @@ export class ApolloClient extends BaseApolloClient {
             variables,
           });
 
-          hydrations.push({
+          this.#toolHydrationLink.hydrate({
             operationName: operation.name,
             result,
             variables,
@@ -179,7 +176,7 @@ export class ApolloClient extends BaseApolloClient {
       }
     });
 
-    this.#toolHydrationLink.complete(hydrations);
+    this.#toolHydrationLink.complete();
   });
 }
 
