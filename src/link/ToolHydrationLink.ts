@@ -5,10 +5,7 @@ import type { FormattedExecutionResult } from "graphql";
 import { of } from "rxjs";
 import type { ManifestOperation } from "../types/application-manifest.js";
 
-interface PendingEntry {
-  resolve: () => void;
-}
-
+type ResolveFn = () => void;
 type OperationKey = string & { __type: "PendingKey" };
 
 /**
@@ -20,7 +17,7 @@ type OperationKey = string & { __type: "PendingKey" };
  */
 export class ToolHydrationLink extends ApolloLink {
   #hydrated = false;
-  #pending: PendingEntry[] = [];
+  #pending: ResolveFn[] = [];
   #operations = new Map<OperationKey, FormattedExecutionResult>();
 
   hydrate(
@@ -39,7 +36,7 @@ export class ToolHydrationLink extends ApolloLink {
   complete(): void {
     this.#hydrated = true;
 
-    for (const { resolve } of this.#pending.splice(0)) {
+    for (const resolve of this.#pending.splice(0)) {
       resolve();
     }
   }
@@ -66,17 +63,16 @@ export class ToolHydrationLink extends ApolloLink {
 
     return new Observable((observer) => {
       let active = true;
-      const entry: PendingEntry = {
-        resolve: () => {
-          if (!active) return;
-          maybeSendToTerminatingLink().subscribe(observer);
-        },
+
+      const resolve: ResolveFn = () => {
+        if (!active) return;
+        maybeSendToTerminatingLink().subscribe(observer);
       };
-      this.#pending.push(entry);
+      this.#pending.push(resolve);
 
       return () => {
         active = false;
-        const idx = this.#pending.indexOf(entry);
+        const idx = this.#pending.indexOf(resolve);
         if (idx !== -1) this.#pending.splice(idx, 1);
       };
     });
