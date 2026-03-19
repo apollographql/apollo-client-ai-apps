@@ -14,14 +14,16 @@ import type {
 import { invariant, promiseWithResolvers } from "../../../utilities/index.js";
 
 export interface MockMcpHost extends Disposable {
-  sendToolResult(params: McpUiToolResultNotification["params"]): Promise<void>;
+  sendToolResult(
+    params: Partial<McpUiToolResultNotification["params"]>
+  ): Promise<void>;
   sendToolInput(params: McpUiToolInputNotification["params"]): Promise<void>;
   sendHostContextChanged(
     params: McpUiHostContextChangedNotification["params"]
   ): Promise<void>;
   mockToolCall(
     name: string,
-    handler: (params: CallToolRequest["params"]) => CallToolResult
+    handler: (params: CallToolRequest["params"]) => Partial<CallToolResult>
   ): () => void;
   /**
    * Register an MCP App to be closed during cleanup. This prevents the App's
@@ -100,7 +102,7 @@ export async function mockMcpHost(
   const cleanupFns = new Set<() => void>();
   const toolCallHandlers = new Map<
     string,
-    (params: CallToolRequest["params"]) => CallToolResult
+    (params: CallToolRequest["params"]) => Partial<CallToolResult>
   >();
 
   const listener = (event: MessageEvent<unknown>) => {
@@ -137,10 +139,20 @@ export async function mockMcpHost(
         `mockMcpHost: A mock tool call handler for '${params.name}' is not registered.`
       );
 
+      const result = handler(params);
+
+      if (result.structuredContent && !result.content) {
+        result.content = [
+          { type: "text", text: JSON.stringify(result.structuredContent) },
+        ];
+      }
+
+      result.content ||= [];
+
       window.postMessage({
         jsonrpc: "2.0",
         id: data.id,
-        result: handler(params),
+        result,
       });
     }
   };
@@ -156,6 +168,15 @@ export async function mockMcpHost(
   return {
     async sendToolResult(params) {
       await initialized;
+
+      if (params.structuredContent && !params.content) {
+        params.content = [
+          { type: "text", text: JSON.stringify(params.structuredContent) },
+        ];
+      }
+
+      params.content ||= [];
+
       window.postMessage({
         jsonrpc: "2.0",
         method: "ui/notifications/tool-result",
