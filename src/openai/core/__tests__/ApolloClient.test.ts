@@ -1060,6 +1060,41 @@ test("serves tool result data on cache-and-network query without calling execute
   expect(execute).not.toHaveBeenCalled();
 });
 
+test("serves tool result data on no-cache query without calling execute tool", async () => {
+  stubOpenAiGlobals({ toolInput: { id: "1" } });
+  using _ = spyOnConsole("debug");
+  const query = gql`
+    query Product($id: ID!)
+    @tool(name: "GetProduct", description: "Get a product") {
+      product(id: $id) {
+        id
+        title
+        __typename
+      }
+    }
+  `;
+
+  const data = {
+    product: { id: "1", title: "Pen", __typename: "Product" },
+  };
+
+  const { client, host } = await setup({ query });
+  using _host = host;
+
+  const execute = vi.fn();
+  host.mockToolCall("execute", execute);
+
+  host.sendToolInput({ arguments: { id: "1" } });
+  host.sendToolResult({ structuredContent: { result: { data } } });
+
+  await client.connect();
+
+  await expect(
+    client.query({ query, variables: { id: "1" }, fetchPolicy: "no-cache" })
+  ).resolves.toStrictEqual({ data });
+  expect(execute).not.toHaveBeenCalled();
+});
+
 test("executes prefetch query on the network with network-only fetch policy", async () => {
   stubOpenAiGlobals({ toolInput: {} });
   using _ = spyOnConsole("debug");
