@@ -147,10 +147,7 @@ export class ApolloClient extends BaseApolloClient {
       ) {
         this.writeQuery({
           query: parse(operation.body),
-          data: structuredContent.prefetch[operation.prefetchID].data as Record<
-            string,
-            unknown
-          >,
+          data: structuredContent.prefetch[operation.prefetchID].data,
         });
       }
 
