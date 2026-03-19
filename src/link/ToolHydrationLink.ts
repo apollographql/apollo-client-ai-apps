@@ -64,7 +64,7 @@ export class ToolHydrationLink extends ApolloLink {
     return new Observable((observer) => {
       let active = true;
 
-      const resolve: ResolveFn = () => {
+      const resolve = () => {
         if (!active) return;
         maybeSendToTerminatingLink().subscribe(observer);
       };
