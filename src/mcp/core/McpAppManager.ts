@@ -23,6 +23,7 @@ export class McpAppManager {
   #toolName: string | undefined;
   #toolMetadata: ApolloMcpServerApps.CallToolResult["_meta"] | undefined;
   #toolInput: Record<string, unknown> | undefined;
+  #toolResultPromise: Promise<ApolloMcpServerApps.CallToolResult> | undefined;
 
   #hostContextCallbacks = new Set<
     (params: McpUiHostContextChangedNotification["params"]) => void
@@ -42,6 +43,15 @@ export class McpAppManager {
 
   get toolInput() {
     return this.#toolInput;
+  }
+
+  get toolResultPromise(): Promise<ApolloMcpServerApps.CallToolResult> {
+    if (!this.#toolResultPromise) {
+      throw new Error(
+        "toolResultPromise is not available before connect() is called"
+      );
+    }
+    return this.#toolResultPromise;
   }
 
   onHostContextChanged(
@@ -74,30 +84,31 @@ export class McpAppManager {
 
     await this.connectToHost();
 
-    const { structuredContent, _meta } = await toolResult.promise;
+    // Store the tool result promise for async consumption by ApolloClient.
+    // We don't await it here — the HydrationLink holds queries until it resolves.
+    this.#toolResultPromise = toolResult.promise;
+
+    // Set toolMetadata and toolName fallbacks when the tool result resolves.
+    // This runs before ApolloClient's toolResultPromise.then() handler since
+    // this .then() is attached first, ensuring metadata is available before
+    // HydrationLink unblocks and components re-render.
+    toolResult.promise.then(({ structuredContent, _meta }) => {
+      this.#toolMetadata = _meta;
+      // Some hosts do not provide toolInfo in the ui/initialize response, so we
+      // fallback to `_meta.toolName` provided by Apollo MCP server if the value
+      // is not available.
+      this.#toolName ??=
+        _meta?.toolName ??
+        // Some hosts do not forward `_meta` nor do they provide `toolInfo`. Our
+        // MCP server provides `toolName` in `structuredContent` as a workaround
+        // that we can use if all else fails
+        structuredContent.toolName;
+    });
+
     const { arguments: args } = await toolInput.promise;
 
-    // Some hosts do not provide toolInfo in the ui/initialize response, so we
-    // fallback to `_meta.toolName` provided by Apollo MCP server if the value
-    // is not available.
-    this.#toolName =
-      this.app.getHostContext()?.toolInfo?.tool.name ??
-      _meta?.toolName ??
-      // Some hosts do not forward `_meta` nor do they provide `toolInfo`. Our
-      // MCP server provides `toolName` in `structuredContent` as a workaround
-      // that we can use if all else fails
-      structuredContent.toolName;
-    this.#toolMetadata = _meta;
+    this.#toolName = this.app.getHostContext()?.toolInfo?.tool.name;
     this.#toolInput = args;
-
-    return {
-      structuredContent: {
-        ...structuredContent,
-        ..._meta?.structuredContent,
-      },
-      toolName: this.toolName,
-      args,
-    };
   });
 
   close() {

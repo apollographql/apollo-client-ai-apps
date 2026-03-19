@@ -19,6 +19,8 @@ import {
   getVariablesForOperationFromToolInput,
   warnOnVariableMismatch,
 } from "../../utilities/index.js";
+import { ToolHydrationLink } from "../../link/ToolHydrationLink.js";
+import type { HydrationData } from "../../link/ToolHydrationLink.js";
 import { McpAppManager } from "./McpAppManager.js";
 import { getVariableNamesFromDocument } from "../../utilities/getVariableNamesFromDocument.js";
 
@@ -37,8 +39,10 @@ export class ApolloClient extends BaseApolloClient {
   readonly [aiClientSymbol] = true;
 
   #toolInput: Record<string, unknown> | undefined;
+  #hydrationLink: ToolHydrationLink;
 
   constructor(options: ApolloClient.Options) {
+    const hydrationLink = new ToolHydrationLink();
     const link = options.link ?? new ToolCallLink();
 
     if (__DEV__) {
@@ -47,7 +51,7 @@ export class ApolloClient extends BaseApolloClient {
 
     super({
       ...options,
-      link,
+      link: hydrationLink.concat(link),
       // Strip out the prefetch/tool directives so they don't get sent with the operation to the server
       documentTransform: new DocumentTransform((document) => {
         const serverDocument = removeDirectivesFromDocument(
@@ -63,8 +67,13 @@ export class ApolloClient extends BaseApolloClient {
       }).concat(options.documentTransform ?? DocumentTransform.identity()),
     });
 
+    this.#hydrationLink = hydrationLink;
     this.manifest = options.manifest;
     this.appManager = new McpAppManager(this.manifest);
+  }
+
+  setLink(newLink: ApolloLink): void {
+    super.setLink(this.#hydrationLink.concat(newLink));
   }
 
   stop() {
@@ -131,27 +140,46 @@ export class ApolloClient extends BaseApolloClient {
 
     this.#toolInput = args;
 
+    // For OpenAI, connect() already blocks on the full tool result (due to
+    // unreliable tool-input notifications from ChatGPT). We call completeHydration()
+    // synchronously here so HydrationLink is already in "hydrated" state before
+    // Suspense releases and any useQuery runs.
+    const hydrations: HydrationData[] = [];
+
     this.manifest.operations.forEach((operation) => {
       if (
         operation.prefetchID &&
         structuredContent.prefetch?.[operation.prefetchID]
       ) {
+        const data = structuredContent.prefetch[operation.prefetchID]
+          .data as Record<string, unknown>;
         this.writeQuery({
           query: parse(operation.body),
-          data: structuredContent.prefetch[operation.prefetchID].data,
+          data,
         });
       }
 
       if (operation.tools.find((tool) => tool.name === toolName)) {
         if (structuredContent.result?.data) {
+          const variables = getVariablesForOperationFromToolInput(
+            operation,
+            args
+          );
           this.writeQuery({
             query: parse(operation.body),
             data: structuredContent.result.data,
-            variables: getVariablesForOperationFromToolInput(operation, args),
+            variables,
+          });
+          hydrations.push({
+            operationName: operation.name,
+            result: structuredContent.result,
+            variables,
           });
         }
       }
     });
+
+    this.#hydrationLink.complete(hydrations);
   });
 }
 
