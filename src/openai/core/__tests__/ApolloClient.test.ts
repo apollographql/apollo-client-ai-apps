@@ -1111,6 +1111,165 @@ test("executes prefetch query on the network with network-only fetch policy", as
   });
 });
 
+test("serves hydrated query from tool result while other network-only queries call execute", async () => {
+  stubOpenAiGlobals({ toolInput: { id: "1" } });
+  using _ = spyOnConsole("debug");
+
+  const productQuery = gql`
+    query Product($id: ID!)
+    @tool(name: "GetProduct", description: "Get a product") {
+      product(id: $id) {
+        id
+        title
+        __typename
+      }
+    }
+  `;
+
+  const cartQuery = gql`
+    query Cart @tool(name: "GetCart", description: "Get the cart") {
+      cart {
+        id
+        __typename
+      }
+    }
+  `;
+
+  const productOperation = parseManifestOperation(productQuery);
+  const cartOperation = parseManifestOperation(cartQuery);
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    manifest: mockApplicationManifest({
+      operations: [productOperation, cartOperation],
+    }),
+  });
+
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GetProduct"),
+  });
+  host.onCleanup(() => client.stop());
+
+  const execute = vi.fn(() => ({
+    structuredContent: {
+      data: { cart: { id: "1", __typename: "Cart" } },
+    },
+  }));
+  host.mockToolCall("execute", execute);
+
+  host.sendToolResult({
+    structuredContent: {
+      result: {
+        data: { product: { id: "1", title: "Pen", __typename: "Product" } },
+      },
+    },
+  });
+  host.sendToolInput({ arguments: { id: "1" } });
+
+  await client.connect();
+
+  const [productResult, cartResult] = await Promise.all([
+    client.query({
+      query: productQuery,
+      variables: { id: "1" },
+      fetchPolicy: "network-only",
+    }),
+    client.query({
+      query: cartQuery,
+      fetchPolicy: "network-only",
+    }),
+  ]);
+
+  expect(productResult).toStrictEqual({
+    data: { product: { id: "1", title: "Pen", __typename: "Product" } },
+  });
+  expect(cartResult).toStrictEqual({
+    data: { cart: { id: "1", __typename: "Cart" } },
+  });
+  expect(execute).toHaveBeenCalledOnce();
+});
+
+test("serves hydrated query after tool result while earlier-queued non-matching query calls execute", async () => {
+  stubOpenAiGlobals({ toolInput: { id: "1" } });
+  using _ = spyOnConsole("debug");
+
+  const productQuery = gql`
+    query Product($id: ID!)
+    @tool(name: "GetProduct", description: "Get a product") {
+      product(id: $id) {
+        id
+        title
+        __typename
+      }
+    }
+  `;
+
+  const cartQuery = gql`
+    query Cart @tool(name: "GetCart", description: "Get the cart") {
+      cart {
+        id
+        __typename
+      }
+    }
+  `;
+
+  const productOperation = parseManifestOperation(productQuery);
+  const cartOperation = parseManifestOperation(cartQuery);
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    manifest: mockApplicationManifest({
+      operations: [productOperation, cartOperation],
+    }),
+  });
+
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GetProduct"),
+  });
+  host.onCleanup(() => client.stop());
+
+  const execute = vi.fn(() => ({
+    structuredContent: {
+      data: { cart: { id: "1", __typename: "Cart" } },
+    },
+  }));
+  host.mockToolCall("execute", execute);
+
+  const connectPromise = client.connect();
+
+  const cartPromise = client.query({
+    query: cartQuery,
+    fetchPolicy: "network-only",
+  });
+
+  host.sendToolResult({
+    structuredContent: {
+      result: {
+        data: { product: { id: "1", title: "Pen", __typename: "Product" } },
+      },
+    },
+  });
+  host.sendToolInput({ arguments: { id: "1" } });
+
+  await connectPromise;
+
+  await expect(cartPromise).resolves.toStrictEqual({
+    data: { cart: { id: "1", __typename: "Cart" } },
+  });
+
+  await expect(
+    client.query({
+      query: productQuery,
+      variables: { id: "1" },
+      fetchPolicy: "network-only",
+    })
+  ).resolves.toStrictEqual({
+    data: { product: { id: "1", title: "Pen", __typename: "Product" } },
+  });
+
+  expect(execute).toHaveBeenCalledOnce();
+});
+
 describe("watchQuery dev warnings", () => {
   const query = gql`
     query Products($category: String!, $page: Int!, $sortBy: String!)
