@@ -49,7 +49,7 @@ export class ToolHydrationLink extends ApolloLink {
       const key = getKey(operation);
       const result = this.#operations.get(key);
 
-      if (result !== undefined) {
+      if (result) {
         this.#operations.delete(key);
         return of(result);
       }
