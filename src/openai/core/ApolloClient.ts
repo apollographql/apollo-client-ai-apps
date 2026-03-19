@@ -164,8 +164,7 @@ export class ApolloClient extends BaseApolloClient {
             variables,
           });
 
-          this.#hydrationLink.hydrate({
-            operationName: operation.name,
+          this.#hydrationLink.hydrate(operation, {
             result: structuredContent.result,
             variables,
           });

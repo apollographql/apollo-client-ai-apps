@@ -3,12 +3,7 @@ import type { OperationVariables } from "@apollo/client";
 import { canonicalStringify } from "@apollo/client/utilities";
 import type { FormattedExecutionResult } from "graphql";
 import { of } from "rxjs";
-
-interface HydrationData {
-  operationName: string;
-  result: FormattedExecutionResult;
-  variables?: OperationVariables;
-}
+import type { ManifestOperation } from "../types/application-manifest.js";
 
 interface PendingEntry {
   resolve: () => void;
@@ -28,15 +23,23 @@ export class ToolHydrationLink extends ApolloLink {
   #pending: PendingEntry[] = [];
   #operations = new Map<OperationKey, FormattedExecutionResult>();
 
-  hydrate(operation: HydrationData) {
-    this.#operations.set(getKey(operation), operation.result);
+  hydrate(
+    operation: ManifestOperation,
+    {
+      result,
+      variables,
+    }: { result: FormattedExecutionResult; variables: OperationVariables }
+  ) {
+    this.#operations.set(
+      getKey({ operationName: operation.name, variables }),
+      result
+    );
   }
 
   complete(): void {
     this.#hydrated = true;
 
-    const pending = this.#pending.splice(0);
-    for (const { resolve } of pending) {
+    for (const { resolve } of this.#pending.splice(0)) {
       resolve();
     }
   }
