@@ -1,3 +1,41 @@
+## 0.6.5 (2026-03-23)
+
+### Features
+
+#### Add support for `extraOutputs` to the `@tool` directive
+
+The `@tool` directive now supports an `extraOutputs` argument. This is a free-form object (any shape) that is written to the manifest under each tool's config. Values provided to `extraOutputs` are returned by Apollo MCP Server for the tool result in `structuredContent` to make it accessible to the LLM.
+
+```graphql
+query MyQuery
+@tool(
+  name: "my-tool",
+  description: "My tool",
+  extraOutputs: { "follow-up-instructions": "Perform a feat of magic" }
+) {
+  myField
+}
+```
+
+#### Support `@private` in operations to hide parts of a query result from LLMs
+
+In MCP Apps, you may have data that you want made available to your app but hidden from the LLM. A new `@private` directive is now supported that hides these fields from LLMs:
+
+```
+query ProductsQuery {
+  topProducts {
+    sku
+    title
+    meta @private {
+      createdAt
+      barcode
+    }
+  }
+}
+```
+
+`@private` directs Apollo MCP Server to remove those fields in `structuredContent` so that the field data is not available to the LLM. The full result is instead added to `_meta`. `@apollo/client-ai-apps` handles reading the query result from the proper location when `@private` is used.
+
 ## 0.6.4 (2026-03-13)
 
 ### Fixes
