@@ -864,7 +864,7 @@ test("serves tool result data on cache-and-network query without calling execute
   expect(execute).not.toHaveBeenCalled();
 });
 
-test("serves tool result data on no-cache query without calling execute tool", async () => {
+test("serves tool result data on no-cache query without calling execute tool and does not write to cache", async () => {
   using _ = spyOnConsole("debug");
   const query = gql`
     query Product($id: ID!)
@@ -896,6 +896,7 @@ test("serves tool result data on no-cache query without calling execute tool", a
     client.query({ query, variables: { id: "1" }, fetchPolicy: "no-cache" })
   ).resolves.toStrictEqual({ data });
   expect(execute).not.toHaveBeenCalled();
+  expect(client.extract()).toStrictEqual({});
 });
 
 test("serves hydrated query from tool result while other pending network-only queries call execute", async () => {
