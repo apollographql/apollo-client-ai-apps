@@ -32,6 +32,7 @@ export type ManifestTool = {
   name: string;
   description: string;
   extraInputs?: ManifestExtraInput[];
+  extraOutputs?: Record<string, unknown>;
   labels?: ManifestLabels;
 };
 
