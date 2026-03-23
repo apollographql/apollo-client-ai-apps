@@ -1095,7 +1095,7 @@ test("serves tool result data on no-cache query without calling execute tool", a
   expect(execute).not.toHaveBeenCalled();
 });
 
-test("executes prefetch query on the network with network-only fetch policy", async () => {
+test("hydrates prefetch query with network-only fetch policy", async () => {
   stubOpenAiGlobals({ toolInput: {} });
   using _ = spyOnConsole("debug");
 
@@ -1116,15 +1116,8 @@ test("executes prefetch query on the network with network-only fetch policy", as
   const { client, host } = await setup({ query, toolName: "OtherTool" });
   using _host = host;
 
-  host.mockToolCall("execute", () => ({
-    structuredContent: {
-      data: {
-        topProducts: [
-          { id: "1", title: "iPhone Pro Max", __typename: "Product" },
-        ],
-      },
-    },
-  }));
+  const execute = vi.fn();
+  host.mockToolCall("execute", execute);
 
   host.sendToolResult({
     structuredContent: {
@@ -1137,13 +1130,8 @@ test("executes prefetch query on the network with network-only fetch policy", as
 
   await expect(
     client.query({ query, fetchPolicy: "network-only" })
-  ).resolves.toStrictEqual({
-    data: {
-      topProducts: [
-        { id: "1", title: "iPhone Pro Max", __typename: "Product" },
-      ],
-    },
-  });
+  ).resolves.toStrictEqual({ data });
+  expect(execute).not.toHaveBeenCalled();
 });
 
 test("serves hydrated query from tool result while other network-only queries call execute", async () => {

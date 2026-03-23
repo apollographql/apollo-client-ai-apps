@@ -149,6 +149,10 @@ export class ApolloClient extends BaseApolloClient {
           query: parse(operation.body),
           data: structuredContent.prefetch[operation.prefetchID].data,
         });
+        this.#toolHydrationLink.hydrate(operation, {
+          result: prefetch[operation.prefetchID],
+          variables: {},
+        });
       }
 
       if (operation.tools.find((tool) => tool.name === toolName)) {

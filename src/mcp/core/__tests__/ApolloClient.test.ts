@@ -973,7 +973,7 @@ test("serves hydrated query from tool result while other pending network-only qu
   expect(execute).toHaveBeenCalledOnce();
 });
 
-test("executes prefetch query on the network with network-only fetch policy", async () => {
+test("hydrates prefetch query with network-only fetch policy", async () => {
   using _ = spyOnConsole("debug");
 
   const query = gql`
@@ -993,15 +993,8 @@ test("executes prefetch query on the network with network-only fetch policy", as
   const { client, host } = await setup({ query, toolName: "OtherTool" });
   using _host = host;
 
-  host.mockToolCall("execute", () => ({
-    structuredContent: {
-      data: {
-        topProducts: [
-          { id: "1", title: "iPhone Pro Max", __typename: "Product" },
-        ],
-      },
-    },
-  }));
+  const execute = vi.fn();
+  host.mockToolCall("execute", execute);
 
   host.sendToolResult({
     structuredContent: {
@@ -1016,11 +1009,10 @@ test("executes prefetch query on the network with network-only fetch policy", as
     client.query({ query, fetchPolicy: "network-only" })
   ).resolves.toStrictEqual({
     data: {
-      topProducts: [
-        { id: "1", title: "iPhone Pro Max", __typename: "Product" },
-      ],
+      topProducts: [{ id: "1", title: "iPhone", __typename: "Product" }],
     },
   });
+  expect(execute).not.toHaveBeenCalled();
 });
 
 describe("watchQuery dev warnings", () => {
