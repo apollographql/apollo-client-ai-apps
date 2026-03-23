@@ -150,7 +150,7 @@ export class ApolloClient extends BaseApolloClient {
           data: structuredContent.prefetch[operation.prefetchID].data,
         });
         this.#toolHydrationLink.hydrate(operation, {
-          result: prefetch[operation.prefetchID],
+          result: structuredContent.prefetch[operation.prefetchID],
           variables: {},
         });
       }
