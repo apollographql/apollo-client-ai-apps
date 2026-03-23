@@ -13,6 +13,7 @@ import type { ApolloMcpServerApps } from "../../core/types";
 
 type ExecuteQueryCallToolResult = Omit<CallToolResult, "structuredContent"> & {
   structuredContent: FormattedExecutionResult;
+  _meta?: { structuredContent?: FormattedExecutionResult };
 };
 
 /** @internal */
@@ -100,9 +101,14 @@ export class McpAppManager {
     this.#toolMetadata = window.openai.toolResponseMetadata;
 
     return {
-      ...structuredContent,
+      structuredContent: {
+        ...structuredContent,
+        ...(
+          window.openai.toolResponseMetadata as ApolloMcpServerApps.Meta | null
+        )?.structuredContent,
+      },
       toolName: this.toolName,
-      args: this.toolInput,
+      args: this.#toolInput,
     };
   });
 
@@ -122,7 +128,10 @@ export class McpAppManager {
       arguments: { query: print(query), variables },
     })) as ExecuteQueryCallToolResult;
 
-    return result.structuredContent;
+    return {
+      ...result.structuredContent,
+      ...result._meta?.structuredContent,
+    };
   }
 
   private async connectToHost() {

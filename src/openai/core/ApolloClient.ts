@@ -126,25 +126,30 @@ export class ApolloClient extends BaseApolloClient {
   }
 
   connect = cacheAsync(async () => {
-    const { prefetch, result, toolName, args } =
+    const { structuredContent, toolName, args } =
       await this.appManager.connect();
 
     this.#toolInput = args;
 
     this.manifest.operations.forEach((operation) => {
-      if (operation.prefetchID && prefetch?.[operation.prefetchID]) {
+      if (
+        operation.prefetchID &&
+        structuredContent.prefetch?.[operation.prefetchID]
+      ) {
         this.writeQuery({
           query: parse(operation.body),
-          data: prefetch[operation.prefetchID].data,
+          data: structuredContent.prefetch[operation.prefetchID].data,
         });
       }
 
       if (operation.tools.find((tool) => tool.name === toolName)) {
-        this.writeQuery({
-          query: parse(operation.body),
-          data: result.data,
-          variables: getVariablesForOperationFromToolInput(operation, args),
-        });
+        if (structuredContent.result?.data) {
+          this.writeQuery({
+            query: parse(operation.body),
+            data: structuredContent.result.data,
+            variables: getVariablesForOperationFromToolInput(operation, args),
+          });
+        }
       }
     });
   });
