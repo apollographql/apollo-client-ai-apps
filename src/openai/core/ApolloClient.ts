@@ -17,11 +17,14 @@ import {
   cacheAsync,
   getToolNamesFromDocument,
   getVariablesForOperationFromToolInput,
+  promiseWithResolvers,
   warnOnVariableMismatch,
 } from "../../utilities/index.js";
 import { ToolHydrationLink } from "../../link/ToolHydrationLink.js";
-import { McpAppManager } from "./McpAppManager.js";
+import { McpAppManager } from "../../core/McpAppManager.js";
 import { getVariableNamesFromDocument } from "../../utilities/getVariableNamesFromDocument.js";
+import type { ApolloMcpServerApps } from "../../core/types.js";
+import { connectToHost } from "../../core/connectToHost.js";
 
 export declare namespace ApolloClient {
   export interface Options extends Omit<BaseApolloClient.Options, "link"> {
@@ -68,7 +71,61 @@ export class ApolloClient extends BaseApolloClient {
 
     this.#toolHydrationLink = toolHydrationLink;
     this.manifest = options.manifest;
-    this.appManager = new McpAppManager(this.manifest);
+    this.appManager = new McpAppManager(this.manifest, async (app) => {
+      const toolResult =
+        promiseWithResolvers<ApolloMcpServerApps.CallToolResult>();
+
+      app.ontoolresult = (params) => {
+        toolResult.resolve(
+          params as unknown as ApolloMcpServerApps.CallToolResult
+        );
+      };
+
+      await connectToHost(app);
+
+      // After a page refresh, OpenAI does not re-send `ui/notifications/tool-result`.
+      // Instead, the tool result is available immediately via `window.openai.toolOutput`.
+      // If it's already set, resolve the promise now rather than waiting for the
+      // notification that will never arrive.
+      if (window.openai.toolOutput !== null) {
+        toolResult.resolve({
+          structuredContent: window.openai.toolOutput,
+          content: [],
+        });
+      }
+
+      const { structuredContent } = await toolResult.promise;
+
+      return {
+        structuredContent: {
+          ...structuredContent,
+          ...(
+            window.openai
+              .toolResponseMetadata as ApolloMcpServerApps.Meta | null
+          )?.structuredContent,
+        },
+        toolName: app.getHostContext()?.toolInfo?.tool.name,
+
+        // OpenAI is not consistent about sending `ui/notifications/tool-input`.
+        // Sometimes it doesn't send at all, other times it sends more than once
+        // before we get the tool result (which should always happen and at most
+        // once according to the spec). Rather than relying on the
+        // `ui/notifications/tool-input` notification to set the tool input value,
+        // we read from `window.openai.toolInput so that we have the most recent
+        // set value.
+        //
+        // When OpenAI fixes this issue and sends `ui/notifications/tool-input`
+        // consistently according to the MCP Apps specification, this can be
+        // reverted to use the `app.ontoolinput` callback.
+        toolInput: window.openai.toolInput,
+
+        // OpenAI doesn't provide access to `_meta`, so we need to use
+        // window.openai.toolResponseMetadata directly
+        _meta: window.openai.toolResponseMetadata as
+          | ApolloMcpServerApps.Meta
+          | undefined,
+      };
+    });
   }
 
   setLink(newLink: ApolloLink): void {
@@ -134,10 +191,10 @@ export class ApolloClient extends BaseApolloClient {
   }
 
   connect = cacheAsync(async () => {
-    const { structuredContent, toolName, args } =
+    const { structuredContent, toolName, toolInput } =
       await this.appManager.connect();
 
-    this.#toolInput = args;
+    this.#toolInput = toolInput;
 
     this.manifest.operations.forEach((operation) => {
       if (
@@ -160,7 +217,10 @@ export class ApolloClient extends BaseApolloClient {
       ) {
         this.#toolHydrationLink.hydrate(operation, {
           result: structuredContent.result,
-          variables: getVariablesForOperationFromToolInput(operation, args),
+          variables: getVariablesForOperationFromToolInput(
+            operation,
+            toolInput
+          ),
         });
       }
     });
