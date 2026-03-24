@@ -8,7 +8,6 @@ import {
   NetworkStatus,
   gql,
 } from "@apollo/client";
-import { print } from "@apollo/client/utilities";
 import { ToolCallLink } from "../../link/ToolCallLink.js";
 import {
   graphqlToolResult,
@@ -160,19 +159,27 @@ describe("prefetchData", () => {
   test("caches tool response when data is provided", async () => {
     stubOpenAiGlobals({ toolInput: { id: 1 } });
     using _ = spyOnConsole("debug");
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      manifest: mockApplicationManifest(),
-    });
-    using host = await mockMcpHost({
-      hostContext: minimalHostContextWithToolName("GetProduct"),
-    });
 
-    host.onCleanup(() => client.stop());
+    const query = gql`
+      query Product($id: ID!)
+      @tool(name: "GetProduct", description: "Get a product") {
+        product(id: $id) {
+          id
+          title
+          rating
+          price
+          description
+          images
+          __typename
+        }
+      }
+    `;
+
+    const { client, host } = await setup({ query });
+    using _host = host;
 
     host.sendToolInput({ arguments: { id: 1 } });
     host.sendToolResult({
-      content: [],
       structuredContent: {
         result: {
           data: {
@@ -192,25 +199,39 @@ describe("prefetchData", () => {
 
     await client.connect();
 
-    expect(client.extract()).toMatchInlineSnapshot(`
-      {
-        "Product:1": {
-          "__typename": "Product",
-          "description": "Awesome pen",
-          "id": "1",
-          "images": [],
-          "price": 1,
-          "rating": 5,
-          "title": "Pen",
+    await expect(
+      client.query({ query, variables: { id: 1 } })
+    ).resolves.toStrictEqual({
+      data: {
+        product: {
+          id: "1",
+          title: "Pen",
+          rating: 5,
+          price: 1.0,
+          description: "Awesome pen",
+          images: [],
+          __typename: "Product",
         },
-        "ROOT_QUERY": {
-          "__typename": "Query",
-          "product({"id":1})": {
-            "__ref": "Product:1",
-          },
+      },
+    });
+
+    expect(client.extract()).toStrictEqual({
+      "Product:1": {
+        __typename: "Product",
+        description: "Awesome pen",
+        id: "1",
+        images: [],
+        price: 1,
+        rating: 5,
+        title: "Pen",
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        'product({"id":1})': {
+          __ref: "Product:1",
         },
-      }
-    `);
+      },
+    });
   });
 
   test("caches prefetched data when prefetched data is provided", async () => {
@@ -294,39 +315,42 @@ describe("prefetchData", () => {
   test("caches both prefetch and tool response when both are provided", async () => {
     stubOpenAiGlobals({ toolInput: { id: 1 } });
     using _ = spyOnConsole("debug");
+
+    const prefetchQuery = gql`
+      query TopProducts
+      @tool(description: "Shows the currently highest rated products.")
+      @prefetch {
+        topProducts {
+          id
+          title
+          rating
+          price
+          __typename
+        }
+      }
+    `;
+
+    const query = gql`
+      query Product($id: ID!)
+      @tool(name: "GetProduct", description: "Get a product") {
+        product(id: $id) {
+          id
+          title
+          rating
+          price
+          description
+          images
+          __typename
+        }
+      }
+    `;
+
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       manifest: mockApplicationManifest({
         operations: [
-          {
-            id: "c43af26552874026c3fb346148c5795896aa2f3a872410a0a2621cffee25291c",
-            name: "Product",
-            type: "query",
-            body: "query Product($id: ID!) {\n  product(id: $id) {\n    id\n    title\n    rating\n    price\n    description\n    images\n    __typename\n  }\n}",
-            variables: { id: "ID" },
-            prefetch: false,
-            tools: [
-              {
-                name: "GetProduct",
-                description: "Shows the details page for a specific product.",
-              },
-            ],
-          },
-          {
-            id: "cd0d52159b9003e791de97c6a76efa03d34fe00cee278d1a3f4bfcec5fb3e1e6",
-            name: "TopProducts",
-            type: "query",
-            body: "query TopProducts {\n  topProducts {\n    id\n    title\n    rating\n    price\n    __typename\n  }\n}",
-            variables: {},
-            prefetch: true,
-            prefetchID: "__anonymous",
-            tools: [
-              {
-                name: "TopProducts",
-                description: "Shows the currently highest rated products.",
-              },
-            ],
-          },
+          parseManifestOperation(prefetchQuery),
+          parseManifestOperation(query),
         ],
       }),
     });
@@ -338,7 +362,6 @@ describe("prefetchData", () => {
 
     host.sendToolInput({ arguments: { id: 1 } });
     host.sendToolResult({
-      content: [],
       structuredContent: {
         result: {
           data: {
@@ -375,7 +398,53 @@ describe("prefetchData", () => {
 
     await client.connect();
 
-    expect(client.extract()).toMatchInlineSnapshot(`
+    await expect(
+      client.query({ query, variables: { id: 1 } })
+    ).resolves.toStrictEqual({
+      data: {
+        product: {
+          id: "1",
+          title: "Pen",
+          rating: 5,
+          price: 1.0,
+          description: "Awesome pen",
+          images: [],
+          __typename: "Product",
+        },
+      },
+    });
+
+    expect(client.extract()).toMatchInlineSnapshot(
+      {
+        "Product:1": {
+          __typename: "Product",
+          description: "Awesome pen",
+          id: "1",
+          images: [],
+          price: 1,
+          rating: 5,
+          title: "Pen",
+        },
+        "Product:2": {
+          __typename: "Product",
+          id: "2",
+          price: 999.99,
+          rating: 5,
+          title: "iPhone 17",
+        },
+        ROOT_QUERY: {
+          __typename: "Query",
+          'product({"id":1})': {
+            __ref: "Product:1",
+          },
+          topProducts: [
+            {
+              __ref: "Product:2",
+            },
+          ],
+        },
+      },
+      `
       {
         "Product:1": {
           "__typename": "Product",
@@ -405,21 +474,30 @@ describe("prefetchData", () => {
           ],
         },
       }
-    `);
+    `
+    );
   });
 
   test("excludes extra inputs when writing to cache", async () => {
     stubOpenAiGlobals({ toolInput: { id: 1, myOtherThing: 2 } });
     using _ = spyOnConsole("debug");
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      manifest: mockApplicationManifest(),
-    });
-    using host = await mockMcpHost({
-      hostContext: minimalHostContextWithToolName("GetProduct"),
-    });
 
-    host.onCleanup(() => client.stop());
+    const query = gql`
+      query Product($id: ID!)
+      @tool(name: "GetProduct", description: "Get a product") {
+        product(id: $id) {
+          id
+          title
+          rating
+          price
+          description
+          images
+          __typename
+        }
+      }
+    `;
+    const { client, host } = await setup({ query });
+    using _host = host;
 
     host.sendToolInput({ arguments: { id: 1, myOtherThing: 2 } });
     host.sendToolResult({
@@ -443,25 +521,39 @@ describe("prefetchData", () => {
 
     await client.connect();
 
-    expect(client.extract()).toMatchInlineSnapshot(`
-      {
-        "Product:1": {
-          "__typename": "Product",
-          "description": "Awesome pen",
-          "id": "1",
-          "images": [],
-          "price": 1,
-          "rating": 5,
-          "title": "Pen",
+    await expect(
+      client.query({ query, variables: { id: 1 } })
+    ).resolves.toStrictEqual({
+      data: {
+        product: {
+          id: "1",
+          title: "Pen",
+          rating: 5,
+          price: 1.0,
+          description: "Awesome pen",
+          images: [],
+          __typename: "Product",
         },
-        "ROOT_QUERY": {
-          "__typename": "Query",
-          "product({"id":1})": {
-            "__ref": "Product:1",
-          },
+      },
+    });
+
+    expect(client.extract()).toStrictEqual({
+      "Product:1": {
+        __typename: "Product",
+        description: "Awesome pen",
+        id: "1",
+        images: [],
+        price: 1,
+        rating: 5,
+        title: "Pen",
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        'product({"id":1})': {
+          __ref: "Product:1",
         },
-      }
-    `);
+      },
+    });
   });
 });
 
@@ -481,7 +573,8 @@ test("reads result data from toolResponseMetadata.structuredContent", async () =
   using _ = spyOnConsole("debug");
 
   const query = gql`
-    query Product($id: ID!) {
+    query Product($id: ID!)
+    @tool(name: "GetProduct", description: "Get a product") {
       product(id: $id) @private {
         id
         title
@@ -490,36 +583,23 @@ test("reads result data from toolResponseMetadata.structuredContent", async () =
     }
   `;
 
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    manifest: mockApplicationManifest({
-      operations: [
-        {
-          id: "c43af26552874026c3fb346148c5795896aa2f3a872410a0a2621cffee25291c",
-          name: "Product",
-          type: "query",
-          body: print(query),
-          variables: { id: "ID" },
-          prefetch: false,
-          tools: [{ name: "GetProduct", description: "Get a product" }],
-        },
-      ],
-    }),
-  });
-  using host = await mockMcpHost({
-    hostContext: minimalHostContextWithToolName("GetProduct"),
-  });
-  host.onCleanup(() => client.stop());
+  const { client, host } = await setup({ query });
+  using _host = host;
 
   host.sendToolInput({ arguments: { id: "1" } });
   host.sendToolResult({
-    content: [],
     structuredContent: {},
   });
 
   await client.connect();
 
-  expect(client.extract()).toEqual({
+  await expect(
+    client.query({ query, variables: { id: "1" } })
+  ).resolves.toStrictEqual({
+    data: { product: { id: "1", title: "Pen", __typename: "Product" } },
+  });
+
+  expect(client.extract()).toStrictEqual({
     "Product:1": {
       __typename: "Product",
       id: "1",
@@ -548,7 +628,9 @@ test("merges prefetch from structuredContent and result from toolResponseMetadat
   using _ = spyOnConsole("debug");
 
   const prefetchQuery = gql`
-    query TopProducts {
+    query TopProducts
+    @tool(description: "Shows the currently highest rated products.")
+    @prefetch {
       topProducts {
         id
         title
@@ -558,7 +640,8 @@ test("merges prefetch from structuredContent and result from toolResponseMetadat
   `;
 
   const query = gql`
-    query Product($id: ID!) {
+    query Product($id: ID!)
+    @tool(name: "GetProduct", description: "Get a product") {
       product(id: $id) @private {
         id
         title
@@ -571,30 +654,8 @@ test("merges prefetch from structuredContent and result from toolResponseMetadat
     cache: new InMemoryCache(),
     manifest: mockApplicationManifest({
       operations: [
-        {
-          id: "1",
-          name: "TopProducts",
-          body: print(prefetchQuery),
-          type: "query",
-          variables: {},
-          prefetch: true,
-          prefetchID: "__anonymous",
-          tools: [
-            {
-              name: "TopProducts",
-              description: "Shows the currently highest rated products.",
-            },
-          ],
-        },
-        {
-          id: "2",
-          name: "Product",
-          body: print(query),
-          type: "query",
-          variables: { id: "ID" },
-          prefetch: false,
-          tools: [{ name: "GetProduct", description: "Get a product" }],
-        },
+        parseManifestOperation(prefetchQuery),
+        parseManifestOperation(query),
       ],
     }),
   });
@@ -605,7 +666,6 @@ test("merges prefetch from structuredContent and result from toolResponseMetadat
 
   host.sendToolInput({ arguments: { id: "2" } });
   host.sendToolResult({
-    content: [],
     structuredContent: {
       prefetch: {
         __anonymous: {
@@ -618,6 +678,12 @@ test("merges prefetch from structuredContent and result from toolResponseMetadat
   });
 
   await client.connect();
+
+  await expect(
+    client.query({ query, variables: { id: "2" } })
+  ).resolves.toStrictEqual({
+    data: { product: { id: "2", title: "iPad", __typename: "Product" } },
+  });
 
   expect(client.extract()).toEqual({
     "Product:1": {
@@ -654,7 +720,8 @@ test("toolResponseMetadata.structuredContent wins over structuredContent", async
   using _ = spyOnConsole("debug");
 
   const query = gql`
-    query Product($id: ID!) {
+    query Product($id: ID!)
+    @tool(name: "GetProduct", description: "Get a product") {
       product(id: $id) {
         id
         title @private
@@ -663,30 +730,11 @@ test("toolResponseMetadata.structuredContent wins over structuredContent", async
     }
   `;
 
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    manifest: mockApplicationManifest({
-      operations: [
-        {
-          id: "1",
-          name: "Product",
-          body: print(query),
-          type: "query",
-          variables: { id: "ID" },
-          prefetch: false,
-          tools: [{ name: "GetProduct", description: "Get a product" }],
-        },
-      ],
-    }),
-  });
-  using host = await mockMcpHost({
-    hostContext: minimalHostContextWithToolName("GetProduct"),
-  });
-  host.onCleanup(() => client.stop());
+  const { client, host } = await setup({ query });
+  using _host = host;
 
   host.sendToolInput({ arguments: { id: "1" } });
   host.sendToolResult({
-    content: [],
     structuredContent: {
       result: {
         data: {
@@ -698,7 +746,13 @@ test("toolResponseMetadata.structuredContent wins over structuredContent", async
 
   await client.connect();
 
-  expect(client.extract()).toEqual({
+  await expect(
+    client.query({ query, variables: { id: "1" } })
+  ).resolves.toStrictEqual({
+    data: { product: { id: "1", title: "Meta title", __typename: "Product" } },
+  });
+
+  expect(client.extract()).toStrictEqual({
     "Product:1": {
       __typename: "Product",
       id: "1",
@@ -731,14 +785,24 @@ test("connects using window.openai.toolOutput when tool-result notification is n
     toolInput: { id: "1" },
   });
   using _ = spyOnConsole("debug");
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    manifest: mockApplicationManifest(),
-  });
-  using host = await mockMcpHost({
-    hostContext: minimalHostContextWithToolName("GetProduct"),
-  });
-  host.onCleanup(() => client.stop());
+
+  const query = gql`
+    query Product($id: ID!)
+    @tool(name: "GetProduct", description: "Get a product") {
+      product(id: $id) {
+        id
+        title
+        rating
+        price
+        description
+        images
+        __typename
+      }
+    }
+  `;
+
+  const { client, host } = await setup({ query });
+  using _host = host;
 
   host.sendToolInput({ arguments: { id: "1" } });
   // No host.sendToolResult() — simulates page reload where ChatGPT does not
@@ -750,25 +814,39 @@ test("connects using window.openai.toolOutput when tool-result notification is n
   // before `using host` disposes and closes the app connection.
   await new Promise((resolve) => setImmediate(resolve));
 
-  expect(client.extract()).toMatchInlineSnapshot(`
-    {
-      "Product:1": {
-        "__typename": "Product",
-        "description": "Awesome pen",
-        "id": "1",
-        "images": [],
-        "price": 1,
-        "rating": 5,
-        "title": "Pen",
+  await expect(
+    client.query({ query, variables: { id: "1" } })
+  ).resolves.toStrictEqual({
+    data: {
+      product: {
+        id: "1",
+        title: "Pen",
+        rating: 5,
+        price: 1.0,
+        description: "Awesome pen",
+        images: [],
+        __typename: "Product",
       },
-      "ROOT_QUERY": {
-        "__typename": "Query",
-        "product({"id":"1"})": {
-          "__ref": "Product:1",
-        },
+    },
+  });
+
+  expect(client.extract()).toStrictEqual({
+    "Product:1": {
+      __typename: "Product",
+      description: "Awesome pen",
+      id: "1",
+      images: [],
+      price: 1,
+      rating: 5,
+      title: "Pen",
+    },
+    ROOT_QUERY: {
+      __typename: "Query",
+      'product({"id":"1"})': {
+        __ref: "Product:1",
       },
-    }
-  `);
+    },
+  });
 });
 
 describe("custom links", () => {
