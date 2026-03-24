@@ -4,7 +4,6 @@ import { ApolloProvider } from "../../ApolloProvider.js";
 import { waitFor } from "@testing-library/react";
 import { ApolloClient } from "../../../openai/core/ApolloClient.js";
 import { gql, InMemoryCache } from "@apollo/client";
-import { print } from "@apollo/client/utilities";
 import {
   minimalHostContextWithToolName,
   mockApplicationManifest,
