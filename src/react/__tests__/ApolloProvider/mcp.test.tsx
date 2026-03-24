@@ -13,12 +13,58 @@ import {
   spyOnConsole,
 } from "../../../testing/internal/index.js";
 
-test("hydrates the tool result and writes the cache when first queried", async () => {
+test("writes prefetch data to the cache when immediately available", async () => {
   using _ = spyOnConsole("debug");
 
-  const toolName = "GreetingQuery";
+  const query = gql`
+    query GreetingQuery @tool(description: "Fetches a greeting") @prefetch {
+      greeting
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    manifest: mockApplicationManifest({
+      operations: [parseManifestOperation(query)],
+    }),
+  });
+
   using host = await mockMcpHost({
-    hostContext: minimalHostContextWithToolName(toolName),
+    hostContext: minimalHostContextWithToolName("OtherTool"),
+  });
+  host.onCleanup(() => client.stop());
+
+  host.sendToolInput({ arguments: {} });
+  host.sendToolResult({
+    structuredContent: {
+      result: {
+        data: null,
+      },
+      prefetch: {
+        __anonymous: { data: { greeting: "hello" } },
+      },
+    },
+  });
+
+  await renderAsync(<ApolloProvider client={client} />, {
+    wrapper: ({ children }) => <Suspense>{children}</Suspense>,
+  });
+
+  await waitFor(() => {
+    expect(client.extract()).toStrictEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        greeting: "hello",
+      },
+    });
+  });
+});
+
+test("hydrates the tool result and writes to the cache when query first executes", async () => {
+  using _ = spyOnConsole("debug");
+
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GreetingQuery"),
   });
   host.onCleanup(() => client.stop());
 
@@ -27,9 +73,6 @@ test("hydrates the tool result and writes the cache when first queried", async (
       greeting
     }
   `;
-  const data = {
-    greeting: "hello",
-  };
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -48,7 +91,7 @@ test("hydrates the tool result and writes the cache when first queried", async (
 
   host.sendToolInput({ arguments: {} });
   host.sendToolResult({
-    structuredContent: { result: { data } },
+    structuredContent: { result: { data: { greeting: "hello" } } },
   });
 
   await expect(
