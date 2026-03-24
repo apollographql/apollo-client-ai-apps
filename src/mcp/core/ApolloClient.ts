@@ -20,10 +20,14 @@ import {
   getToolNamesFromDocument,
   getVariableNamesFromDocument,
   getVariablesForOperationFromToolInput,
+  promiseWithResolvers,
   warnOnVariableMismatch,
 } from "../../utilities/index.js";
 import { ToolHydrationLink } from "../../link/ToolHydrationLink.js";
-import { McpAppManager } from "./McpAppManager.js";
+import { McpAppManager } from "../../core/McpAppManager.js";
+import type { ApolloMcpServerApps } from "../../core/types.js";
+import type { App } from "@modelcontextprotocol/ext-apps";
+import { connectToHost } from "../../core/connectToHost.js";
 
 export declare namespace ApolloClient {
   export interface Options extends Omit<BaseApolloClient.Options, "link"> {
@@ -70,7 +74,47 @@ export class ApolloClient extends BaseApolloClient {
 
     this.#toolHydrationLink = toolHydrationLink;
     this.manifest = options.manifest;
-    this.appManager = new McpAppManager(this.manifest);
+    this.appManager = new McpAppManager(this.manifest, async (app) => {
+      let toolResult =
+        promiseWithResolvers<ApolloMcpServerApps.CallToolResult>();
+      let toolInput = promiseWithResolvers<Parameters<App["ontoolinput"]>[0]>();
+
+      app.ontoolresult = (params) => {
+        toolResult.resolve(
+          params as unknown as ApolloMcpServerApps.CallToolResult
+        );
+      };
+
+      app.ontoolinput = (params) => {
+        toolInput.resolve(params);
+      };
+
+      await connectToHost(app);
+
+      const { structuredContent, _meta } = await toolResult.promise;
+      const { arguments: args } = await toolInput.promise;
+
+      // Some hosts do not provide toolInfo in the ui/initialize response, so we
+      // fallback to `_meta.toolName` provided by Apollo MCP server if the value
+      // is not available.
+      const toolName =
+        app.getHostContext()?.toolInfo?.tool.name ??
+        _meta?.toolName ??
+        // Some hosts do not forward `_meta` nor do they provide `toolInfo`. Our
+        // MCP server provides `toolName` in `structuredContent` as a workaround
+        // that we can use if all else fails
+        structuredContent.toolName;
+
+      return {
+        structuredContent: {
+          ...structuredContent,
+          ..._meta?.structuredContent,
+        },
+        toolName,
+        toolInput: args,
+        _meta,
+      };
+    });
   }
 
   setLink(newLink: ApolloLink): void {
@@ -135,10 +179,10 @@ export class ApolloClient extends BaseApolloClient {
   }
 
   connect = cacheAsync(async () => {
-    const { structuredContent, toolName, args } =
+    const { structuredContent, toolName, toolInput } =
       await this.appManager.connect();
 
-    this.#toolInput = args;
+    this.#toolInput = toolInput;
 
     this.manifest.operations.forEach((operation) => {
       if (
@@ -161,7 +205,10 @@ export class ApolloClient extends BaseApolloClient {
       ) {
         this.#toolHydrationLink.hydrate(operation, {
           result: structuredContent.result,
-          variables: getVariablesForOperationFromToolInput(operation, args),
+          variables: getVariablesForOperationFromToolInput(
+            operation,
+            toolInput
+          ),
         });
       }
     });
