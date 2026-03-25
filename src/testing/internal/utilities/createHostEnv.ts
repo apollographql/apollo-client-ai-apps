@@ -81,7 +81,7 @@ export function createHostEnv(hostEnv: "openai" | "mcp") {
       params.toolResult.structuredContent = structuredContent;
     }
 
-    // OpenAI doesn't not set _meta in the notification
+    // OpenAI doesn't set _meta in the notification
     if (hostEnv === "mcp" && _meta) {
       params.toolResult._meta = _meta;
     }
