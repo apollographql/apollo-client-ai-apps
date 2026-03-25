@@ -100,6 +100,12 @@ export function createHostEnv(hostEnv: "openai" | "mcp") {
       });
     }
 
-    return { host, params };
+    return {
+      host,
+      params,
+      [Symbol.dispose]() {
+        host[Symbol.dispose]();
+      },
+    };
   };
 }

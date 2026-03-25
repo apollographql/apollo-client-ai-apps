@@ -22,7 +22,7 @@ eachHostEnv((setupHost, ApolloClient, { hostEnv }) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "GetProduct",
@@ -30,7 +30,7 @@ eachHostEnv((setupHost, ApolloClient, { hostEnv }) => {
         result: { structuredContent: { result: { data: { product: null } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
@@ -63,11 +63,11 @@ eachHostEnv((setupHost, ApolloClient, { hostEnv }) => {
         manifest: mockApplicationManifest(),
       });
 
-      const { host } = await setupHost({
+      using env = await setupHost({
         client,
         toolCall: { name: "GetProduct" },
       });
-      using _host = host;
+      const { host } = env;
 
       host.sendToolResult({
         structuredContent: { result: { data: { product: null } } },

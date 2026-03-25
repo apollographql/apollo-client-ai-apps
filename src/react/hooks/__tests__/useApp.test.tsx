@@ -23,11 +23,11 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: { name: "Test", result: { structuredContent: {} } },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);

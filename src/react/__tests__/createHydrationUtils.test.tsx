@@ -37,7 +37,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "GetProductsByCategory",
@@ -45,7 +45,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         result: { structuredContent: { result: { data: { products: [] } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
@@ -96,7 +96,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       }),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "OtherTool",
@@ -104,7 +104,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         result: { structuredContent: { result: { data: { product: null } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
@@ -153,7 +153,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "GetProduct",
@@ -161,7 +161,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         result: { structuredContent: { result: { data: { product: null } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
@@ -199,7 +199,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "OtherTool",
@@ -207,7 +207,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         result: { structuredContent: { result: { data: { product: null } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
@@ -235,7 +235,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "GetProductsByCategory",
@@ -243,7 +243,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         result: { structuredContent: { result: { data: { products: [] } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
@@ -291,7 +291,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "GetProductsByCategory",
@@ -299,7 +299,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         result: { structuredContent: { result: { data: { products: [] } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
@@ -347,7 +347,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "GetProductsByCategory",
@@ -355,7 +355,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         result: { structuredContent: { result: { data: { products: [] } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
@@ -400,7 +400,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "GetProductsByCategory",
@@ -408,7 +408,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         result: { structuredContent: { result: { data: { products: [] } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
@@ -453,7 +453,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "GetProductsByCategory",
@@ -461,7 +461,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         result: { structuredContent: { result: { data: { products: [] } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
@@ -530,7 +530,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "GetProductsByCategory",
@@ -538,7 +538,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         result: { structuredContent: { result: { data: { products: [] } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
@@ -577,7 +577,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "GetProductsByCategory",
@@ -585,7 +585,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         result: { structuredContent: { result: { data: { products: [] } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
@@ -672,7 +672,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       }),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "OtherTool",
@@ -680,7 +680,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         result: { structuredContent: { result: { data: { product: null } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
@@ -732,7 +732,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "GetProductsByCategory",
@@ -740,7 +740,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         result: { structuredContent: { result: { data: { products: [] } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
@@ -783,7 +783,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "GetProductsByCategory",
@@ -791,7 +791,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         result: { structuredContent: { result: { data: { products: [] } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
@@ -851,7 +851,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "GetProductsByCategory",
@@ -859,7 +859,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         result: { structuredContent: { result: { data: { products: [] } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
@@ -913,7 +913,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "OtherTool",
@@ -921,7 +921,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         result: { structuredContent: { result: { data: { products: [] } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
@@ -962,7 +962,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "GetProductsByCategory",
@@ -970,7 +970,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         result: { structuredContent: { result: { data: { products: [] } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
@@ -1039,7 +1039,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "GetProductsAlt",
@@ -1047,7 +1047,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         result: { structuredContent: { result: { data: { products: [] } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
@@ -1086,7 +1086,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "GetProductsByCategory",
@@ -1094,7 +1094,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         result: { structuredContent: { result: { data: { products: [] } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
@@ -1167,7 +1167,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host, params } = await setupHost({
+    using env = await setupHost({
       client,
       toolCall: {
         name: "GetProductsByCategory",
@@ -1175,7 +1175,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         result: { structuredContent: { result: { data: { products: [] } } } },
       },
     });
-    using _host = host;
+    const { host, params } = env;
 
     host.sendToolInput(params.toolInput);
     host.sendToolResult(params.toolResult);
