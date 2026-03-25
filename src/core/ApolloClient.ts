@@ -1,4 +1,4 @@
-import { AbstractApolloClient as AbstractApolloClient } from "../core/ApolloClient.js";
+import { AbstractApolloClient } from "./AbstractApolloClient.js";
 import type { ApplicationManifest } from "../types/application-manifest.js";
 import { aiClientSymbol } from "../utilities/constants.js";
 

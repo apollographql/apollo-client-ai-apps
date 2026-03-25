@@ -15,7 +15,7 @@ export type {
   ToolName,
 } from "./core/typeRegistration.js";
 
-export { ApolloClient } from "./stubs/ApolloClient.js";
+export { ApolloClient } from "./core/ApolloClient.js";
 export { ToolCallLink } from "./link/ToolCallLink.js";
 
 export { Platform } from "./core/Platform.js";
