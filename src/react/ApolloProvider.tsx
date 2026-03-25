@@ -3,7 +3,7 @@ import { use } from "react";
 import { ApolloProvider as BaseApolloProvider } from "@apollo/client/react";
 import { ApolloClient as OpenAiApolloClient } from "../openai/core/ApolloClient.js";
 import { ApolloClient as McpApolloClient } from "../mcp/core/ApolloClient.js";
-import type { ApolloClient as FallbackApolloClient } from "../stubs/ApolloClient.js";
+import type { ApolloClient as FallbackApolloClient } from "../core/ApolloClient.js";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { aiClientSymbol, invariant } from "../utilities/index.js";
 
