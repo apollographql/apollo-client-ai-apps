@@ -9,13 +9,14 @@ export function eachHostEnv(
     setupHost: ReturnType<typeof createHostEnv>,
     ApolloClient: new (
       options: AbstractApolloClient.Options
-    ) => AbstractApolloClient
+    ) => AbstractApolloClient,
+    opts: { hostEnv: "mcp" | "openai" }
   ) => void | PromiseLike<void>
 ) {
   describe.each([
     ["mcp", McpApolloClient],
     ["openai", OpenAiApolloClient],
   ] as const)("Host: %s", (hostEnv, ApolloClient) => {
-    return suite(createHostEnv(hostEnv), ApolloClient);
+    return suite(createHostEnv(hostEnv), ApolloClient, { hostEnv });
   });
 }
