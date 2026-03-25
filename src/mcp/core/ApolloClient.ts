@@ -11,9 +11,10 @@ export declare namespace ApolloClient {
 export class ApolloClient extends AbstractApolloClient {
   constructor(options: ApolloClient.Options) {
     super(options, async (app) => {
-      let toolResult =
+      const toolResult =
         promiseWithResolvers<ApolloMcpServerApps.CallToolResult>();
-      let toolInput = promiseWithResolvers<Parameters<App["ontoolinput"]>[0]>();
+      const toolInput =
+        promiseWithResolvers<Parameters<App["ontoolinput"]>[0]>();
 
       app.ontoolresult = (params) => {
         toolResult.resolve(
