@@ -28,7 +28,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       client,
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("GetProduct"),
-      structuredContent: { result: { data: { product: null } } },
+      toolResult: { structuredContent: { result: { data: { product: null } } } },
     });
     using _host = host;
 
@@ -68,7 +68,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       client,
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("GetProduct"),
-      structuredContent: { result: { data: { product: null } } },
+      toolResult: { structuredContent: { result: { data: { product: null } } } },
     });
     using _host = host;
 

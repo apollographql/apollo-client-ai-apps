@@ -43,7 +43,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
-      structuredContent: { result: { data: { products: [] } } },
+      toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
     using _host = host;
 
@@ -98,7 +98,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("OtherTool"),
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
-      structuredContent: { result: { data: { product: null } } },
+      toolResult: { structuredContent: { result: { data: { product: null } } } },
     });
     using _host = host;
 
@@ -151,7 +151,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("GetProduct"),
       toolInput: { id: "1" },
-      structuredContent: { result: { data: { product: null } } },
+      toolResult: { structuredContent: { result: { data: { product: null } } } },
     });
     using _host = host;
 
@@ -193,7 +193,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("OtherTool"),
       toolInput: { id: "1" },
-      structuredContent: { result: { data: { product: null } } },
+      toolResult: { structuredContent: { result: { data: { product: null } } } },
     });
     using _host = host;
 
@@ -225,7 +225,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
-      structuredContent: { result: { data: { products: [] } } },
+      toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
     using _host = host;
 
@@ -277,7 +277,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
-      structuredContent: { result: { data: { products: [] } } },
+      toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
     using _host = host;
 
@@ -329,7 +329,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
-      structuredContent: { result: { data: { products: [] } } },
+      toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
     using _host = host;
 
@@ -378,7 +378,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
-      structuredContent: { result: { data: { products: [] } } },
+      toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
     using _host = host;
 
@@ -427,7 +427,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
-      structuredContent: { result: { data: { products: [] } } },
+      toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
     using _host = host;
 
@@ -500,7 +500,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
-      structuredContent: { result: { data: { products: [] } } },
+      toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
     using _host = host;
 
@@ -543,7 +543,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
-      structuredContent: { result: { data: { products: [] } } },
+      toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
     using _host = host;
 
@@ -634,7 +634,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("OtherTool"),
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
-      structuredContent: { result: { data: { product: null } } },
+      toolResult: { structuredContent: { result: { data: { product: null } } } },
     });
     using _host = host;
 
@@ -690,7 +690,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
       toolInput: { category: "electronics" },
-      structuredContent: { result: { data: { products: [] } } },
+      toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
     using _host = host;
 
@@ -737,7 +737,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
       toolInput: { category: "electronics" },
-      structuredContent: { result: { data: { products: [] } } },
+      toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
     using _host = host;
 
@@ -801,7 +801,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
       toolInput: { category: "electronics", page: 1 },
-      structuredContent: { result: { data: { products: [] } } },
+      toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
     using _host = host;
 
@@ -859,7 +859,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("OtherTool"),
       toolInput: { category: "electronics", page: 1 },
-      structuredContent: { result: { data: { products: [] } } },
+      toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
     using _host = host;
 
@@ -904,7 +904,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
-      structuredContent: { result: { data: { products: [] } } },
+      toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
     using _host = host;
 
@@ -977,7 +977,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("GetProductsAlt"),
       toolInput: { category: "electronics", page: 2, sortBy: "price" },
-      structuredContent: { result: { data: { products: [] } } },
+      toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
     using _host = host;
 
@@ -1020,7 +1020,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
-      structuredContent: { result: { data: { products: [] } } },
+      toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
     using _host = host;
 
@@ -1097,7 +1097,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
-      structuredContent: { result: { data: { products: [] } } },
+      toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
     using _host = host;
 

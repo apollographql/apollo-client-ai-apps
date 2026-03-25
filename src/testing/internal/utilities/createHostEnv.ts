@@ -1,7 +1,6 @@
 import type {
   McpUiHostContext,
   McpUiToolInputNotification,
-  McpUiToolResultNotification,
 } from "@modelcontextprotocol/ext-apps";
 import type { AbstractApolloClient } from "../../../core/AbstractApolloClient";
 import { mockMcpHost } from "../mcp/mockMcpHost";
@@ -12,6 +11,11 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 export declare namespace createHostEnv {
   export namespace setupHost {
+    export type MockToolResult = Pick<
+      ApolloMcpServerApps.CallToolResult,
+      "structuredContent" | "_meta" | "isError"
+    >;
+
     export interface Options {
       /**
        * Send the tool-input and tool-result notifications automatically.
@@ -22,14 +26,13 @@ export declare namespace createHostEnv {
       client: AbstractApolloClient;
       hostContext?: McpUiHostContext;
       toolInput?: Record<string, unknown>;
-      structuredContent?: ApolloMcpServerApps.StructuredContent;
-      _meta?: ApolloMcpServerApps.Meta;
+      toolResult?: setupHost.MockToolResult;
       customizeOpenAiGlobals?: (
         globals: Partial<OpenAiGlobals>,
         options: {
           params: {
             toolInput: McpUiToolInputNotification["params"];
-            toolResult: Partial<McpUiToolResultNotification["params"]>;
+            toolResult: Partial<setupHost.MockToolResult>;
           };
         }
       ) => Partial<OpenAiGlobals>;
@@ -44,9 +47,8 @@ export function createHostEnv(hostEnv: "openai" | "mcp") {
       client,
       hostContext,
       toolInput,
-      structuredContent,
+      toolResult,
       customizeOpenAiGlobals,
-      _meta,
     } = options;
 
     const mockOptions: mockMcpHost.Options = {};
@@ -59,30 +61,26 @@ export function createHostEnv(hostEnv: "openai" | "mcp") {
     host.onCleanup(() => client.stop());
 
     const params = {
-      toolInput: {} as McpUiToolInputNotification["params"],
-      toolResult: {} as Partial<McpUiToolResultNotification["params"]>,
+      toolInput: toolInput ? { arguments: toolInput } : {},
+      toolResult: { ...toolResult },
     };
 
     if (toolInput) {
       params.toolInput.arguments = toolInput;
     }
 
-    if (structuredContent) {
-      params.toolResult.structuredContent = structuredContent;
-    }
-
-    // OpenAI doesn't set _meta in the notification
-    if (hostEnv === "mcp" && _meta) {
-      params.toolResult._meta = _meta;
-    }
-
     if (hostEnv === "openai") {
+      // OpenAI doesn't set _meta in the notification
+      delete params.toolResult._meta;
+
       stubOpenAiGlobals((defaults) => {
         const globals: Partial<OpenAiGlobals> = { ...defaults };
 
         if (toolInput) {
           globals.toolInput = toolInput;
         }
+
+        const _meta = toolResult?._meta;
 
         if (_meta) {
           globals.toolResponseMetadata = _meta;

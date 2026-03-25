@@ -28,7 +28,7 @@ eachHostEnv((setupHost, ApolloClient) => {
       client,
       autoTriggerTool: true,
       hostContext: minimalHostContextWithToolName("Test"),
-      structuredContent: {},
+      toolResult: { structuredContent: {} },
     });
     using _host = host;
 

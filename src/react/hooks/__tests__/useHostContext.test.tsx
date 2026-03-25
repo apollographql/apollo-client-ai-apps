@@ -28,7 +28,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         ...minimalHostContextWithToolName("GetProduct"),
         theme: "light",
       },
-      structuredContent: { result: { data: { product: null } } },
+      toolResult: { structuredContent: { result: { data: { product: null } } } },
     });
     using _host = host;
 
@@ -64,7 +64,7 @@ eachHostEnv((setupHost, ApolloClient) => {
         ...minimalHostContextWithToolName("GetProduct"),
         theme: "light",
       },
-      structuredContent: { result: { data: { product: null } } },
+      toolResult: { structuredContent: { result: { data: { product: null } } } },
     });
     using _host = host;
 
