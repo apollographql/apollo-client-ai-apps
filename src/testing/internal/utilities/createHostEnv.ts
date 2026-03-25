@@ -24,6 +24,15 @@ export declare namespace createHostEnv {
       toolInput?: Record<string, unknown>;
       structuredContent?: ApolloMcpServerApps.StructuredContent;
       _meta?: ApolloMcpServerApps.Meta;
+      customizeOpenAiGlobals?: (
+        globals: Partial<OpenAiGlobals>,
+        options: {
+          params: {
+            toolInput: McpUiToolInputNotification["params"];
+            toolResult: Partial<McpUiToolResultNotification["params"]>;
+          };
+        }
+      ) => Partial<OpenAiGlobals>;
     }
   }
 }
@@ -36,28 +45,9 @@ export function createHostEnv(hostEnv: "openai" | "mcp") {
       hostContext,
       toolInput,
       structuredContent,
+      customizeOpenAiGlobals,
       _meta,
     } = options;
-
-    if (hostEnv === "openai") {
-      stubOpenAiGlobals((defaults) => {
-        const globals: Partial<OpenAiGlobals> = { ...defaults };
-
-        if (toolInput) {
-          globals.toolInput = toolInput;
-        }
-
-        if (structuredContent) {
-          globals.toolOutput = structuredContent;
-        }
-
-        if (_meta) {
-          globals.toolResponseMetadata = _meta;
-        }
-
-        return globals;
-      });
-    }
 
     const mockOptions: mockMcpHost.Options = {};
 
@@ -84,6 +74,24 @@ export function createHostEnv(hostEnv: "openai" | "mcp") {
     // OpenAI doesn't set _meta in the notification
     if (hostEnv === "mcp" && _meta) {
       params.toolResult._meta = _meta;
+    }
+
+    if (hostEnv === "openai") {
+      stubOpenAiGlobals((defaults) => {
+        const globals: Partial<OpenAiGlobals> = { ...defaults };
+
+        if (toolInput) {
+          globals.toolInput = toolInput;
+        }
+
+        if (_meta) {
+          globals.toolResponseMetadata = _meta;
+        }
+
+        return typeof customizeOpenAiGlobals === "function" ?
+            customizeOpenAiGlobals(globals, { params })
+          : globals;
+      });
     }
 
     if (autoTriggerTool) {
