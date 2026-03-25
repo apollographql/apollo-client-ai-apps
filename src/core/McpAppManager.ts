@@ -62,24 +62,22 @@ export class McpAppManager {
       this.app
     );
 
-    // Some hosts do not provide toolInfo in the ui/initialize response, so we
-    // fallback to `_meta.toolName` provided by Apollo MCP server if the value
-    // is not available.
-    const toolName =
-      this.app.getHostContext()?.toolInfo?.tool.name ??
-      _meta?.toolName ??
-      // Some hosts do not forward `_meta` nor do they provide `toolInfo`. Our
-      // MCP server provides `toolName` in `structuredContent` as a workaround
-      // that we can use if all else fails
-      structuredContent.toolName;
-
     return {
       structuredContent: {
         ...structuredContent,
         ..._meta?.structuredContent,
       },
       toolInput,
-      toolName,
+      // Some hosts do not provide toolInfo in the ui/initialize response, so we
+      // fallback to `_meta.toolName` provided by Apollo MCP server if the value
+      // is not available.
+      toolName:
+        this.app.getHostContext()?.toolInfo?.tool.name ??
+        _meta?.toolName ??
+        // Some hosts do not forward `_meta` nor do they provide `toolInfo`. Our
+        // MCP server provides `toolName` in `structuredContent` as a workaround
+        // that we can use if all else fails
+        structuredContent.toolName,
       _meta,
     };
   });
