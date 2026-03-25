@@ -77,11 +77,19 @@ export class McpAppManager {
 
     const result = await this.#connectToHost(this.app);
 
+    const structuredContent = {
+      ...result.structuredContent,
+      ...result._meta?.structuredContent,
+    };
+
     this.#toolName = result.toolName;
     this.#toolInput = result.toolInput;
     this.#toolMetadata = result._meta;
 
-    return result;
+    return {
+      ...result,
+      structuredContent,
+    };
   });
 
   close() {

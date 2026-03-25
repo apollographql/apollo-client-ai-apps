@@ -35,13 +35,7 @@ export class ApolloClient extends AbstractApolloClient {
       const { structuredContent } = await toolResult.promise;
 
       return {
-        structuredContent: {
-          ...structuredContent,
-          ...(
-            window.openai
-              .toolResponseMetadata as ApolloMcpServerApps.Meta | null
-          )?.structuredContent,
-        },
+        structuredContent,
         toolName: app.getHostContext()?.toolInfo?.tool.name,
 
         // OpenAI is not consistent about sending `ui/notifications/tool-input`.

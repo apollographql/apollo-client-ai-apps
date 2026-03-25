@@ -42,10 +42,7 @@ export class ApolloClient extends AbstractApolloClient {
         structuredContent.toolName;
 
       return {
-        structuredContent: {
-          ...structuredContent,
-          ..._meta?.structuredContent,
-        },
+        structuredContent,
         toolName,
         toolInput: args,
         _meta,
