@@ -6,6 +6,7 @@ export type { Reactive } from "./reactive.js";
 
 export { useApp } from "./hooks/useApp.js";
 export { useHostContext } from "./hooks/useHostContext.js";
+export { useToolMetadata } from "./hooks/useToolMetadata.js";
 
 // Use `mcp` related types since these are the most common between the two
 // targets
@@ -16,11 +17,6 @@ export { useHostContext } from "./hooks/useHostContext.js";
  */
 export const useToolInput =
   missingHook<typeof import("./index.mcp.js").useToolInput>("useToolInput");
-
-export const useToolMetadata =
-  missingHook<typeof import("./index.mcp.js").useToolMetadata>(
-    "useToolMetadata"
-  );
 
 /**
  * @deprecated Please use the `useToolInfo` hook. `useToolName` will be removed
