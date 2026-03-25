@@ -65,13 +65,16 @@ eachHostEnv((setupHost, ApolloClient, { hostEnv }) => {
 
       using env = await setupHost({
         client,
-        toolCall: { name: "GetProduct" },
+        toolCall: {
+          name: "GetProduct",
+          result: {
+            structuredContent: { result: { data: { product: null } } },
+          },
+        },
       });
-      const { host } = env;
+      const { host, params } = env;
 
-      host.sendToolResult({
-        structuredContent: { result: { data: { product: null } } },
-      });
+      host.sendToolResult(params.toolResult);
 
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot } = await renderHookToSnapshotStream(
