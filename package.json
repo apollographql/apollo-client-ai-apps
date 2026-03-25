@@ -60,10 +60,8 @@
       "default": "./dist/utilities/emptyModule.js"
     },
     "./react": {
-      "default": {
-        "types": "./dist/react/index.d.ts",
-        "default": "./dist/react/index.js"
-      }
+      "types": "./dist/react/index.d.ts",
+      "default": "./dist/react/index.js"
     },
     "./tsconfig/core": "./dist/tsconfig/core/tsconfig.json",
     "./tsconfig/mcp": "./dist/tsconfig/mcp/tsconfig.json",
