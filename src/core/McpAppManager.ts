@@ -74,32 +74,32 @@ export class McpAppManager {
       this.#hostContextCallbacks.forEach((cb) => cb(params));
     };
 
-    const result = await this.#connectToHost(this.app);
+    const { structuredContent, _meta, toolInput } = await this.#connectToHost(
+      this.app
+    );
 
     // Some hosts do not provide toolInfo in the ui/initialize response, so we
     // fallback to `_meta.toolName` provided by Apollo MCP server if the value
     // is not available.
     const toolName =
       this.app.getHostContext()?.toolInfo?.tool.name ??
-      result._meta?.toolName ??
+      _meta?.toolName ??
       // Some hosts do not forward `_meta` nor do they provide `toolInfo`. Our
       // MCP server provides `toolName` in `structuredContent` as a workaround
       // that we can use if all else fails
-      result.structuredContent.toolName;
-
-    const structuredContent = {
-      ...result.structuredContent,
-      ...result._meta?.structuredContent,
-    };
+      structuredContent.toolName;
 
     this.#toolName = toolName;
-    this.#toolInput = result.toolInput;
-    this.#toolMetadata = result._meta;
+    this.#toolInput = toolInput;
+    this.#toolMetadata = _meta;
 
     return {
-      ...result,
+      structuredContent: {
+        ...structuredContent,
+        ..._meta?.structuredContent,
+      },
+      toolInput,
       toolName,
-      structuredContent,
     };
   });
 
