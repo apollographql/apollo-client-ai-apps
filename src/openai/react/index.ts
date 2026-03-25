@@ -1,4 +1,3 @@
-export { useApp } from "./hooks/useApp.js";
 export { useHostContext } from "./hooks/useHostContext.js";
 export { useToolName } from "./hooks/useToolName.js";
 export { useToolMetadata } from "./hooks/useToolMetadata.js";

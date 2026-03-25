@@ -1,6 +1,5 @@
 export * from "./index.js";
 export {
-  useApp,
   useHostContext,
   useToolInput,
   useToolInfo,

@@ -4,11 +4,10 @@ export { ApolloProvider } from "./ApolloProvider.js";
 export { reactive } from "./reactive.js";
 export type { Reactive } from "./reactive.js";
 
+export { useApp } from "./hooks/useApp.js";
+
 // Use `mcp` related types since these are the most common between the two
 // targets
-export const useApp =
-  missingHook<typeof import("./index.mcp.js").useApp>("useApp");
-
 export const useHostContext =
   missingHook<typeof import("./index.mcp.js").useHostContext>("useHostContext");
 
