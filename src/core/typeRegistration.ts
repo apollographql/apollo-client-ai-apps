@@ -4,14 +4,6 @@ type RegisteredToolInputs =
   Register extends { toolInputs: infer T extends Record<string, unknown> } ? T
   : never;
 
-/**
- * @deprecated Please use the `ToolInfo` type instead. `ToolInput` will be
- * removed in the next major version.
- */
-export type ToolInput =
-  [RegisteredToolInputs] extends [never] ? Record<string, unknown>
-  : RegisteredToolInputs[keyof RegisteredToolInputs];
-
 type ToolInfoFromInputs<T extends Record<string, unknown>> = {
   [K in keyof T]: {
     toolName: K;

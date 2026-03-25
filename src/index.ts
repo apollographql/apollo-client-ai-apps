@@ -8,7 +8,7 @@ export type {
   ManifestWidgetSettings,
 } from "./types/application-manifest.js";
 
-export type { Register, ToolInfo, ToolInput } from "./core/typeRegistration.js";
+export type { Register, ToolInfo } from "./core/typeRegistration.js";
 
 export { ApolloClient } from "./core/ApolloClient.js";
 export { ToolCallLink } from "./link/ToolCallLink.js";
