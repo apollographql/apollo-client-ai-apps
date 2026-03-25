@@ -4,7 +4,7 @@
   "include": [
     "./src/vite",
     "./src/config",
-    "./src/utilities/",
+    "./src/utilities/invariant.ts",
     "./src/types/application-manifest.ts"
   ],
   "exclude": [
