@@ -17,8 +17,8 @@ type ExecuteQueryCallToolResult = Omit<CallToolResult, "structuredContent"> & {
 
 interface ConnectToHostResult {
   structuredContent: ApolloMcpServerApps.StructuredContent;
-  _meta: ApolloMcpServerApps.Meta | undefined;
   toolInput: Record<string, unknown> | undefined;
+  _meta: ApolloMcpServerApps.Meta | undefined;
 }
 
 export type ConnectToHostImplementation = (
