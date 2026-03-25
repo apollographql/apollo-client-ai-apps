@@ -21,9 +21,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "GetProduct",
         result: { structuredContent: { result: { data: { product: null } } } },
@@ -31,6 +30,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       hostContext: { theme: "light" },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -57,9 +59,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "GetProduct",
         result: { structuredContent: { result: { data: { product: null } } } },
@@ -67,6 +68,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       hostContext: { theme: "light" },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(

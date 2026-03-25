@@ -8,8 +8,6 @@ import { mockMcpHost } from "../mcp/mockMcpHost";
 import { stubOpenAiGlobals } from "../openai/stubOpenAiGlobals";
 import type { ApolloMcpServerApps } from "../../../core/types";
 import type { OpenAiGlobals } from "../../../openai/types";
-import { invariant } from "@apollo/client/utilities/invariant";
-
 export declare namespace createHostEnv {
   export namespace setupHost {
     export interface MockToolResult extends Pick<
@@ -22,12 +20,6 @@ export declare namespace createHostEnv {
     }
 
     export interface Options {
-      /**
-       * Send the tool-input and tool-result notifications automatically.
-       *
-       * @default false
-       */
-      autoTriggerTool?: boolean;
       client: AbstractApolloClient;
       hostContext?: McpUiHostContext;
       toolCall?: {
@@ -51,7 +43,6 @@ export declare namespace createHostEnv {
 export function createHostEnv(hostEnv: "openai" | "mcp") {
   return async function setupHost(options: createHostEnv.setupHost.Options) {
     const {
-      autoTriggerTool = false,
       client,
       toolCall,
       customizeOpenAiGlobals,
@@ -112,16 +103,6 @@ export function createHostEnv(hostEnv: "openai" | "mcp") {
             customizeOpenAiGlobals(globals, { params })
           : globals;
       });
-    }
-
-    if (autoTriggerTool) {
-      invariant(
-        params.toolResult.structuredContent,
-        "Must set structuredContent when autoTriggerTool is true"
-      );
-
-      host.sendToolInput(params.toolInput);
-      host.sendToolResult(params.toolResult);
     }
 
     return { host, params };

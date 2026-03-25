@@ -21,15 +21,17 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "TestTool",
         result: { structuredContent: {}, _meta: { customField: "customValue" } },
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(

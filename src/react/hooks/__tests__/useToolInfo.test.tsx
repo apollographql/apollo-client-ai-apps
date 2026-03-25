@@ -22,9 +22,8 @@ eachHostEnv((setupHost, ApolloClient, { hostEnv }) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "GetProduct",
         input: { id: "1" },
@@ -32,6 +31,9 @@ eachHostEnv((setupHost, ApolloClient, { hostEnv }) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(

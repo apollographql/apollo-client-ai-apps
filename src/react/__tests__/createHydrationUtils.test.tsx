@@ -37,9 +37,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "GetProductsByCategory",
         input: { category: "electronics", page: 1, sortBy: "title" },
@@ -47,6 +46,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
@@ -94,9 +96,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       }),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "OtherTool",
         input: { category: "electronics", page: 1, sortBy: "title" },
@@ -104,6 +105,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
@@ -149,9 +153,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "GetProduct",
         input: { id: "1" },
@@ -159,6 +162,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -193,9 +199,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "OtherTool",
         input: { id: "1" },
@@ -203,6 +208,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -227,9 +235,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "GetProductsByCategory",
         input: { category: "electronics", page: 1, sortBy: "title" },
@@ -237,6 +244,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
@@ -281,9 +291,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "GetProductsByCategory",
         input: { category: "electronics", page: 1, sortBy: "title" },
@@ -291,6 +300,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
@@ -335,9 +347,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "GetProductsByCategory",
         input: { category: "electronics", page: 1, sortBy: "title" },
@@ -345,6 +356,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
@@ -386,9 +400,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "GetProductsByCategory",
         input: { category: "electronics", page: 1, sortBy: "title" },
@@ -396,6 +409,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
@@ -437,9 +453,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "GetProductsByCategory",
         input: { category: "electronics", page: 1, sortBy: "title" },
@@ -447,6 +462,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
@@ -512,9 +530,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "GetProductsByCategory",
         input: { category: "electronics", page: 1, sortBy: "title" },
@@ -522,6 +539,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
@@ -557,9 +577,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "GetProductsByCategory",
         input: { category: "electronics", page: 1, sortBy: "title" },
@@ -567,6 +586,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
@@ -650,9 +672,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       }),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "OtherTool",
         input: { category: "electronics", page: 1, sortBy: "title" },
@@ -660,6 +681,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
@@ -708,9 +732,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "GetProductsByCategory",
         input: { category: "electronics" },
@@ -718,6 +741,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     const { useHydratedVariables } = createHydrationUtils(query);
 
@@ -757,9 +783,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "GetProductsByCategory",
         input: { category: "electronics" },
@@ -767,6 +792,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     const { useHydratedVariables } = createHydrationUtils(query);
 
@@ -823,9 +851,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "GetProductsByCategory",
         input: { category: "electronics", page: 1 },
@@ -833,6 +860,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     const { useHydratedVariables } = createHydrationUtils(query);
 
@@ -883,9 +913,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "OtherTool",
         input: { category: "electronics", page: 1 },
@@ -893,6 +922,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     const { useHydratedVariables } = createHydrationUtils(query);
 
@@ -930,9 +962,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "GetProductsByCategory",
         input: { category: "electronics", page: 1, sortBy: "title" },
@@ -940,6 +971,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
@@ -1005,9 +1039,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "GetProductsAlt",
         input: { category: "electronics", page: 2, sortBy: "price" },
@@ -1015,6 +1048,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     const { useHydratedVariables } = createHydrationUtils(MULTI_TOOL_QUERY);
 
@@ -1050,9 +1086,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "GetProductsByCategory",
         input: { category: "electronics", page: 1, sortBy: "title" },
@@ -1060,6 +1095,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
@@ -1129,9 +1167,8 @@ eachHostEnv((setupHost, ApolloClient) => {
       manifest: mockApplicationManifest(),
     });
 
-    const { host } = await setupHost({
+    const { host, params } = await setupHost({
       client,
-      autoTriggerTool: true,
       toolCall: {
         name: "GetProductsByCategory",
         input: { category: "electronics", page: 1, sortBy: "title" },
@@ -1139,6 +1176,9 @@ eachHostEnv((setupHost, ApolloClient) => {
       },
     });
     using _host = host;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
 
     const { useHydratedVariables } = createHydrationUtils(PRODUCTS_QUERY);
 
