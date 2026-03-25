@@ -1,4 +1,3 @@
-import { __DEV__ } from "@apollo/client/utilities/environment";
 import { AbstractApolloClient } from "../../core/AbstractApolloClient.js";
 import { connectToHost, promiseWithResolvers } from "../../utilities/index.js";
 import type { ApolloMcpServerApps } from "../../core/types.js";
