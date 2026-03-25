@@ -1,10 +1,9 @@
 import type { ReactNode } from "react";
 import { use } from "react";
 import { ApolloProvider as BaseApolloProvider } from "@apollo/client/react";
-import type { ApolloClient as BaseApolloClient } from "@apollo/client";
 import { ApolloClient as OpenAiApolloClient } from "../openai/core/ApolloClient.js";
 import { ApolloClient as McpApolloClient } from "../mcp/core/ApolloClient.js";
-import type { ApolloClient as FallbackApolloClient } from "../core/ApolloClient.js";
+import type { ApolloClient as FallbackApolloClient } from "../stubs/ApolloClient.js";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { aiClientSymbol, invariant } from "../utilities/index.js";
 
@@ -27,9 +26,5 @@ export function ApolloProvider({ children, client }: ApolloProvider.Props) {
 
   use(client.connect());
 
-  return (
-    <BaseApolloProvider client={client as BaseApolloClient}>
-      {children}
-    </BaseApolloProvider>
-  );
+  return <BaseApolloProvider client={client}>{children}</BaseApolloProvider>;
 }
