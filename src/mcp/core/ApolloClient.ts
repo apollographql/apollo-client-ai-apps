@@ -30,20 +30,8 @@ export class ApolloClient extends AbstractApolloClient {
       const { structuredContent, _meta } = await toolResult.promise;
       const { arguments: args } = await toolInput.promise;
 
-      // Some hosts do not provide toolInfo in the ui/initialize response, so we
-      // fallback to `_meta.toolName` provided by Apollo MCP server if the value
-      // is not available.
-      const toolName =
-        app.getHostContext()?.toolInfo?.tool.name ??
-        _meta?.toolName ??
-        // Some hosts do not forward `_meta` nor do they provide `toolInfo`. Our
-        // MCP server provides `toolName` in `structuredContent` as a workaround
-        // that we can use if all else fails
-        structuredContent.toolName;
-
       return {
         structuredContent,
-        toolName,
         toolInput: args,
         _meta,
       };

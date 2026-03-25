@@ -36,8 +36,6 @@ export class ApolloClient extends AbstractApolloClient {
 
       return {
         structuredContent,
-        toolName: app.getHostContext()?.toolInfo?.tool.name,
-
         // OpenAI is not consistent about sending `ui/notifications/tool-input`.
         // Sometimes it doesn't send at all, other times it sends more than once
         // before we get the tool result (which should always happen and at most

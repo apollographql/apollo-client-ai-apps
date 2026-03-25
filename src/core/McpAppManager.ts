@@ -19,7 +19,6 @@ interface ConnectToHostResult {
   structuredContent: ApolloMcpServerApps.StructuredContent;
   _meta: ApolloMcpServerApps.Meta | undefined;
   toolInput: Record<string, unknown> | undefined;
-  toolName: string | undefined;
 }
 
 export type ConnectToHostImplementation = (
@@ -77,17 +76,29 @@ export class McpAppManager {
 
     const result = await this.#connectToHost(this.app);
 
+    // Some hosts do not provide toolInfo in the ui/initialize response, so we
+    // fallback to `_meta.toolName` provided by Apollo MCP server if the value
+    // is not available.
+    const toolName =
+      this.app.getHostContext()?.toolInfo?.tool.name ??
+      result._meta?.toolName ??
+      // Some hosts do not forward `_meta` nor do they provide `toolInfo`. Our
+      // MCP server provides `toolName` in `structuredContent` as a workaround
+      // that we can use if all else fails
+      result.structuredContent.toolName;
+
     const structuredContent = {
       ...result.structuredContent,
       ...result._meta?.structuredContent,
     };
 
-    this.#toolName = result.toolName;
+    this.#toolName = toolName;
     this.#toolInput = result.toolInput;
     this.#toolMetadata = result._meta;
 
     return {
       ...result,
+      toolName,
       structuredContent,
     };
   });
