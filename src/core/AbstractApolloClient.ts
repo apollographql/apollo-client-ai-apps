@@ -156,8 +156,11 @@ export class AbstractApolloClient extends NativeApolloClient {
       await this.appManager.connect();
 
     this.#hydratedToolInput = toolInput;
-    this.#toolInfo = { toolName: toolName!, toolInput };
     this.#toolMetadata = _meta;
+
+    if (toolName != null) {
+      this.#toolInfo = { toolName, toolInput };
+    }
 
     this.manifest.operations.forEach((operation) => {
       if (
