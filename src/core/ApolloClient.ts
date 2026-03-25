@@ -1,12 +1,8 @@
 import { AbstractApolloClient } from "./AbstractApolloClient.js";
-import type { ApplicationManifest } from "../types/application-manifest.js";
 import { aiClientSymbol } from "../utilities/constants.js";
 
 export declare namespace ApolloClient {
-  export interface Options extends Omit<AbstractApolloClient.Options, "link"> {
-    link?: AbstractApolloClient.Options["link"];
-    manifest: ApplicationManifest;
-  }
+  export interface Options extends AbstractApolloClient.Options {}
 }
 
 export class ApolloClient extends AbstractApolloClient {
