@@ -1,3 +1,4 @@
+export { createHostEnv } from "./utilities/createHostEnv.js";
 export { dispatchStateChange } from "./openai/dispatchStateChange.js";
 export { graphqlToolResult } from "./mcp/graphqlToolResult.js";
 export { mockApplicationManifest } from "./utilities/mockApplicationManifest.js";
