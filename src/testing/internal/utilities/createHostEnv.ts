@@ -31,7 +31,7 @@ export declare namespace createHostEnv {
          * tool-result notification. Call host.sendToolInput(params.toolInput) but
          * omit host.sendToolResult() in the test.
          */
-        toolOutput?: boolean;
+        toolOutput?: true;
       };
     }
   }
