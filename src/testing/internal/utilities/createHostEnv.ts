@@ -1,7 +1,4 @@
-import type {
-  McpUiHostContext,
-  McpUiToolInputNotification,
-} from "@modelcontextprotocol/ext-apps";
+import type { McpUiHostContext } from "@modelcontextprotocol/ext-apps";
 import type { AbstractApolloClient } from "../../../core/AbstractApolloClient";
 import { minimalHostContextWithToolName } from "../mcp/minimalHostContextWithToolName";
 import { mockMcpHost } from "../mcp/mockMcpHost";
@@ -27,26 +24,22 @@ export declare namespace createHostEnv {
         input?: Record<string, unknown>;
         result?: setupHost.MockToolResult;
       };
-      customizeOpenAiGlobals?: (
-        globals: Partial<OpenAiGlobals>,
-        options: {
-          params: {
-            toolInput: McpUiToolInputNotification["params"];
-            toolResult: Partial<setupHost.MockToolResult>;
-          };
-        }
-      ) => Partial<OpenAiGlobals>;
+      openai?: {
+        /**
+         * When true, sets window.openai.toolOutput to toolCall.result.structuredContent.
+         * Simulates the page-refresh scenario where ChatGPT does not re-send the
+         * tool-result notification. Call host.sendToolInput(params.toolInput) but
+         * omit host.sendToolResult() in the test.
+         */
+        toolOutput?: boolean;
+      };
     }
   }
 }
 
 export function createHostEnv(hostEnv: "openai" | "mcp") {
   return async function setupHost(options: createHostEnv.setupHost.Options) {
-    const {
-      client,
-      toolCall,
-      customizeOpenAiGlobals,
-    } = options;
+    const { client, toolCall } = options;
 
     const toolName = toolCall?.name;
     const toolInput = toolCall?.input;
@@ -99,9 +92,11 @@ export function createHostEnv(hostEnv: "openai" | "mcp") {
           globals.toolResponseMetadata = _meta;
         }
 
-        return typeof customizeOpenAiGlobals === "function" ?
-            customizeOpenAiGlobals(globals, { params })
-          : globals;
+        if (options.openai?.toolOutput && toolResult?.structuredContent) {
+          globals.toolOutput = toolResult.structuredContent;
+        }
+
+        return globals;
       });
     }
 
