@@ -29,10 +29,6 @@ export type ConnectToHostImplementation = (
 export class McpAppManager {
   readonly app: App;
 
-  #toolName: string | undefined;
-  #toolMetadata: ApolloMcpServerApps.CallToolResult["_meta"] | undefined;
-  #toolInput: Record<string, unknown> | undefined;
-
   #connectToHost: ConnectToHostImplementation;
 
   #hostContextCallbacks = new Set<
@@ -45,18 +41,6 @@ export class McpAppManager {
   ) {
     this.app = new App({ name: manifest.name, version: manifest.appVersion });
     this.#connectToHost = connectToHost;
-  }
-
-  get toolName() {
-    return this.#toolName;
-  }
-
-  get toolMetadata() {
-    return this.#toolMetadata;
-  }
-
-  get toolInput() {
-    return this.#toolInput;
   }
 
   onHostContextChanged(
@@ -88,10 +72,6 @@ export class McpAppManager {
       // MCP server provides `toolName` in `structuredContent` as a workaround
       // that we can use if all else fails
       structuredContent.toolName;
-
-    this.#toolName = toolName;
-    this.#toolInput = toolInput;
-    this.#toolMetadata = _meta;
 
     return {
       structuredContent: {

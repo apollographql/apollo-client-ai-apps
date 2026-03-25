@@ -25,6 +25,8 @@ import {
   getVariablesForOperationFromToolInput,
   warnOnVariableMismatch,
 } from "../utilities/index.js";
+import type { ApolloMcpServerApps } from "./types.js";
+import type { ToolInfo } from "./typeRegistration.js";
 
 export declare namespace AbstractApolloClient {
   export interface Options extends Omit<NativeApolloClient.Options, "link"> {
@@ -42,6 +44,9 @@ export class AbstractApolloClient extends NativeApolloClient {
 
   #hydratedToolInput: Record<string, unknown> | undefined;
   #toolHydrationLink: ToolHydrationLink;
+
+  #toolInfo: ToolInfo | undefined;
+  #toolMetadata: ApolloMcpServerApps.CallToolResult["_meta"] | undefined;
 
   constructor(
     options: AbstractApolloClient.Options,
@@ -77,6 +82,14 @@ export class AbstractApolloClient extends NativeApolloClient {
     this.appManager = new McpAppManager(this.manifest, connectToHost);
   }
 
+  get toolInfo() {
+    return this.#toolInfo;
+  }
+
+  get toolMetadata() {
+    return this.#toolMetadata;
+  }
+
   setLink(newLink: ApolloLink): void {
     super.setLink(this.#toolHydrationLink.concat(newLink));
   }
@@ -102,7 +115,7 @@ export class AbstractApolloClient extends NativeApolloClient {
       const toolInput = this.#hydratedToolInput;
 
       if (toolInput) {
-        const toolName = this.appManager.toolName;
+        const toolName = this.toolInfo?.toolName;
         const hasMatchingTool =
           !!toolName && getToolNamesFromDocument(options.query).has(toolName);
 
@@ -139,10 +152,12 @@ export class AbstractApolloClient extends NativeApolloClient {
   }
 
   connect = cacheAsync(async () => {
-    const { structuredContent, toolName, toolInput } =
+    const { structuredContent, toolName, toolInput, _meta } =
       await this.appManager.connect();
 
     this.#hydratedToolInput = toolInput;
+    this.#toolInfo = { toolName: toolName!, toolInput };
+    this.#toolMetadata = _meta;
 
     this.manifest.operations.forEach((operation) => {
       if (
