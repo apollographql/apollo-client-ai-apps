@@ -11,7 +11,7 @@ import { parse, visit } from "graphql";
 import { equal } from "@wry/equality";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { ApplicationManifest } from "../../types/application-manifest.js";
-import { ToolCallLink } from "../link/ToolCallLink.js";
+import { ToolCallLink } from "../../link/ToolCallLink.js";
 import {
   aiClientSymbol,
   cacheAsync,
