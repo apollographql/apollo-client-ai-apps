@@ -5,7 +5,6 @@ import type {
   TypedDocumentNode,
 } from "@apollo/client";
 import { useApolloClient } from "./useApolloClient.js";
-import { useToolName } from "./useToolName.js";
 import { isReactive } from "../../../react/reactive.js";
 import type { Reactive } from "../../../react/reactive.js";
 import { equal } from "@wry/equality";
@@ -14,6 +13,7 @@ import {
   getToolNamesFromDocument,
   getVariableNamesFromDocument,
 } from "../../../utilities/index.js";
+import { useToolInfo } from "../../../react/index.js";
 
 type HydratedVariablesInput<TVariables> = {
   [K in keyof TVariables]: TVariables[K] | Reactive<TVariables[K]>;
@@ -48,13 +48,13 @@ export function createHydrationUtils<
     setVariables: SetVariables<StateVariables<TVariables, TInputVariables>>,
   ] {
     const client = useApolloClient();
-    const toolName = useToolName();
+    const toolInfo = useToolInfo();
     const [toolInput] = useState(() => client["hydratedToolInput"]);
 
     const toolMatches =
       toolInput !== undefined &&
-      toolName !== undefined &&
-      documentToolNames.has(toolName);
+      toolInfo?.toolName !== undefined &&
+      documentToolNames.has(toolInfo.toolName);
 
     const [stateVars, setStateVars] = useState<Record<string, unknown>>(() => {
       const values: Record<string, unknown> = {};
