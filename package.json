@@ -60,14 +60,6 @@
       "default": "./dist/utilities/emptyModule.js"
     },
     "./react": {
-      "mcp": {
-        "types": "./dist/react/index.mcp.d.ts",
-        "default": "./dist/react/index.mcp.js"
-      },
-      "openai": {
-        "types": "./dist/react/index.openai.d.ts",
-        "default": "./dist/react/index.openai.js"
-      },
       "default": {
         "types": "./dist/react/index.d.ts",
         "default": "./dist/react/index.js"
