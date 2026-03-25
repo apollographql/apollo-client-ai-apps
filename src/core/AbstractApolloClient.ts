@@ -86,11 +86,11 @@ export class AbstractApolloClient extends NativeApolloClient {
     this.appManager.close().catch(() => {});
   }
 
-  get hydratedToolInput() {
+  protected get hydratedToolInput() {
     return this.#hydratedToolInput;
   }
 
-  clearToolInput() {
+  protected clearHydratedToolInput() {
     this.#hydratedToolInput = undefined;
   }
 

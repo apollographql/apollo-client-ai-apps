@@ -49,7 +49,7 @@ export function createHydrationUtils<
   ] {
     const client = useApolloClient();
     const toolName = useToolName();
-    const [toolInput] = useState(() => client.hydratedToolInput);
+    const [toolInput] = useState(() => client["hydratedToolInput"]);
 
     const toolMatches =
       toolInput !== undefined &&
@@ -125,7 +125,7 @@ export function createHydrationUtils<
     // present, so both paths are idempotent.
     useLayoutEffect(() => {
       if (toolMatches) {
-        client.clearToolInput();
+        client["clearHydratedToolInput"]();
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
