@@ -3,7 +3,6 @@ import { gql, InMemoryCache } from "@apollo/client";
 import { execute } from "@apollo/client/link";
 import {
   eachHostEnv,
-  minimalHostContextWithToolName,
   mockApplicationManifest,
   ObservableStream,
   spyOnConsole,
@@ -27,7 +26,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("GetProduct"),
+      toolName: "GetProduct",
       toolResult: { structuredContent: { result: { data: { product: null } } } },
     });
     using _host = host;
@@ -67,7 +66,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("GetProduct"),
+      toolName: "GetProduct",
       toolResult: { structuredContent: { result: { data: { product: null } } } },
     });
     using _host = host;

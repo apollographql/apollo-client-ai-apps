@@ -10,7 +10,6 @@ import { App } from "@modelcontextprotocol/ext-apps";
 import { useApp } from "../useApp.js";
 import {
   eachHostEnv,
-  minimalHostContextWithToolName,
   mockApplicationManifest,
   spyOnConsole,
 } from "../../../testing/internal/index.js";
@@ -27,7 +26,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("Test"),
+      toolName: "Test",
       toolResult: { structuredContent: {} },
     });
     using _host = host;

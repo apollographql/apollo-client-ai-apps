@@ -24,7 +24,8 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      toolResult: { structuredContent: {}, _meta: { toolName: "TestTool", customField: "customValue" } },
+      toolName: "TestTool",
+      toolResult: { structuredContent: {}, _meta: { customField: "customValue" } },
     });
     using _host = host;
 

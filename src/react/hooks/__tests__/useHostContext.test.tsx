@@ -24,10 +24,8 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: {
-        ...minimalHostContextWithToolName("GetProduct"),
-        theme: "light",
-      },
+      toolName: "GetProduct",
+      hostContext: { theme: "light" },
       toolResult: { structuredContent: { result: { data: { product: null } } } },
     });
     using _host = host;
@@ -60,10 +58,8 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: {
-        ...minimalHostContextWithToolName("GetProduct"),
-        theme: "light",
-      },
+      toolName: "GetProduct",
+      hostContext: { theme: "light" },
       toolResult: { structuredContent: { result: { data: { product: null } } } },
     });
     using _host = host;

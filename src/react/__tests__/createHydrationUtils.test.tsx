@@ -9,7 +9,6 @@ import { createHydrationUtils } from "../createHydrationUtils.js";
 import { reactive } from "../reactive.js";
 import {
   eachHostEnv,
-  minimalHostContextWithToolName,
   mockApplicationManifest,
   parseManifestOperation,
   spyOnConsole,
@@ -41,7 +40,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
+      toolName: "GetProductsByCategory",
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
       toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
@@ -96,7 +95,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("OtherTool"),
+      toolName: "OtherTool",
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
       toolResult: { structuredContent: { result: { data: { product: null } } } },
     });
@@ -149,7 +148,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("GetProduct"),
+      toolName: "GetProduct",
       toolInput: { id: "1" },
       toolResult: { structuredContent: { result: { data: { product: null } } } },
     });
@@ -191,7 +190,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("OtherTool"),
+      toolName: "OtherTool",
       toolInput: { id: "1" },
       toolResult: { structuredContent: { result: { data: { product: null } } } },
     });
@@ -223,7 +222,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
+      toolName: "GetProductsByCategory",
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
       toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
@@ -275,7 +274,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
+      toolName: "GetProductsByCategory",
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
       toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
@@ -327,7 +326,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
+      toolName: "GetProductsByCategory",
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
       toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
@@ -376,7 +375,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
+      toolName: "GetProductsByCategory",
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
       toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
@@ -425,7 +424,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
+      toolName: "GetProductsByCategory",
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
       toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
@@ -498,7 +497,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
+      toolName: "GetProductsByCategory",
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
       toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
@@ -541,7 +540,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
+      toolName: "GetProductsByCategory",
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
       toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
@@ -632,7 +631,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("OtherTool"),
+      toolName: "OtherTool",
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
       toolResult: { structuredContent: { result: { data: { product: null } } } },
     });
@@ -688,7 +687,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
+      toolName: "GetProductsByCategory",
       toolInput: { category: "electronics" },
       toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
@@ -735,7 +734,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
+      toolName: "GetProductsByCategory",
       toolInput: { category: "electronics" },
       toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
@@ -799,7 +798,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
+      toolName: "GetProductsByCategory",
       toolInput: { category: "electronics", page: 1 },
       toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
@@ -857,7 +856,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("OtherTool"),
+      toolName: "OtherTool",
       toolInput: { category: "electronics", page: 1 },
       toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
@@ -902,7 +901,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
+      toolName: "GetProductsByCategory",
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
       toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
@@ -975,7 +974,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("GetProductsAlt"),
+      toolName: "GetProductsAlt",
       toolInput: { category: "electronics", page: 2, sortBy: "price" },
       toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
@@ -1018,7 +1017,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
+      toolName: "GetProductsByCategory",
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
       toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });
@@ -1095,7 +1094,7 @@ eachHostEnv((setupHost, ApolloClient) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("GetProductsByCategory"),
+      toolName: "GetProductsByCategory",
       toolInput: { category: "electronics", page: 1, sortBy: "title" },
       toolResult: { structuredContent: { result: { data: { products: [] } } } },
     });

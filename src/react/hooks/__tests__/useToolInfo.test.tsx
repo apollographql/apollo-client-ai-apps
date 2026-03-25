@@ -9,7 +9,6 @@ import { InMemoryCache } from "@apollo/client";
 import { useToolInfo } from "../useToolInfo.js";
 import {
   eachHostEnv,
-  minimalHostContextWithToolName,
   mockApplicationManifest,
   spyOnConsole,
 } from "../../../testing/internal/index.js";
@@ -26,7 +25,7 @@ eachHostEnv((setupHost, ApolloClient, { hostEnv }) => {
     const { host } = await setupHost({
       client,
       autoTriggerTool: true,
-      hostContext: minimalHostContextWithToolName("GetProduct"),
+      toolName: "GetProduct",
       toolInput: { id: "1" },
       toolResult: { structuredContent: { result: { data: { product: null } } } },
     });
@@ -62,8 +61,7 @@ eachHostEnv((setupHost, ApolloClient, { hostEnv }) => {
 
       const { host } = await setupHost({
         client,
-        hostContext: minimalHostContextWithToolName("GetProduct"),
-        toolResult: { structuredContent: {}, _meta: { toolName: "GetProduct" } },
+        toolName: "GetProduct",
       });
       using _host = host;
 

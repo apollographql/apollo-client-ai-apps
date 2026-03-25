@@ -3,6 +3,7 @@ import type {
   McpUiToolInputNotification,
 } from "@modelcontextprotocol/ext-apps";
 import type { AbstractApolloClient } from "../../../core/AbstractApolloClient";
+import { minimalHostContextWithToolName } from "../mcp/minimalHostContextWithToolName";
 import { mockMcpHost } from "../mcp/mockMcpHost";
 import { stubOpenAiGlobals } from "../openai/stubOpenAiGlobals";
 import type { ApolloMcpServerApps } from "../../../core/types";
@@ -11,10 +12,14 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 export declare namespace createHostEnv {
   export namespace setupHost {
-    export type MockToolResult = Pick<
+    export interface MockToolResult extends Pick<
       ApolloMcpServerApps.CallToolResult,
-      "structuredContent" | "_meta" | "isError"
-    >;
+      "structuredContent" | "isError"
+    > {
+      _meta?: Omit<ApolloMcpServerApps.Meta, "toolName"> & {
+        toolName?: string;
+      };
+    }
 
     export interface Options {
       /**
@@ -26,6 +31,7 @@ export declare namespace createHostEnv {
       client: AbstractApolloClient;
       hostContext?: McpUiHostContext;
       toolInput?: Record<string, unknown>;
+      toolName?: string;
       toolResult?: setupHost.MockToolResult;
       customizeOpenAiGlobals?: (
         globals: Partial<OpenAiGlobals>,
@@ -45,17 +51,33 @@ export function createHostEnv(hostEnv: "openai" | "mcp") {
     const {
       autoTriggerTool = false,
       client,
-      hostContext,
       toolInput,
-      toolResult,
+      toolName,
       customizeOpenAiGlobals,
     } = options;
 
     const mockOptions: mockMcpHost.Options = {};
 
+    const hostContext =
+      toolName ?
+        { ...minimalHostContextWithToolName(toolName), ...options.hostContext }
+      : options.hostContext;
+
     if (hostContext) {
       mockOptions.hostContext = hostContext;
     }
+
+    const toolResult =
+      toolName ?
+        {
+          ...options.toolResult,
+          structuredContent: {
+            ...options.toolResult?.structuredContent,
+            toolName,
+          },
+          _meta: { ...options.toolResult?._meta, toolName },
+        }
+      : options.toolResult;
 
     const host = await mockMcpHost(mockOptions);
     host.onCleanup(() => client.stop());
@@ -64,10 +86,6 @@ export function createHostEnv(hostEnv: "openai" | "mcp") {
       toolInput: toolInput ? { arguments: toolInput } : {},
       toolResult: { ...toolResult },
     };
-
-    if (toolInput) {
-      params.toolInput.arguments = toolInput;
-    }
 
     if (hostEnv === "openai") {
       // OpenAI doesn't set _meta in the notification
