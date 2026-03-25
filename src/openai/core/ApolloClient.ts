@@ -49,8 +49,8 @@ export class ApolloClient extends AbstractApolloClient {
         // reverted to use the `app.ontoolinput` callback.
         toolInput: window.openai.toolInput,
 
-        // OpenAI doesn't provide access to `_meta`, so we need to use
-        // window.openai.toolResponseMetadata directly
+        // OpenAI doesn't provide access to `_meta` from ui/notifications/tool-result,
+        // so we need to use window.openai.toolResponseMetadata directly
         _meta: window.openai.toolResponseMetadata as
           | ApolloMcpServerApps.Meta
           | undefined,
