@@ -30,9 +30,11 @@ export declare namespace createHostEnv {
       autoTriggerTool?: boolean;
       client: AbstractApolloClient;
       hostContext?: McpUiHostContext;
-      toolInput?: Record<string, unknown>;
-      toolName?: string;
-      toolResult?: setupHost.MockToolResult;
+      toolCall?: {
+        name?: string;
+        input?: Record<string, unknown>;
+        result?: setupHost.MockToolResult;
+      };
       customizeOpenAiGlobals?: (
         globals: Partial<OpenAiGlobals>,
         options: {
@@ -51,10 +53,12 @@ export function createHostEnv(hostEnv: "openai" | "mcp") {
     const {
       autoTriggerTool = false,
       client,
-      toolInput,
-      toolName,
+      toolCall,
       customizeOpenAiGlobals,
     } = options;
+
+    const toolName = toolCall?.name;
+    const toolInput = toolCall?.input;
 
     const mockOptions: mockMcpHost.Options = {};
 
@@ -70,14 +74,14 @@ export function createHostEnv(hostEnv: "openai" | "mcp") {
     const toolResult =
       toolName ?
         {
-          ...options.toolResult,
+          ...options.toolCall?.result,
           structuredContent: {
-            ...options.toolResult?.structuredContent,
+            ...options.toolCall?.result?.structuredContent,
             toolName,
           },
-          _meta: { ...options.toolResult?._meta, toolName },
+          _meta: { ...options.toolCall?.result?._meta, toolName },
         }
-      : options.toolResult;
+      : options.toolCall?.result;
 
     const host = await mockMcpHost(mockOptions);
     host.onCleanup(() => client.stop());
