@@ -1,4 +1,9 @@
-import { ApolloLink } from "@apollo/client";
+import { ApolloClient, ApolloLink } from "@apollo/client";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { from } from "rxjs";
+
+import type { McpAppManager } from "../core/McpAppManager";
+import { aiClientSymbol, invariant } from "../utilities/index.js";
 
 /**
  * A terminating link that sends a GraphQL request through an agent tool call.
@@ -23,11 +28,28 @@ import { ApolloLink } from "@apollo/client";
  * ```
  */
 export class ToolCallLink extends ApolloLink {
-  constructor() {
-    super();
+  readonly name = "ToolCallLink";
+  request(operation: ApolloLink.Operation) {
+    const client = getPrivateAccess(operation.client);
 
-    throw new Error(
-      "Cannot construct a `ToolCallLink` from `@apollo/client-ai-apps` without export conditions. Please set export conditions or import from  the `/openai` or `/mcp` subpath directly."
+    return from(
+      client.appManager.executeQuery({
+        query: operation.query,
+        variables: operation.variables,
+      })
     );
   }
+}
+
+function getPrivateAccess(
+  client: ApolloClient
+): ApolloClient & { appManager: McpAppManager } {
+  if (__DEV__) {
+    invariant(
+      (client as any)[aiClientSymbol],
+      'The "client" instance used with `ToolCallLink` is the wrong instance. You might have imported `ApolloClient` from `@apollo/client`. Please import `ApolloClient` from `@apollo/client-ai-apps` instead.'
+    );
+  }
+
+  return client as any;
 }
