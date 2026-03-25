@@ -25,7 +25,10 @@ eachHostEnv((setupHost, ApolloClient) => {
       client,
       toolCall: {
         name: "TestTool",
-        result: { structuredContent: {}, _meta: { customField: "customValue" } },
+        result: {
+          structuredContent: {},
+          _meta: { customField: "customValue" },
+        },
       },
     });
     using _host = host;
