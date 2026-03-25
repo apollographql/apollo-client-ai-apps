@@ -5,11 +5,10 @@ export { reactive } from "./reactive.js";
 export type { Reactive } from "./reactive.js";
 
 export { useApp } from "./hooks/useApp.js";
+export { useHostContext } from "./hooks/useHostContext.js";
 
 // Use `mcp` related types since these are the most common between the two
 // targets
-export const useHostContext =
-  missingHook<typeof import("./index.mcp.js").useHostContext>("useHostContext");
 
 /**
  * @deprecated Please use the `useToolInfo` hook. `useToolInput` will be removed
