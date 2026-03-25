@@ -1,5 +1,6 @@
 export { createHostEnv } from "./utilities/createHostEnv.js";
 export { dispatchStateChange } from "./openai/dispatchStateChange.js";
+export { eachHostEnv } from "./tests/eachHostEnv.js";
 export { graphqlToolResult } from "./mcp/graphqlToolResult.js";
 export { mockApplicationManifest } from "./utilities/mockApplicationManifest.js";
 export { stubOpenAiGlobals } from "./openai/stubOpenAiGlobals.js";
