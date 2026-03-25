@@ -32,4 +32,3 @@ If you are importing React symbols from platform-specific entry points, you will
 +   createHydrationUtils
 + } from "@apollo/client-ai-apps/react";
 ```
-

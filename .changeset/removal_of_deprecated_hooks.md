@@ -18,4 +18,3 @@ The deprecated `useToolInput` and `useToolName` hooks have been removed along wi
     // ...
   }
 ```
-
