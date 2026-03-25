@@ -1,14 +1,14 @@
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { App } from "@modelcontextprotocol/ext-apps";
-import { ApolloClient as BaseApolloClient } from "../../core/ApolloClient.js";
+import { AbstractApolloClient } from "../../core/AbstractApolloClient.js";
 import { connectToHost, promiseWithResolvers } from "../../utilities/index.js";
 import type { ApolloMcpServerApps } from "../../core/types.js";
 
 export declare namespace ApolloClient {
-  export interface Options extends BaseApolloClient.Options {}
+  export interface Options extends AbstractApolloClient.Options {}
 }
 
-export class ApolloClient extends BaseApolloClient {
+export class ApolloClient extends AbstractApolloClient {
   constructor(options: ApolloClient.Options) {
     super(options, async (app) => {
       let toolResult =

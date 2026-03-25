@@ -1,6 +1,6 @@
 import {
   ApolloLink,
-  ApolloClient as BaseApolloClient,
+  ApolloClient as NativeApolloClient,
   DocumentTransform,
   ObservableQuery,
   type OperationVariables,
@@ -26,14 +26,14 @@ import {
   warnOnVariableMismatch,
 } from "../utilities/index.js";
 
-export declare namespace ApolloClient {
-  export interface Options extends Omit<BaseApolloClient.Options, "link"> {
-    link?: BaseApolloClient.Options["link"];
+export declare namespace AbstractApolloClient {
+  export interface Options extends Omit<NativeApolloClient.Options, "link"> {
+    link?: NativeApolloClient.Options["link"];
     manifest: ApplicationManifest;
   }
 }
 
-export class ApolloClient extends BaseApolloClient {
+export class AbstractApolloClient extends NativeApolloClient {
   manifest: ApplicationManifest;
   private readonly appManager: McpAppManager;
 
@@ -44,7 +44,7 @@ export class ApolloClient extends BaseApolloClient {
   #toolHydrationLink: ToolHydrationLink;
 
   constructor(
-    options: ApolloClient.Options,
+    options: AbstractApolloClient.Options,
     connectToHost: ConnectToHostImplementation
   ) {
     const toolHydrationLink = new ToolHydrationLink();

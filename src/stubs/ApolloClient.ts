@@ -1,15 +1,15 @@
-import { ApolloClient as BaseApolloClient } from "../core/ApolloClient.js";
+import { AbstractApolloClient as AbstractApolloClient } from "../core/ApolloClient.js";
 import type { ApplicationManifest } from "../types/application-manifest.js";
 import { aiClientSymbol } from "../utilities/constants.js";
 
 export declare namespace ApolloClient {
-  export interface Options extends Omit<BaseApolloClient.Options, "link"> {
-    link?: BaseApolloClient.Options["link"];
+  export interface Options extends Omit<AbstractApolloClient.Options, "link"> {
+    link?: AbstractApolloClient.Options["link"];
     manifest: ApplicationManifest;
   }
 }
 
-export class ApolloClient extends BaseApolloClient {
+export class ApolloClient extends AbstractApolloClient {
   /** @internal */
   readonly [aiClientSymbol] = true;
 
