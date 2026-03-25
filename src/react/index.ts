@@ -6,6 +6,7 @@ export type { Reactive } from "./reactive.js";
 
 export { useApp } from "./hooks/useApp.js";
 export { useHostContext } from "./hooks/useHostContext.js";
+export { useToolInfo } from "./hooks/useToolInfo.js";
 export { useToolMetadata } from "./hooks/useToolMetadata.js";
 
 // Use `mcp` related types since these are the most common between the two
@@ -24,9 +25,6 @@ export const useToolInput =
  */
 export const useToolName =
   missingHook<typeof import("./index.mcp.js").useToolName>("useToolName");
-
-export const useToolInfo =
-  missingHook<typeof import("./index.mcp.js").useToolInfo>("useToolInfo");
 
 /** @experimental */
 export const createHydrationUtils = missingHook<
