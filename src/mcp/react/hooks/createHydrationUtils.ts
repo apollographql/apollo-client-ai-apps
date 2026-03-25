@@ -49,7 +49,7 @@ export function createHydrationUtils<
   ] {
     const client = useApolloClient();
     const toolName = useToolName();
-    const [toolInput] = useState(() => client.toolInput);
+    const [toolInput] = useState(() => client.hydratedToolInput);
 
     const toolMatches =
       toolInput !== undefined &&

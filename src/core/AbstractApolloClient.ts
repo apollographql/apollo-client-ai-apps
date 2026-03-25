@@ -40,7 +40,7 @@ export class AbstractApolloClient extends NativeApolloClient {
   /** @internal */
   readonly [aiClientSymbol] = true;
 
-  #toolInput: Record<string, unknown> | undefined;
+  #hydratedToolInput: Record<string, unknown> | undefined;
   #toolHydrationLink: ToolHydrationLink;
 
   constructor(
@@ -86,12 +86,12 @@ export class AbstractApolloClient extends NativeApolloClient {
     this.appManager.close().catch(() => {});
   }
 
-  get toolInput() {
-    return this.#toolInput;
+  get hydratedToolInput() {
+    return this.#hydratedToolInput;
   }
 
   clearToolInput() {
-    this.#toolInput = undefined;
+    this.#hydratedToolInput = undefined;
   }
 
   watchQuery<
@@ -99,7 +99,7 @@ export class AbstractApolloClient extends NativeApolloClient {
     TVariables extends OperationVariables = OperationVariables,
   >(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables> {
     if (__DEV__) {
-      const toolInput = this.#toolInput;
+      const toolInput = this.#hydratedToolInput;
 
       if (toolInput) {
         const toolName = this.appManager.toolName;
@@ -109,7 +109,7 @@ export class AbstractApolloClient extends NativeApolloClient {
         if (hasMatchingTool) {
           // Clear after first matching comparison so this only fires once and
           // remounting doesn't produce spurious warnings.
-          this.#toolInput = undefined;
+          this.#hydratedToolInput = undefined;
 
           const variableNames = getVariableNamesFromDocument(options.query);
 
@@ -142,7 +142,7 @@ export class AbstractApolloClient extends NativeApolloClient {
     const { structuredContent, toolName, toolInput } =
       await this.appManager.connect();
 
-    this.#toolInput = toolInput;
+    this.#hydratedToolInput = toolInput;
 
     this.manifest.operations.forEach((operation) => {
       if (
