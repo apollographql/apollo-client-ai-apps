@@ -17,6 +17,7 @@ import { ToolCallLink } from "../../link/ToolCallLink.js";
 import {
   aiClientSymbol,
   cacheAsync,
+  connectToHost,
   getToolNamesFromDocument,
   getVariableNamesFromDocument,
   getVariablesForOperationFromToolInput,
@@ -27,7 +28,6 @@ import { ToolHydrationLink } from "../../link/ToolHydrationLink.js";
 import { McpAppManager } from "../../core/McpAppManager.js";
 import type { ApolloMcpServerApps } from "../../core/types.js";
 import type { App } from "@modelcontextprotocol/ext-apps";
-import { connectToHost } from "../../core/connectToHost.js";
 
 export declare namespace ApolloClient {
   export interface Options extends Omit<BaseApolloClient.Options, "link"> {
