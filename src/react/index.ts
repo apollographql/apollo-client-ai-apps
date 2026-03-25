@@ -19,13 +19,6 @@ export { useToolMetadata } from "./hooks/useToolMetadata.js";
 export const useToolInput =
   missingHook<typeof import("./index.mcp.js").useToolInput>("useToolInput");
 
-/**
- * @deprecated Please use the `useToolInfo` hook. `useToolName` will be removed
- * in the next major version.
- */
-export const useToolName =
-  missingHook<typeof import("./index.mcp.js").useToolName>("useToolName");
-
 /** @experimental */
 export const createHydrationUtils = missingHook<
   typeof import("./index.mcp.js").createHydrationUtils
