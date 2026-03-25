@@ -14,62 +14,32 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "mcp": {
-        "types": "./dist/index.mcp.d.ts",
-        "default": "./dist/index.mcp.js"
-      },
-      "openai": {
-        "types": "./dist/index.openai.d.ts",
-        "default": "./dist/index.openai.js"
-      },
-      "default": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
+      "mcp": "./dist/index.mcp.js",
+      "openai": "./dist/index.openai.js",
+      "default": "./dist/index.js"
     },
-    "./config": {
-      "types": "./dist/config/index.d.ts",
-      "default": "./dist/config/index.js"
-    },
+    "./config": "./dist/config/index.js",
     "./mcp": {
-      "mcp": {
-        "types": "./dist/mcp/index.d.ts",
-        "default": "./dist/mcp/index.js"
-      },
+      "mcp": "./dist/mcp/index.js",
       "default": "./dist/utilities/emptyModule.js"
     },
     "./openai": {
-      "openai": {
-        "types": "./dist/openai/index.d.ts",
-        "default": "./dist/openai/index.js"
-      },
+      "openai": "./dist/openai/index.js",
       "default": "./dist/utilities/emptyModule.js"
     },
     "./openai/globals": {
-      "openai": {
-        "types": "./dist/openai/globals.d.ts",
-        "default": "./dist/openai/globals.js"
-      },
+      "openai": "./dist/openai/globals.js",
       "default": "./dist/utilities/emptyModule.js"
     },
     "./openai/react": {
-      "openai": {
-        "types": "./dist/openai/react/index.d.ts",
-        "default": "./dist/openai/react/index.js"
-      },
+      "openai": "./dist/openai/react/index.js",
       "default": "./dist/utilities/emptyModule.js"
     },
-    "./react": {
-      "types": "./dist/react/index.d.ts",
-      "default": "./dist/react/index.js"
-    },
+    "./react": "./dist/react/index.js",
     "./tsconfig/core": "./dist/tsconfig/core/tsconfig.json",
     "./tsconfig/mcp": "./dist/tsconfig/mcp/tsconfig.json",
     "./tsconfig/openai": "./dist/tsconfig/openai/tsconfig.json",
-    "./vite": {
-      "types": "./dist/vite/index.d.ts",
-      "default": "./dist/vite/index.js"
-    }
+    "./vite": "./dist/vite/index.js"
   },
   "devEngines": {
     "packageManager": {
