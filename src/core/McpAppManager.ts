@@ -100,6 +100,7 @@ export class McpAppManager {
       },
       toolInput,
       toolName,
+      _meta,
     };
   });
 
