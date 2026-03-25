@@ -22,7 +22,9 @@ interface ConnectToHostResult {
   toolName: string | undefined;
 }
 
-type ConnectToHostImplementation = (app: App) => Promise<ConnectToHostResult>;
+export type ConnectToHostImplementation = (
+  app: App
+) => Promise<ConnectToHostResult>;
 
 /** @internal */
 export class McpAppManager {
