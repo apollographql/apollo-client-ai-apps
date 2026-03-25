@@ -17,6 +17,11 @@ export declare namespace createHostEnv {
     }
 
     export interface Options {
+      /**
+       * The ApolloClient instance under test. Passed here so that
+       * `client.stop()` is called automatically when the env is disposed,
+       * preventing MCP event listener leaks between tests.
+       */
       client: AbstractApolloClient;
       hostContext?: McpUiHostContext;
       toolCall?: {
@@ -68,7 +73,6 @@ export function createHostEnv(hostEnv: "openai" | "mcp") {
       : options.toolCall?.result;
 
     const host = await mockMcpHost(mockOptions);
-    host.onCleanup(() => client.stop());
 
     const params = {
       toolInput: toolInput ? { arguments: toolInput } : {},
@@ -105,6 +109,7 @@ export function createHostEnv(hostEnv: "openai" | "mcp") {
       params,
       [Symbol.dispose]() {
         host[Symbol.dispose]();
+        client.stop();
       },
     };
   };
