@@ -5,6 +5,7 @@ import { mockMcpHost } from "../mcp/mockMcpHost";
 import { stubOpenAiGlobals } from "../openai/stubOpenAiGlobals";
 import type { ApolloMcpServerApps } from "../../../core/types";
 import type { OpenAiGlobals } from "../../../openai/types";
+
 export declare namespace createHostEnv {
   export namespace setupHost {
     export interface MockToolResult extends Pick<
