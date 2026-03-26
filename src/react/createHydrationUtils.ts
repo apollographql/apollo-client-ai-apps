@@ -12,7 +12,6 @@ import {
   getToolNamesFromDocument,
   getVariableNamesFromDocument,
 } from "../utilities/index.js";
-import { useToolInfo } from "./hooks/useToolInfo.js";
 
 type HydratedVariablesInput<TVariables> = {
   [K in keyof TVariables]: TVariables[K] | Reactive<TVariables[K]>;
@@ -47,13 +46,12 @@ export function createHydrationUtils<
     setVariables: SetVariables<StateVariables<TVariables, TInputVariables>>,
   ] {
     const client = useApolloClient();
-    const toolInfo = useToolInfo();
     const [toolInput] = useState(() => client["hydratedToolInput"]);
 
     const toolMatches =
       toolInput !== undefined &&
-      toolInfo?.toolName !== undefined &&
-      documentToolNames.has(toolInfo.toolName);
+      client.toolInfo?.toolName !== undefined &&
+      documentToolNames.has(client.toolInfo.toolName);
 
     const [stateVars, setStateVars] = useState<Record<string, unknown>>(() => {
       const values: Record<string, unknown> = {};
