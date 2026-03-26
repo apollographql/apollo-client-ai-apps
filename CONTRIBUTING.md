@@ -193,4 +193,3 @@ When you make changes to this package:
 3. Restart the React app dev server
 
 Refer to the [MCP Apps Quickstart Guide](https://www.apollographql.com/docs/apollo-mcp-server/mcp-apps-quickstart) for more details on configuring the template, setting up tunneling for end-to-end testing with a host like ChatGPT, and other development workflows.
-
