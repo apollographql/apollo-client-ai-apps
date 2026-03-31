@@ -5,6 +5,7 @@ export { stubOpenAiGlobals } from "./openai/stubOpenAiGlobals.js";
 export { minimalHostContextWithToolName } from "./mcp/minimalHostContextWithToolName.js";
 export { mockMcpHost } from "./mcp/mockMcpHost.js";
 export { ObservableStream } from "./utilities/ObservableStream.js";
+export { parseManifestOperation } from "./graphql/parseManifestOperation.js";
 export { renderAsync } from "./react/renderAsync.js";
 export { spyOnConsole } from "./utilities/spyOnConsole.js";
 export { wait } from "./utilities/wait.js";

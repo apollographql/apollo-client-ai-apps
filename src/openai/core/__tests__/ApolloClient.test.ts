@@ -1,7 +1,13 @@
 import { expect, test, describe, vi } from "vitest";
 import { ApolloClient } from "../ApolloClient.js";
-import { parse } from "graphql";
-import { ApolloLink, HttpLink, InMemoryCache, gql } from "@apollo/client";
+import { parse, type DocumentNode } from "graphql";
+import {
+  ApolloLink,
+  HttpLink,
+  InMemoryCache,
+  NetworkStatus,
+  gql,
+} from "@apollo/client";
 import { print } from "@apollo/client/utilities";
 import { ToolCallLink } from "../../link/ToolCallLink.js";
 import {
@@ -9,6 +15,8 @@ import {
   minimalHostContextWithToolName,
   mockApplicationManifest,
   mockMcpHost,
+  ObservableStream,
+  parseManifestOperation,
   spyOnConsole,
   stubOpenAiGlobals,
 } from "../../../testing/internal/index.js";
@@ -900,6 +908,391 @@ describe("custom links", () => {
   });
 });
 
+test("serves tool result data on network-only query without calling execute tool", async () => {
+  stubOpenAiGlobals({ toolInput: { id: "1" } });
+  using _ = spyOnConsole("debug");
+  const query = gql`
+    query Product($id: ID!)
+    @tool(name: "GetProduct", description: "Get a product") {
+      product(id: $id) {
+        id
+        title
+        __typename
+      }
+    }
+  `;
+
+  const data = {
+    product: { id: "1", title: "Pen", __typename: "Product" },
+  };
+
+  const { client, host } = await setup({ query });
+  using _host = host;
+
+  const execute = vi.fn();
+  host.mockToolCall("execute", execute);
+
+  host.sendToolResult({ structuredContent: { result: { data } } });
+  host.sendToolInput({ arguments: { id: "1" } });
+
+  await client.connect();
+
+  await expect(
+    client.query({
+      query,
+      variables: { id: "1" },
+      fetchPolicy: "network-only",
+    })
+  ).resolves.toStrictEqual({ data });
+  expect(execute).not.toHaveBeenCalled();
+});
+
+test("calls execute tool on second network-only query after hydration is consumed", async () => {
+  stubOpenAiGlobals({ toolInput: { id: "1" } });
+  using _ = spyOnConsole("debug");
+  const query = gql`
+    query Product($id: ID!)
+    @tool(name: "GetProduct", description: "Get a product") {
+      product(id: $id) {
+        id
+        title
+        __typename
+      }
+    }
+  `;
+
+  const { client, host } = await setup({ query });
+  using _host = host;
+
+  host.mockToolCall("execute", () => ({
+    structuredContent: {
+      data: {
+        product: { id: "1", title: "Updated Pen", __typename: "Product" },
+      },
+    },
+  }));
+
+  host.sendToolResult({
+    structuredContent: {
+      result: {
+        data: {
+          product: { id: "1", title: "Pen", __typename: "Product" },
+        },
+      },
+    },
+  });
+  host.sendToolInput({ arguments: { id: "1" } });
+
+  await client.connect();
+
+  await client.query({
+    query,
+    variables: { id: "1" },
+    fetchPolicy: "network-only",
+  });
+
+  await expect(
+    client.query({
+      query,
+      variables: { id: "1" },
+      fetchPolicy: "network-only",
+    })
+  ).resolves.toStrictEqual({
+    data: {
+      product: { id: "1", title: "Updated Pen", __typename: "Product" },
+    },
+  });
+});
+
+test("serves tool result data on cache-and-network query without calling execute tool", async () => {
+  stubOpenAiGlobals({ toolInput: { id: "1" } });
+  using _ = spyOnConsole("debug");
+  const query = gql`
+    query Product($id: ID!)
+    @tool(name: "GetProduct", description: "Get a product") {
+      product(id: $id) {
+        id
+        title
+        __typename
+      }
+    }
+  `;
+
+  const { client, host } = await setup({ query });
+  using _host = host;
+
+  const execute = vi.fn();
+  host.mockToolCall("execute", execute);
+
+  host.sendToolResult({
+    structuredContent: {
+      result: {
+        data: {
+          product: { id: "1", title: "Pen", __typename: "Product" },
+        },
+      },
+    },
+  });
+  host.sendToolInput({ arguments: { id: "1" } });
+
+  await client.connect();
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      variables: { id: "1" },
+      fetchPolicy: "cache-and-network",
+    })
+  );
+
+  // The hydrated result is emitted synchronously so we won't observe a loading
+  // state like we normally would with `cache-and-network`
+  await expect(stream).toEmitValue({
+    data: { product: { id: "1", title: "Pen", __typename: "Product" } },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(execute).not.toHaveBeenCalled();
+});
+
+test("serves tool result data on no-cache query without calling execute tool", async () => {
+  stubOpenAiGlobals({ toolInput: { id: "1" } });
+  using _ = spyOnConsole("debug");
+  const query = gql`
+    query Product($id: ID!)
+    @tool(name: "GetProduct", description: "Get a product") {
+      product(id: $id) {
+        id
+        title
+        __typename
+      }
+    }
+  `;
+
+  const data = {
+    product: { id: "1", title: "Pen", __typename: "Product" },
+  };
+
+  const { client, host } = await setup({ query });
+  using _host = host;
+
+  const execute = vi.fn();
+  host.mockToolCall("execute", execute);
+
+  host.sendToolInput({ arguments: { id: "1" } });
+  host.sendToolResult({ structuredContent: { result: { data } } });
+
+  await client.connect();
+
+  await expect(
+    client.query({ query, variables: { id: "1" }, fetchPolicy: "no-cache" })
+  ).resolves.toStrictEqual({ data });
+  expect(execute).not.toHaveBeenCalled();
+});
+
+test("hydrates prefetch query with network-only fetch policy", async () => {
+  stubOpenAiGlobals({ toolInput: {} });
+  using _ = spyOnConsole("debug");
+
+  const query = gql`
+    query TopProducts @tool(description: "Shows top products") @prefetch {
+      topProducts {
+        id
+        title
+        __typename
+      }
+    }
+  `;
+
+  const data = {
+    topProducts: [{ id: "1", title: "iPhone", __typename: "Product" }],
+  };
+
+  const { client, host } = await setup({ query, toolName: "OtherTool" });
+  using _host = host;
+
+  const execute = vi.fn();
+  host.mockToolCall("execute", execute);
+
+  host.sendToolResult({
+    structuredContent: {
+      prefetch: { __anonymous: { data } },
+    },
+  });
+  host.sendToolInput({ arguments: {} });
+
+  await client.connect();
+
+  await expect(
+    client.query({ query, fetchPolicy: "network-only" })
+  ).resolves.toStrictEqual({ data });
+  expect(execute).not.toHaveBeenCalled();
+});
+
+test("serves hydrated query from tool result while other network-only queries call execute", async () => {
+  stubOpenAiGlobals({ toolInput: { id: "1" } });
+  using _ = spyOnConsole("debug");
+
+  const productQuery = gql`
+    query Product($id: ID!)
+    @tool(name: "GetProduct", description: "Get a product") {
+      product(id: $id) {
+        id
+        title
+        __typename
+      }
+    }
+  `;
+
+  const cartQuery = gql`
+    query Cart @tool(name: "GetCart", description: "Get the cart") {
+      cart {
+        id
+        __typename
+      }
+    }
+  `;
+
+  const productOperation = parseManifestOperation(productQuery);
+  const cartOperation = parseManifestOperation(cartQuery);
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    manifest: mockApplicationManifest({
+      operations: [productOperation, cartOperation],
+    }),
+  });
+
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GetProduct"),
+  });
+  host.onCleanup(() => client.stop());
+
+  const execute = vi.fn(() => ({
+    structuredContent: {
+      data: { cart: { id: "1", __typename: "Cart" } },
+    },
+  }));
+  host.mockToolCall("execute", execute);
+
+  host.sendToolResult({
+    structuredContent: {
+      result: {
+        data: { product: { id: "1", title: "Pen", __typename: "Product" } },
+      },
+    },
+  });
+  host.sendToolInput({ arguments: { id: "1" } });
+
+  await client.connect();
+
+  const [productResult, cartResult] = await Promise.all([
+    client.query({
+      query: productQuery,
+      variables: { id: "1" },
+      fetchPolicy: "network-only",
+    }),
+    client.query({
+      query: cartQuery,
+      fetchPolicy: "network-only",
+    }),
+  ]);
+
+  expect(productResult).toStrictEqual({
+    data: { product: { id: "1", title: "Pen", __typename: "Product" } },
+  });
+  expect(cartResult).toStrictEqual({
+    data: { cart: { id: "1", __typename: "Cart" } },
+  });
+  expect(execute).toHaveBeenCalledOnce();
+});
+
+test("serves hydrated query after tool result while earlier-queued non-matching query calls execute", async () => {
+  stubOpenAiGlobals({ toolInput: { id: "1" } });
+  using _ = spyOnConsole("debug");
+
+  const productQuery = gql`
+    query Product($id: ID!)
+    @tool(name: "GetProduct", description: "Get a product") {
+      product(id: $id) {
+        id
+        title
+        __typename
+      }
+    }
+  `;
+
+  const cartQuery = gql`
+    query Cart @tool(name: "GetCart", description: "Get the cart") {
+      cart {
+        id
+        __typename
+      }
+    }
+  `;
+
+  const productOperation = parseManifestOperation(productQuery);
+  const cartOperation = parseManifestOperation(cartQuery);
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    manifest: mockApplicationManifest({
+      operations: [productOperation, cartOperation],
+    }),
+  });
+
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GetProduct"),
+  });
+  host.onCleanup(() => client.stop());
+
+  const execute = vi.fn(() => ({
+    structuredContent: {
+      data: { cart: { id: "1", __typename: "Cart" } },
+    },
+  }));
+  host.mockToolCall("execute", execute);
+
+  const connectPromise = client.connect();
+
+  const cartPromise = client.query({
+    query: cartQuery,
+    fetchPolicy: "network-only",
+  });
+
+  host.sendToolResult({
+    structuredContent: {
+      result: {
+        data: { product: { id: "1", title: "Pen", __typename: "Product" } },
+      },
+    },
+  });
+  host.sendToolInput({ arguments: { id: "1" } });
+
+  await connectPromise;
+
+  await expect(cartPromise).resolves.toStrictEqual({
+    data: { cart: { id: "1", __typename: "Cart" } },
+  });
+
+  await expect(
+    client.query({
+      query: productQuery,
+      variables: { id: "1" },
+      fetchPolicy: "network-only",
+    })
+  ).resolves.toStrictEqual({
+    data: { product: { id: "1", title: "Pen", __typename: "Product" } },
+  });
+
+  expect(execute).toHaveBeenCalledOnce();
+});
+
 describe("watchQuery dev warnings", () => {
   const query = gql`
     query Products($category: String!, $page: Int!, $sortBy: String!)
@@ -1004,3 +1397,26 @@ describe("watchQuery dev warnings", () => {
     expect(console.warn).toHaveBeenCalledTimes(1);
   });
 });
+
+async function setup({
+  query,
+  toolName,
+}: {
+  query: DocumentNode;
+  toolName?: string;
+}) {
+  const operation = parseManifestOperation(query);
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    manifest: mockApplicationManifest({ operations: [operation] }),
+  });
+
+  const host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName(
+      toolName ?? operation.tools[0].name
+    ),
+  });
+  host.onCleanup(() => client.stop());
+
+  return { client, host };
+}

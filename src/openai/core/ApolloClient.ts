@@ -19,6 +19,7 @@ import {
   getVariablesForOperationFromToolInput,
   warnOnVariableMismatch,
 } from "../../utilities/index.js";
+import { ToolHydrationLink } from "../../link/ToolHydrationLink.js";
 import { McpAppManager } from "./McpAppManager.js";
 import { getVariableNamesFromDocument } from "../../utilities/getVariableNamesFromDocument.js";
 
@@ -37,8 +38,10 @@ export class ApolloClient extends BaseApolloClient {
   readonly [aiClientSymbol] = true;
 
   #toolInput: Record<string, unknown> | undefined;
+  #toolHydrationLink: ToolHydrationLink;
 
   constructor(options: ApolloClient.Options) {
+    const toolHydrationLink = new ToolHydrationLink();
     const link = options.link ?? new ToolCallLink();
 
     if (__DEV__) {
@@ -47,7 +50,7 @@ export class ApolloClient extends BaseApolloClient {
 
     super({
       ...options,
-      link,
+      link: toolHydrationLink.concat(link),
       // Strip out the prefetch/tool directives so they don't get sent with the operation to the server
       documentTransform: new DocumentTransform((document) => {
         const serverDocument = removeDirectivesFromDocument(
@@ -63,8 +66,13 @@ export class ApolloClient extends BaseApolloClient {
       }).concat(options.documentTransform ?? DocumentTransform.identity()),
     });
 
+    this.#toolHydrationLink = toolHydrationLink;
     this.manifest = options.manifest;
     this.appManager = new McpAppManager(this.manifest);
+  }
+
+  setLink(newLink: ApolloLink): void {
+    super.setLink(this.#toolHydrationLink.concat(newLink));
   }
 
   stop() {
@@ -140,18 +148,33 @@ export class ApolloClient extends BaseApolloClient {
           query: parse(operation.body),
           data: structuredContent.prefetch[operation.prefetchID].data,
         });
+        this.#toolHydrationLink.hydrate(operation, {
+          result: structuredContent.prefetch[operation.prefetchID],
+          variables: {},
+        });
       }
 
       if (operation.tools.find((tool) => tool.name === toolName)) {
         if (structuredContent.result?.data) {
+          const variables = getVariablesForOperationFromToolInput(
+            operation,
+            args
+          );
           this.writeQuery({
             query: parse(operation.body),
             data: structuredContent.result.data,
-            variables: getVariablesForOperationFromToolInput(operation, args),
+            variables,
+          });
+
+          this.#toolHydrationLink.hydrate(operation, {
+            result: structuredContent.result,
+            variables,
           });
         }
       }
     });
+
+    this.#toolHydrationLink.complete();
   });
 }
 
