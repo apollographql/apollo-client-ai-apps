@@ -2,6 +2,18 @@
   "$schema": "https://www.schemastore.org/package.json",
   "name": "@apollo/client-ai-apps",
   "version": "0.7.0",
+  "keywords": [
+    "apollo",
+    "graphql",
+    "react",
+    "hooks",
+    "client",
+    "cache",
+    "mcp"
+  ],
+  "author": "packages@apollographql.com",
+  "license": "MIT",
+  "description": "An Apollo Client integration for building MCP Apps",
   "publishConfig": {
     "access": "public"
   },
@@ -91,10 +103,6 @@
     "typecheck": "tsc -b --emitDeclarationOnly",
     "attw": "npm run build && attw --pack . --ignore-rules cjs-resolves-to-esm --profile node16"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "devDependencies": {
     "@apollo/client": "^4.0.12",
     "@arethetypeswrong/cli": "^0.18.2",
