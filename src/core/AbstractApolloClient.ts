@@ -1,0 +1,217 @@
+import {
+  ApolloLink,
+  ApolloClient as NativeApolloClient,
+  DocumentTransform,
+  ObservableQuery,
+  type OperationVariables,
+  type WatchQueryOptions,
+} from "@apollo/client";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
+import { parse, visit } from "graphql";
+import { equal } from "@wry/equality";
+import type { ApplicationManifest } from "../types/application-manifest.js";
+import { aiClientSymbol } from "../utilities/constants.js";
+import {
+  McpAppManager,
+  type ConnectToHostImplementation,
+} from "./McpAppManager.js";
+import { ToolHydrationLink } from "../link/ToolHydrationLink.js";
+import { ToolCallLink } from "../link/ToolCallLink.js";
+import {
+  cacheAsync,
+  getToolNamesFromDocument,
+  getVariableNamesFromDocument,
+  getVariablesForOperationFromToolInput,
+  warnOnVariableMismatch,
+} from "../utilities/index.js";
+import type { ApolloMcpServerApps } from "./types.js";
+import type { ToolInfo } from "./typeRegistration.js";
+
+export declare namespace AbstractApolloClient {
+  export interface Options extends Omit<NativeApolloClient.Options, "link"> {
+    link?: NativeApolloClient.Options["link"];
+    manifest: ApplicationManifest;
+  }
+}
+
+export class AbstractApolloClient extends NativeApolloClient {
+  manifest: ApplicationManifest;
+  private readonly appManager: McpAppManager;
+
+  /** @internal */
+  readonly [aiClientSymbol] = true;
+
+  #hydratedToolInput: Record<string, unknown> | undefined;
+  #toolHydrationLink: ToolHydrationLink;
+
+  #toolInfo: ToolInfo | undefined;
+  #toolMetadata: ApolloMcpServerApps.CallToolResult["_meta"] | undefined;
+
+  constructor(
+    options: AbstractApolloClient.Options,
+    connectToHost: ConnectToHostImplementation
+  ) {
+    const toolHydrationLink = new ToolHydrationLink();
+    const link = options.link ?? new ToolCallLink();
+
+    if (__DEV__) {
+      validateTerminatingLink(link);
+    }
+
+    super({
+      ...options,
+      link: toolHydrationLink.concat(link),
+      // Strip out the prefetch/tool directives so they don't get sent with the operation to the server
+      documentTransform: new DocumentTransform((document) => {
+        const serverDocument = removeDirectivesFromDocument(
+          [{ name: "prefetch" }, { name: "tool" }],
+          document
+        )!;
+
+        return visit(serverDocument, {
+          OperationDefinition(node) {
+            return { ...node, description: undefined };
+          },
+        });
+      }).concat(options.documentTransform ?? DocumentTransform.identity()),
+    });
+
+    this.#toolHydrationLink = toolHydrationLink;
+    this.manifest = options.manifest;
+    this.appManager = new McpAppManager(this.manifest, connectToHost);
+  }
+
+  get toolInfo() {
+    return this.#toolInfo;
+  }
+
+  get toolMetadata() {
+    return this.#toolMetadata;
+  }
+
+  setLink(newLink: ApolloLink): void {
+    super.setLink(this.#toolHydrationLink.concat(newLink));
+  }
+
+  stop() {
+    super.stop();
+    this.appManager.close().catch(() => {});
+  }
+
+  protected get hydratedToolInput() {
+    return this.#hydratedToolInput;
+  }
+
+  protected clearHydratedToolInput() {
+    this.#hydratedToolInput = undefined;
+  }
+
+  watchQuery<
+    T = any,
+    TVariables extends OperationVariables = OperationVariables,
+  >(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables> {
+    if (__DEV__) {
+      const toolInput = this.#hydratedToolInput;
+
+      if (toolInput) {
+        const toolName = this.toolInfo?.toolName;
+        const hasMatchingTool =
+          !!toolName && getToolNamesFromDocument(options.query).has(toolName);
+
+        if (hasMatchingTool) {
+          // Clear after first matching comparison so this only fires once and
+          // remounting doesn't produce spurious warnings.
+          this.#hydratedToolInput = undefined;
+
+          const variableNames = getVariableNamesFromDocument(options.query);
+
+          if (variableNames.size > 0) {
+            const { variables } = options;
+            const toolInputVariables = Object.entries(toolInput).filter(
+              ([key]) => variableNames.has(key)
+            );
+
+            const hasToolInputMismatch = toolInputVariables.some(
+              ([key, value]) => !equal(value, variables?.[key])
+            );
+
+            if (hasToolInputMismatch) {
+              warnOnVariableMismatch(
+                options.query,
+                Object.fromEntries(toolInputVariables),
+                variables
+              );
+            }
+          }
+        }
+      }
+    }
+
+    return super.watchQuery(options);
+  }
+
+  connect = cacheAsync(async () => {
+    const { structuredContent, toolName, toolInput, _meta } =
+      await this.appManager.connect();
+
+    this.#hydratedToolInput = toolInput;
+    this.#toolMetadata = _meta;
+
+    if (toolName != null) {
+      this.#toolInfo = { toolName, toolInput };
+    }
+
+    this.manifest.operations.forEach((operation) => {
+      if (
+        operation.prefetchID &&
+        structuredContent.prefetch?.[operation.prefetchID]
+      ) {
+        this.writeQuery({
+          query: parse(operation.body),
+          data: structuredContent.prefetch[operation.prefetchID].data,
+        });
+        this.#toolHydrationLink.hydrate(operation, {
+          result: structuredContent.prefetch[operation.prefetchID],
+          variables: {},
+        });
+      }
+
+      if (
+        structuredContent.result &&
+        operation.tools.find((tool) => tool.name === toolName)
+      ) {
+        this.#toolHydrationLink.hydrate(operation, {
+          result: structuredContent.result,
+          variables: getVariablesForOperationFromToolInput(
+            operation,
+            toolInput
+          ),
+        });
+      }
+    });
+
+    this.#toolHydrationLink.complete();
+  });
+}
+
+function validateTerminatingLink(link: ApolloLink) {
+  let terminatingLink = link;
+
+  while (terminatingLink.right) {
+    terminatingLink = terminatingLink.right;
+  }
+
+  if (
+    !isNamedLink(terminatingLink) ||
+    terminatingLink.name !== "ToolCallLink"
+  ) {
+    throw new Error(
+      "The terminating link must be a `ToolCallLink`. If you are using a `split` link, ensure the `right` branch uses a `ToolCallLink` as the terminating link."
+    );
+  }
+}
+
+function isNamedLink(link: ApolloLink): link is ApolloLink & { name: string } {
+  return "name" in link;
+}

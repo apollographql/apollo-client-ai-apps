@@ -1,192 +1,40 @@
-import {
-  ApolloLink,
-  ApolloClient as BaseApolloClient,
-  DocumentTransform,
-} from "@apollo/client";
-import type {
-  WatchQueryOptions,
-  ObservableQuery,
-  OperationVariables,
-} from "@apollo/client";
-import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
-import { parse, visit } from "graphql";
-import { equal } from "@wry/equality";
-import { __DEV__ } from "@apollo/client/utilities/environment";
-import type { ApplicationManifest } from "../../types/application-manifest.js";
-import { ToolCallLink } from "../link/ToolCallLink.js";
-import {
-  aiClientSymbol,
-  cacheAsync,
-  getToolNamesFromDocument,
-  getVariableNamesFromDocument,
-  getVariablesForOperationFromToolInput,
-  warnOnVariableMismatch,
-} from "../../utilities/index.js";
-import { ToolHydrationLink } from "../../link/ToolHydrationLink.js";
-import { McpAppManager } from "./McpAppManager.js";
+import type { App } from "@modelcontextprotocol/ext-apps";
+import { AbstractApolloClient } from "../../core/AbstractApolloClient.js";
+import { connectToHost, promiseWithResolvers } from "../../utilities/index.js";
+import type { ApolloMcpServerApps } from "../../core/types.js";
 
 export declare namespace ApolloClient {
-  export interface Options extends Omit<BaseApolloClient.Options, "link"> {
-    link?: BaseApolloClient.Options["link"];
-    manifest: ApplicationManifest;
-  }
+  export interface Options extends AbstractApolloClient.Options {}
 }
 
-export class ApolloClient extends BaseApolloClient {
-  manifest: ApplicationManifest;
-  private readonly appManager: McpAppManager;
-
-  /** @internal */
-  readonly [aiClientSymbol] = true;
-
-  #toolInput: Record<string, unknown> | undefined;
-  #toolHydrationLink: ToolHydrationLink;
-
+export class ApolloClient extends AbstractApolloClient {
   constructor(options: ApolloClient.Options) {
-    const toolHydrationLink = new ToolHydrationLink();
-    const link = options.link ?? new ToolCallLink();
+    super(options, async (app) => {
+      const toolResult =
+        promiseWithResolvers<ApolloMcpServerApps.CallToolResult>();
+      const toolInput =
+        promiseWithResolvers<Parameters<App["ontoolinput"]>[0]>();
 
-    if (__DEV__) {
-      validateTerminatingLink(link);
-    }
+      app.ontoolresult = (params) => {
+        toolResult.resolve(
+          params as unknown as ApolloMcpServerApps.CallToolResult
+        );
+      };
 
-    super({
-      ...options,
-      link: toolHydrationLink.concat(link),
-      // Strip out the prefetch/tool directives so they don't get sent with the operation to the server
-      documentTransform: new DocumentTransform((document) => {
-        const serverDocument = removeDirectivesFromDocument(
-          [{ name: "prefetch" }, { name: "tool" }],
-          document
-        )!;
+      app.ontoolinput = (params) => {
+        toolInput.resolve(params);
+      };
 
-        return visit(serverDocument, {
-          OperationDefinition(node) {
-            return { ...node, description: undefined };
-          },
-        });
-      }).concat(options.documentTransform ?? DocumentTransform.identity()),
+      await connectToHost(app);
+
+      const { structuredContent, _meta } = await toolResult.promise;
+      const { arguments: args } = await toolInput.promise;
+
+      return {
+        structuredContent,
+        toolInput: args,
+        _meta,
+      };
     });
-
-    this.#toolHydrationLink = toolHydrationLink;
-    this.manifest = options.manifest;
-    this.appManager = new McpAppManager(this.manifest);
   }
-
-  setLink(newLink: ApolloLink): void {
-    super.setLink(this.#toolHydrationLink.concat(newLink));
-  }
-
-  stop() {
-    super.stop();
-    this.appManager.close().catch(() => {});
-  }
-
-  get toolInput() {
-    return this.#toolInput;
-  }
-
-  clearToolInput() {
-    this.#toolInput = undefined;
-  }
-
-  watchQuery<
-    T = any,
-    TVariables extends OperationVariables = OperationVariables,
-  >(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables> {
-    if (__DEV__) {
-      const toolInput = this.#toolInput;
-
-      if (toolInput) {
-        const toolName = this.appManager.toolName;
-        const hasMatchingTool =
-          !!toolName && getToolNamesFromDocument(options.query).has(toolName);
-
-        if (hasMatchingTool) {
-          // Clear after first matching comparison so this only fires once and
-          // remounting doesn't produce spurious warnings.
-          this.#toolInput = undefined;
-
-          const variableNames = getVariableNamesFromDocument(options.query);
-
-          if (variableNames.size > 0) {
-            const { variables } = options;
-            const toolInputVariables = Object.entries(toolInput).filter(
-              ([key]) => variableNames.has(key)
-            );
-
-            const hasToolInputMismatch = toolInputVariables.some(
-              ([key, value]) => !equal(value, variables?.[key])
-            );
-
-            if (hasToolInputMismatch) {
-              warnOnVariableMismatch(
-                options.query,
-                Object.fromEntries(toolInputVariables),
-                variables
-              );
-            }
-          }
-        }
-      }
-    }
-
-    return super.watchQuery(options);
-  }
-
-  connect = cacheAsync(async () => {
-    const { structuredContent, toolName, args } =
-      await this.appManager.connect();
-
-    this.#toolInput = args;
-
-    this.manifest.operations.forEach((operation) => {
-      if (
-        operation.prefetchID &&
-        structuredContent.prefetch?.[operation.prefetchID]
-      ) {
-        this.writeQuery({
-          query: parse(operation.body),
-          data: structuredContent.prefetch[operation.prefetchID].data,
-        });
-        this.#toolHydrationLink.hydrate(operation, {
-          result: structuredContent.prefetch[operation.prefetchID],
-          variables: {},
-        });
-      }
-
-      if (
-        structuredContent.result &&
-        operation.tools.find((tool) => tool.name === toolName)
-      ) {
-        this.#toolHydrationLink.hydrate(operation, {
-          result: structuredContent.result,
-          variables: getVariablesForOperationFromToolInput(operation, args),
-        });
-      }
-    });
-
-    this.#toolHydrationLink.complete();
-  });
-}
-
-function validateTerminatingLink(link: ApolloLink) {
-  let terminatingLink = link;
-
-  while (terminatingLink.right) {
-    terminatingLink = terminatingLink.right;
-  }
-
-  if (
-    !isNamedLink(terminatingLink) ||
-    terminatingLink.name !== "ToolCallLink"
-  ) {
-    throw new Error(
-      "The terminating link must be a `ToolCallLink`. If you are using a `split` link, ensure the `right` branch uses a `ToolCallLink` as the terminating link."
-    );
-  }
-}
-
-function isNamedLink(link: ApolloLink): link is ApolloLink & { name: string } {
-  return "name" in link;
 }

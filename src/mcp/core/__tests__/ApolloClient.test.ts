@@ -9,7 +9,7 @@ import {
   type DocumentNode,
 } from "@apollo/client";
 import { print } from "@apollo/client/utilities";
-import { ToolCallLink } from "../../link/ToolCallLink.js";
+import { ToolCallLink } from "../../../link/ToolCallLink.js";
 import {
   graphqlToolResult,
   minimalHostContextWithToolName,

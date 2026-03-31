@@ -8,7 +8,7 @@ import {
   NetworkStatus,
   gql,
 } from "@apollo/client";
-import { ToolCallLink } from "../../link/ToolCallLink.js";
+import { ToolCallLink } from "../../../link/ToolCallLink.js";
 import {
   graphqlToolResult,
   minimalHostContextWithToolName,

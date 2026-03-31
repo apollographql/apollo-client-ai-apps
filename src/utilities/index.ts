@@ -1,4 +1,5 @@
 export { aiClientSymbol } from "./constants.js";
+export { connectToHost } from "./connectToHost.js";
 export { getVariablesForOperationFromToolInput } from "./getVariablesForOperationFromToolInput.js";
 export { getToolNamesFromDocument } from "./getToolNamesFromDocument.js";
 export { getVariableNamesFromDocument } from "./getVariableNamesFromDocument.js";
