@@ -24,7 +24,8 @@ test("writes tool result data to cache", async () => {
   using _ = spyOnConsole("debug");
 
   const query = gql`
-    query Product($id: ID!) {
+    query Product($id: ID!)
+    @tool(name: "GetProduct", description: "Get a product") {
       product(id: $id) {
         id
         title
@@ -33,27 +34,8 @@ test("writes tool result data to cache", async () => {
     }
   `;
 
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    manifest: mockApplicationManifest({
-      operations: [
-        {
-          id: "1",
-          name: "Product",
-          body: print(query),
-          type: "query",
-          prefetch: false,
-          variables: { id: "ID" },
-          tools: [{ name: "GetProduct", description: "Get a product" }],
-        },
-      ],
-    }),
-  });
-
-  using host = await mockMcpHost({
-    hostContext: minimalHostContextWithToolName("GetProduct"),
-  });
-  host.onCleanup(() => client.stop());
+  const { client, host } = await setup({ query });
+  using _host = host;
 
   host.sendToolResult({
     content: [],
@@ -68,6 +50,12 @@ test("writes tool result data to cache", async () => {
   host.sendToolInput({ arguments: { id: "1" } });
 
   await client.connect();
+
+  await expect(
+    client.query({ query, variables: { id: "1" } })
+  ).resolves.toStrictEqual({
+    data: { product: { id: "1", title: "Pen", __typename: "Product" } },
+  });
 
   expect(client.extract()).toEqual({
     "Product:1": {
@@ -149,11 +137,11 @@ test("writes prefetch data to cache", async () => {
   });
 });
 
-test("writes prefetch and tool response data to cache when both are provided", async () => {
+test("writes prefetch response data to cache when both are provided", async () => {
   using _ = spyOnConsole("debug");
 
   const prefetchQuery = gql`
-    query TopProducts {
+    query TopProducts @tool(description: "Shows top products") @prefetch {
       topProducts {
         id
         title
@@ -163,7 +151,7 @@ test("writes prefetch and tool response data to cache when both are provided", a
   `;
 
   const query = gql`
-    query Product($id: ID!) {
+    query Product($id: ID!) @tool(description: "Get a product by id") {
       product(id: $id) {
         id
         title
@@ -176,25 +164,8 @@ test("writes prefetch and tool response data to cache when both are provided", a
     cache: new InMemoryCache(),
     manifest: mockApplicationManifest({
       operations: [
-        {
-          id: "1",
-          name: "TopProducts",
-          body: print(prefetchQuery),
-          type: "query",
-          prefetch: true,
-          prefetchID: "__anonymous",
-          variables: {},
-          tools: [{ name: "TopProducts", description: "Shows top products" }],
-        },
-        {
-          id: "2",
-          name: "Product",
-          body: print(query),
-          type: "query",
-          prefetch: false,
-          variables: { id: "ID" },
-          tools: [{ name: "Product", description: "Get a product by id" }],
-        },
+        parseManifestOperation(prefetchQuery),
+        parseManifestOperation(query),
       ],
     }),
   });
@@ -205,7 +176,6 @@ test("writes prefetch and tool response data to cache when both are provided", a
   host.onCleanup(() => client.stop());
 
   host.sendToolResult({
-    content: [],
     structuredContent: {
       prefetch: {
         __anonymous: {
@@ -224,6 +194,12 @@ test("writes prefetch and tool response data to cache when both are provided", a
   host.sendToolInput({ arguments: { id: "2" } });
 
   await client.connect();
+
+  await expect(
+    client.query({ query, variables: { id: "2" } })
+  ).resolves.toStrictEqual({
+    data: { product: { __typename: "Product", id: "2", title: "iPad" } },
+  });
 
   expect(client.extract()).toEqual({
     "Product:1": {
@@ -248,7 +224,8 @@ test("excludes extra tool input variables not defined in the operation", async (
   using _ = spyOnConsole("debug");
 
   const query = gql`
-    query Product($id: ID!) {
+    query Product($id: ID!)
+    @tool(name: "GetProduct", description: "Get a product") {
       product(id: $id) {
         id
         title
@@ -257,30 +234,10 @@ test("excludes extra tool input variables not defined in the operation", async (
     }
   `;
 
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    manifest: mockApplicationManifest({
-      operations: [
-        {
-          id: "1",
-          name: "Product",
-          body: print(query),
-          type: "query",
-          prefetch: false,
-          variables: { id: "ID" },
-          tools: [{ name: "GetProduct", description: "Get a product" }],
-        },
-      ],
-    }),
-  });
-
-  using host = await mockMcpHost({
-    hostContext: minimalHostContextWithToolName("GetProduct"),
-  });
-  host.onCleanup(() => client.stop());
+  const { client, host } = await setup({ query });
+  using _host = host;
 
   host.sendToolResult({
-    content: [],
     structuredContent: {
       result: {
         data: {
@@ -293,7 +250,13 @@ test("excludes extra tool input variables not defined in the operation", async (
 
   await client.connect();
 
-  expect(client.extract()).toEqual({
+  await expect(
+    client.query({ query, variables: { id: "1" } })
+  ).resolves.toStrictEqual({
+    data: { product: { id: "1", title: "Pen", __typename: "Product" } },
+  });
+
+  expect(client.extract()).toStrictEqual({
     "Product:1": {
       __typename: "Product",
       id: "1",
@@ -477,7 +440,8 @@ test("reads result data from _meta.structuredContent", async () => {
   using _ = spyOnConsole("debug");
 
   const query = gql`
-    query Product($id: ID!) {
+    query Product($id: ID!)
+    @tool(name: "GetProduct", description: "Get a product") {
       product(id: $id) @private {
         id
         title
@@ -486,30 +450,10 @@ test("reads result data from _meta.structuredContent", async () => {
     }
   `;
 
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    manifest: mockApplicationManifest({
-      operations: [
-        {
-          id: "1",
-          name: "Product",
-          body: print(query),
-          type: "query",
-          prefetch: false,
-          variables: { id: "ID" },
-          tools: [{ name: "GetProduct", description: "Get a product" }],
-        },
-      ],
-    }),
-  });
-
-  using host = await mockMcpHost({
-    hostContext: minimalHostContextWithToolName("GetProduct"),
-  });
-  host.onCleanup(() => client.stop());
+  const { client, host } = await setup({ query });
+  using _host = host;
 
   host.sendToolResult({
-    content: [],
     structuredContent: {},
     _meta: {
       toolName: "GetProduct",
@@ -525,6 +469,12 @@ test("reads result data from _meta.structuredContent", async () => {
   host.sendToolInput({ arguments: { id: "1" } });
 
   await client.connect();
+
+  await expect(
+    client.query({ query, variables: { id: "1" } })
+  ).resolves.toStrictEqual({
+    data: { product: { id: "1", title: "Pen", __typename: "Product" } },
+  });
 
   expect(client.extract()).toEqual({
     "Product:1": {
@@ -545,7 +495,7 @@ test("merges prefetch from structuredContent and result from _meta.structuredCon
   using _ = spyOnConsole("debug");
 
   const prefetchQuery = gql`
-    query TopProducts {
+    query TopProducts @tool(description: "Shows top products") @prefetch {
       topProducts {
         id
         title
@@ -555,7 +505,8 @@ test("merges prefetch from structuredContent and result from _meta.structuredCon
   `;
 
   const query = gql`
-    query Product($id: ID!) {
+    query Product($id: ID!)
+    @tool(name: "GetProduct", description: "Get a product") {
       product(id: $id) @private {
         id
         title
@@ -568,25 +519,8 @@ test("merges prefetch from structuredContent and result from _meta.structuredCon
     cache: new InMemoryCache(),
     manifest: mockApplicationManifest({
       operations: [
-        {
-          id: "1",
-          name: "TopProducts",
-          body: print(prefetchQuery),
-          type: "query",
-          prefetch: true,
-          prefetchID: "__anonymous",
-          variables: {},
-          tools: [{ name: "TopProducts", description: "Shows top products" }],
-        },
-        {
-          id: "2",
-          name: "Product",
-          body: print(query),
-          type: "query",
-          prefetch: false,
-          variables: { id: "ID" },
-          tools: [{ name: "GetProduct", description: "Get a product" }],
-        },
+        parseManifestOperation(prefetchQuery),
+        parseManifestOperation(query),
       ],
     }),
   });
@@ -597,7 +531,6 @@ test("merges prefetch from structuredContent and result from _meta.structuredCon
   host.onCleanup(() => client.stop());
 
   host.sendToolResult({
-    content: [],
     structuredContent: {
       prefetch: {
         __anonymous: {
@@ -622,7 +555,13 @@ test("merges prefetch from structuredContent and result from _meta.structuredCon
 
   await client.connect();
 
-  expect(client.extract()).toEqual({
+  await expect(
+    client.query({ query, variables: { id: "2" } })
+  ).resolves.toStrictEqual({
+    data: { product: { id: "2", title: "iPad", __typename: "Product" } },
+  });
+
+  expect(client.extract()).toStrictEqual({
     "Product:1": {
       __typename: "Product",
       id: "1",
@@ -646,7 +585,7 @@ test("_meta.structuredContent wins over structuredContent", async () => {
 
   const query = gql`
     query Product($id: ID!) {
-      product(id: $id) {
+      product(id: $id) @tool(name: "GetProduct", description: "Get a product") {
         id
         title @private
         __typename
@@ -654,30 +593,10 @@ test("_meta.structuredContent wins over structuredContent", async () => {
     }
   `;
 
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    manifest: mockApplicationManifest({
-      operations: [
-        {
-          id: "1",
-          name: "Product",
-          body: print(query),
-          type: "query",
-          prefetch: false,
-          variables: { id: "ID" },
-          tools: [{ name: "GetProduct", description: "Get a product" }],
-        },
-      ],
-    }),
-  });
-
-  using host = await mockMcpHost({
-    hostContext: minimalHostContextWithToolName("GetProduct"),
-  });
-  host.onCleanup(() => client.stop());
+  const { client, host } = await setup({ query });
+  using _host = host;
 
   host.sendToolResult({
-    content: [],
     structuredContent: {
       result: {
         data: {
@@ -699,6 +618,12 @@ test("_meta.structuredContent wins over structuredContent", async () => {
   host.sendToolInput({ arguments: { id: "1" } });
 
   await client.connect();
+
+  await expect(
+    client.query({ query, variables: { id: "1" } })
+  ).resolves.toStrictEqual({
+    data: { product: { id: "1", title: "Meta title", __typename: "Product" } },
+  });
 
   expect(client.extract()).toEqual({
     "Product:1": {
@@ -864,7 +789,7 @@ test("serves tool result data on cache-and-network query without calling execute
   expect(execute).not.toHaveBeenCalled();
 });
 
-test("serves tool result data on no-cache query without calling execute tool", async () => {
+test("serves tool result data on no-cache query without calling execute tool and does not write to cache", async () => {
   using _ = spyOnConsole("debug");
   const query = gql`
     query Product($id: ID!)
@@ -896,6 +821,7 @@ test("serves tool result data on no-cache query without calling execute tool", a
     client.query({ query, variables: { id: "1" }, fetchPolicy: "no-cache" })
   ).resolves.toStrictEqual({ data });
   expect(execute).not.toHaveBeenCalled();
+  expect(client.extract()).toStrictEqual({});
 });
 
 test("serves hydrated query from tool result while other pending network-only queries call execute", async () => {

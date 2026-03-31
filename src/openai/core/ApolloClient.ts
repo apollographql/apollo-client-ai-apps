@@ -154,23 +154,14 @@ export class ApolloClient extends BaseApolloClient {
         });
       }
 
-      if (operation.tools.find((tool) => tool.name === toolName)) {
-        if (structuredContent.result?.data) {
-          const variables = getVariablesForOperationFromToolInput(
-            operation,
-            args
-          );
-          this.writeQuery({
-            query: parse(operation.body),
-            data: structuredContent.result.data,
-            variables,
-          });
-
-          this.#toolHydrationLink.hydrate(operation, {
-            result: structuredContent.result,
-            variables,
-          });
-        }
+      if (
+        structuredContent.result &&
+        operation.tools.find((tool) => tool.name === toolName)
+      ) {
+        this.#toolHydrationLink.hydrate(operation, {
+          result: structuredContent.result,
+          variables: getVariablesForOperationFromToolInput(operation, args),
+        });
       }
     });
 

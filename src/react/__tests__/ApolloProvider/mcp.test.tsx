@@ -4,48 +4,80 @@ import { ApolloProvider } from "../../ApolloProvider.js";
 import { waitFor } from "@testing-library/react";
 import { ApolloClient } from "../../../mcp/core/ApolloClient.js";
 import { gql, InMemoryCache } from "@apollo/client";
-import { print } from "@apollo/client/utilities";
 import {
   minimalHostContextWithToolName,
   mockApplicationManifest,
   mockMcpHost,
+  parseManifestOperation,
   renderAsync,
   spyOnConsole,
 } from "../../../testing/internal/index.js";
 
-test("writes to the cache as soon as toolOutput is available", async () => {
+test("writes prefetch data to the cache when immediately available", async () => {
   using _ = spyOnConsole("debug");
 
-  const toolName = "GreetingQuery";
-  using host = await mockMcpHost({
-    hostContext: minimalHostContextWithToolName(toolName),
-  });
-  host.onCleanup(() => client.stop());
-
   const query = gql`
-    query GreetingQuery {
+    query GreetingQuery @tool(description: "Fetches a greeting") @prefetch {
       greeting
     }
   `;
-  const data = {
-    greeting: "hello",
-  };
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     manifest: mockApplicationManifest({
-      operations: [
-        {
-          id: "1",
-          name: "GreetingQuery",
-          body: print(query),
-          prefetch: true,
-          prefetchID: "__anonymous",
-          type: "query",
-          variables: {},
-          tools: [{ name: toolName, description: "Fetches a greeting" }],
-        },
-      ],
+      operations: [parseManifestOperation(query)],
+    }),
+  });
+
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("OtherTool"),
+  });
+  host.onCleanup(() => client.stop());
+
+  host.sendToolInput({ arguments: {} });
+  host.sendToolResult({
+    structuredContent: {
+      result: {
+        data: null,
+      },
+      prefetch: {
+        __anonymous: { data: { greeting: "hello" } },
+      },
+    },
+  });
+
+  await renderAsync(<ApolloProvider client={client} />, {
+    wrapper: ({ children }) => <Suspense>{children}</Suspense>,
+  });
+
+  await waitFor(() => {
+    expect(client.extract()).toStrictEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        greeting: "hello",
+      },
+    });
+  });
+});
+
+test("hydrates the tool result and writes to the cache when query first executes", async () => {
+  using _ = spyOnConsole("debug");
+
+  using host = await mockMcpHost({
+    hostContext: minimalHostContextWithToolName("GreetingQuery"),
+  });
+  host.onCleanup(() => client.stop());
+
+  const query = gql`
+    query GreetingQuery @tool(description: "Fetches a greeting") {
+      greeting
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    manifest: mockApplicationManifest({
+      operations: [parseManifestOperation(query)],
     }),
   });
 
@@ -59,16 +91,21 @@ test("writes to the cache as soon as toolOutput is available", async () => {
 
   host.sendToolInput({ arguments: {} });
   host.sendToolResult({
-    content: [{ type: "text", text: JSON.stringify({ result: { data } }) }],
-    structuredContent: { result: { data } },
+    structuredContent: { result: { data: { greeting: "hello" } } },
   });
 
-  await waitFor(() => {
-    expect(client.extract()).toEqual({
-      ROOT_QUERY: {
-        __typename: "Query",
-        greeting: "hello",
-      },
-    });
+  await expect(
+    waitFor(() => expect(client.extract()).not.toEqual({}))
+  ).rejects.toThrow();
+
+  await expect(client.query({ query })).resolves.toStrictEqual({
+    data: { greeting: "hello" },
+  });
+
+  expect(client.extract()).toStrictEqual({
+    ROOT_QUERY: {
+      __typename: "Query",
+      greeting: "hello",
+    },
   });
 });

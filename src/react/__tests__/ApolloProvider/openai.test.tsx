@@ -4,22 +4,22 @@ import { ApolloProvider } from "../../ApolloProvider.js";
 import { waitFor } from "@testing-library/react";
 import { ApolloClient } from "../../../openai/core/ApolloClient.js";
 import { gql, InMemoryCache } from "@apollo/client";
-import { print } from "@apollo/client/utilities";
 import {
   minimalHostContextWithToolName,
   mockApplicationManifest,
   mockMcpHost,
+  parseManifestOperation,
   renderAsync,
   spyOnConsole,
   stubOpenAiGlobals,
 } from "../../../testing/internal/index.js";
 
-test("writes data to the cache when immediately available", async () => {
+test("writes prefetch data to the cache when immediately available", async () => {
   stubOpenAiGlobals();
   using _ = spyOnConsole("debug");
 
   const query = gql`
-    query GreetingQuery {
+    query GreetingQuery @tool(description: "Fetches a greeting") @prefetch {
       greeting
     }
   `;
@@ -31,18 +31,7 @@ test("writes data to the cache when immediately available", async () => {
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     manifest: mockApplicationManifest({
-      operations: [
-        {
-          id: "1",
-          name: "GreetingQuery",
-          body: print(query),
-          prefetch: true,
-          prefetchID: "__anonymous",
-          type: "query",
-          variables: {},
-          tools: [],
-        },
-      ],
+      operations: [parseManifestOperation(query)],
     }),
   });
 
@@ -53,7 +42,6 @@ test("writes data to the cache when immediately available", async () => {
 
   host.sendToolInput({ arguments: {} });
   host.sendToolResult({
-    content: [],
     structuredContent: {
       result: {
         data: null,
@@ -78,36 +66,20 @@ test("writes data to the cache when immediately available", async () => {
   });
 });
 
-test("writes to the cache as soon as toolOutput is available", async () => {
+test("hydrates the tool result and writes to the cache when query first executes", async () => {
   stubOpenAiGlobals();
   using _ = spyOnConsole("debug");
 
-  stubOpenAiGlobals();
-
   const query = gql`
-    query GreetingQuery {
+    query GreetingQuery @tool(description: "Fetches a greeting") {
       greeting
     }
   `;
-  const data = {
-    greeting: "hello",
-  };
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     manifest: mockApplicationManifest({
-      operations: [
-        {
-          id: "1",
-          name: "GreetingQuery",
-          body: print(query),
-          prefetch: true,
-          prefetchID: "__anonymous",
-          type: "query",
-          variables: {},
-          tools: [],
-        },
-      ],
+      operations: [parseManifestOperation(query)],
     }),
   });
 
@@ -127,12 +99,15 @@ test("writes to the cache as soon as toolOutput is available", async () => {
   ).rejects.toThrow();
 
   host.sendToolResult({
-    content: [],
-    structuredContent: {
-      prefetch: {
-        __anonymous: { data },
-      },
-    },
+    structuredContent: { result: { data: { greeting: "hello" } } },
+  });
+
+  await expect(
+    waitFor(() => expect(client.extract()).not.toEqual({}))
+  ).rejects.toThrow();
+
+  await expect(client.query({ query })).resolves.toStrictEqual({
+    data: { greeting: "hello" },
   });
 
   await waitFor(() => {
