@@ -1,3 +1,11 @@
+## 0.7.1 (2026-04-01)
+
+### Fixes
+
+#### Fix license type
+
+Fix license type in `package.json` to an MIT license.
+
 ## 0.7.0 (2026-03-31)
 
 ### Breaking Changes
