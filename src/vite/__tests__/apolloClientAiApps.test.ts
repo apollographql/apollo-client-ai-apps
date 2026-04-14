@@ -437,19 +437,7 @@ describe("operations", () => {
         "format": "apollo-ai-app-manifest",
         "hash": "abc",
         "name": "my-app",
-        "operations": [
-          {
-            "body": "query HelloWorldQuery {
-        helloWorld
-      }",
-            "id": "f8604bba13e2f589608c0eb36c3039c5ef3a4c5747bc1596f9dbcbe924dc90f9",
-            "name": "HelloWorldQuery",
-            "prefetch": false,
-            "tools": [],
-            "type": "query",
-            "variables": {},
-          },
-        ],
+        "operations": [],
         "resource": "http://localhost:3333",
         "version": "1",
       }
