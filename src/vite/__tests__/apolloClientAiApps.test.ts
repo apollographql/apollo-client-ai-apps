@@ -410,7 +410,8 @@ describe("operations", () => {
     vol.fromJSON({
       "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
-        query HelloWorldQuery {
+        "Returns a greeting"
+        query HelloWorldQuery @tool {
           helloWorld
         }
       `),
@@ -437,7 +438,24 @@ describe("operations", () => {
         "format": "apollo-ai-app-manifest",
         "hash": "abc",
         "name": "my-app",
-        "operations": [],
+        "operations": [
+          {
+            "body": "query HelloWorldQuery {
+        helloWorld
+      }",
+            "id": "f8604bba13e2f589608c0eb36c3039c5ef3a4c5747bc1596f9dbcbe924dc90f9",
+            "name": "HelloWorldQuery",
+            "prefetch": false,
+            "tools": [
+              {
+                "description": "Returns a greeting",
+                "name": "HelloWorldQuery",
+              },
+            ],
+            "type": "query",
+            "variables": {},
+          },
+        ],
         "resource": "http://localhost:3333",
         "version": "1",
       }
