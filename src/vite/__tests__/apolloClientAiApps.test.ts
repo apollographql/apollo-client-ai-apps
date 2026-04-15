@@ -518,6 +518,49 @@ describe("operations", () => {
     `);
   });
 
+  test("does not write operations if not annotated with `@tool` or `@prefetch`", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery {
+          helloWorld
+        }
+      `),
+      "src/my-mutation.tsx": declareOperation(gql`
+        mutation SendGreeting {
+          sendGreeting(message: "Hello")
+        }
+      `),
+    });
+
+    await using server = await setupServer({
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
+    });
+    await server.listen();
+
+    const manifest = readManifestFile();
+    expect(manifest).toMatchInlineSnapshot(`
+      {
+        "appVersion": "1.0.0",
+        "csp": {
+          "baseUriDomains": [],
+          "connectDomains": [],
+          "frameDomains": [],
+          "redirectDomains": [],
+          "resourceDomains": [],
+        },
+        "format": "apollo-ai-app-manifest",
+        "hash": "abc",
+        "name": "my-app",
+        "operations": [],
+        "resource": "http://localhost:3333",
+        "version": "1",
+      }
+    `);
+  });
+
   test("errors when a subscription operation type is discovered", async () => {
     vol.fromJSON({
       "package.json": mockPackageJson(),
