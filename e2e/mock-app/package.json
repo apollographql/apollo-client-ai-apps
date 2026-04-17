@@ -1,0 +1,8 @@
+{
+  "name": "mock-app",
+  "private": true,
+  "dependencies": {
+    "@apollo/client": "4.1.7",
+    "@apollo/client-ai-apps": "0.7.2"
+  }
+}

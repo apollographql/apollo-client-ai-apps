@@ -2,6 +2,11 @@
   "name": "integration-tests",
   "private": true,
   "workspaces": [
-    "./graphql-server"
-  ]
+    "./graphql-server",
+    "./mock-app"
+  ],
+  "devDependencies": {
+    "@apollo/mcp-impostor-host": "^0.3.0",
+    "@playwright/test": "^1.59.1"
+  }
 }
