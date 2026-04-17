@@ -1,18 +1,17 @@
-import { gql, type TypedDocumentNode } from "@apollo/client";
-import { useQuery } from "@apollo/client/react";
-
-interface HelloQueryData {
-  hello: string;
-}
-
-const HELLO_QUERY: TypedDocumentNode<HelloQueryData> = gql`
-  query Hello @tool(name: "Hello", description: "Returns a greeting.") {
-    hello
-  }
-`;
+import { useToolInfo } from "@apollo/client-ai-apps/react";
+import { Hello } from "./tools/Hello";
+import { Echo } from "./tools/Echo";
 
 export function App() {
-  const { data } = useQuery(HELLO_QUERY);
+  const toolInfo = useToolInfo();
 
-  return <h1 data-testid="greeting">{data?.hello}</h1>;
+  switch (toolInfo?.toolName) {
+    case "Hello":
+      return <Hello />;
+    case "Echo":
+      return <Echo />;
+    default:
+      // @ts-expect-error type should be never
+      throw new Error("Unknown tool:", toolInfo?.toolName);
+  }
 }
