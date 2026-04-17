@@ -18,6 +18,6 @@ export function App() {
       return <SemiPrivate />;
     default:
       // @ts-expect-error type should be never
-      throw new Error("Unknown tool:", toolInfo?.toolName);
+      throw new Error(`Unknown tool: ${toolInfo?.toolName}`);
   }
 }
