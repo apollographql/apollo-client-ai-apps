@@ -12,7 +12,7 @@ interface Variables {
 
 const ECHO_QUERY: TypedDocumentNode<Data, Variables> = gql`
   "Echos the message back to the user"
-  query Echo($message: String!) @tool {
+  query Echo($message: String!) @tool(name: "Echo") {
     echo(message: $message)
   }
 `;
@@ -20,7 +20,9 @@ const ECHO_QUERY: TypedDocumentNode<Data, Variables> = gql`
 const { useHydratedVariables } = createHydrationUtils(ECHO_QUERY);
 
 export function Echo() {
-  const [variables] = useHydratedVariables({ message: "Hello, world" });
+  const [variables] = useHydratedVariables({
+    message: "This should be unused",
+  });
   const { data, dataState } = useQuery(ECHO_QUERY, { variables });
 
   if (dataState !== "complete") {
