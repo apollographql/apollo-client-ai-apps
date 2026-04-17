@@ -11,7 +11,15 @@
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "baseUrl": ".",
+    "paths": {
+      /* Prevent in-editor TypeScript issues by using the types from the root installed version */
+      "@apollo/client": ["../node_modules/@apollo/client"],
+      "@apollo/client/*": ["../node_modules/@apollo/client/*"],
+      "vite": ["../node_modules/vite"],
+      "vite/*": ["../node_modules/vite/*"]
+    }
   },
   "include": ["src", "vite.config.ts", ".apollo-client-ai-apps/types"]
 }

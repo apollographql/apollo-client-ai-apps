@@ -8,7 +8,7 @@ export default defineConfig({
     emptyOutDir: true,
   },
   resolve: {
-    dedupe: ["react", "react-dom"],
+    dedupe: ["react", "react-dom", "@apollo/client"],
   },
   plugins: [
     apolloClientAiApps({
