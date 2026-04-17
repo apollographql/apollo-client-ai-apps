@@ -7,7 +7,8 @@ const typeDefs = readFileSync("/data/schema.graphql", "utf-8");
 const resolvers = {
   Query: {
     hello: () => "Hello, world!",
-    echo: (_: unknown, { message }: { message: string }) => `Echo: ${message}`,
+    echo: (_: unknown, { message }: { message: string }) =>
+      `${message} (${message})`,
     user: () => ({ address: "1234 Main St", fullName: "MCP User" }),
   },
 };
