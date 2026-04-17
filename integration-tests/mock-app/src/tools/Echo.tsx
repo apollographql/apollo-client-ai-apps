@@ -21,9 +21,11 @@ const { useHydratedVariables } = createHydrationUtils(ECHO_QUERY);
 
 export function Echo() {
   const [variables] = useHydratedVariables({ message: "Hello, world" });
-  const { data, loading } = useQuery(ECHO_QUERY, { variables });
+  const { data, dataState } = useQuery(ECHO_QUERY, { variables });
 
-  return loading ?
-      <div>Loading...</div>
-    : <div data-testid="echo">{data?.echo}</div>;
+  if (dataState !== "complete") {
+    return <div>Loading...</div>;
+  }
+
+  return <div data-testid="echo">{data.echo}</div>;
 }
