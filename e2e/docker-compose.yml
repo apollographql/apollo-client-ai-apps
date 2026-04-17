@@ -23,6 +23,7 @@ services:
     volumes:
       - ./mcp-config.yaml:/config.yaml
       - ./schema.graphql:/data/schema.graphql
+      - ./apps:/data/apps
     command: ["/config.yaml"]
     depends_on:
       graphql:

@@ -4,10 +4,9 @@ schema:
   source: local
   path: /data/schema.graphql
 
-operations:
-  source: infer
-
 introspection:
+  introspect:
+    enabled: true
   execute:
     enabled: true
 
@@ -19,5 +18,12 @@ health_check:
   enabled: true
   path: /health
 
+cors:
+  enabled: true
+  allow_any_origin: true
+
 logging:
   level: info
+
+overrides:
+  mutation_mode: all

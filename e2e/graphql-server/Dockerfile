@@ -9,4 +9,4 @@ COPY server.ts ./
 
 EXPOSE 4000
 
-CMD ["npx", "tsx", "server.ts"]
+CMD ["node_modules/.bin/tsx", "server.ts"]

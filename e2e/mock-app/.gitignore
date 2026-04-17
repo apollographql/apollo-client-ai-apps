@@ -1,0 +1,5 @@
+node_modules
+dist
+.application-manifest.json
+.application-manifest.d.json.ts
+.apollo-client-ai-apps

@@ -2,7 +2,7 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests",
-  globalTeardown: "./e2e/global-teardown.js",
+  globalTeardown: "./global-teardown.js",
   webServer: [
     {
       command: "npx serve-impostor-host --playwright",
@@ -11,7 +11,6 @@ export default defineConfig({
     },
     {
       command: "docker compose up --build",
-      cwd: "e2e",
       url: "http://localhost:8000/health",
       reuseExistingServer: !process.env.CI,
     },
@@ -19,5 +18,6 @@ export default defineConfig({
   workers: 1,
   use: {
     browserName: "chromium",
+    trace: "retain-on-failure",
   },
 });
