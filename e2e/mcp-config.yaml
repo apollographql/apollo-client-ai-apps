@@ -1,0 +1,23 @@
+endpoint: http://graphql:4000/
+
+schema:
+  source: local
+  path: /data/schema.graphql
+
+operations:
+  source: infer
+
+introspection:
+  execute:
+    enabled: true
+
+transport:
+  type: streamable_http
+  port: 8000
+
+health_check:
+  enabled: true
+  path: /health
+
+logging:
+  level: info

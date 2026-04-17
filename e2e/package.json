@@ -1,0 +1,7 @@
+{
+  "name": "integration-tests",
+  "private": true,
+  "workspaces": [
+    "./graphql-server"
+  ]
+}

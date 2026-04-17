@@ -1,0 +1,9 @@
+{
+  "name": "e2e-graphql-server",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@apollo/server": "^5.5.0",
+    "graphql": "^16.12.0"
+  }
+}
