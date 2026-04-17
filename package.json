@@ -104,7 +104,7 @@
     "attw": "npm run build && attw --pack . --ignore-rules cjs-resolves-to-esm --profile node16"
   },
   "devDependencies": {
-    "@apollo/client": "^4.0.12",
+    "@apollo/client": "^4.1.7",
     "@arethetypeswrong/cli": "^0.18.2",
     "@modelcontextprotocol/ext-apps": "^1.0.1",
     "@testing-library/jest-dom": "^6.9.1",
