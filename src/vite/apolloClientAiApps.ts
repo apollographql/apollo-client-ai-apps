@@ -453,8 +453,11 @@ export function apolloClientAiApps(
             query: source,
             fetchPolicy: "no-cache",
           });
+          const data = result.data!;
 
-          manifestOperations.push(result.data!);
+          if (data.tools.length > 0 || data.prefetch) {
+            manifestOperations.push(data);
+          }
           break;
         }
         case OperationTypeNode.MUTATION: {
@@ -462,8 +465,11 @@ export function apolloClientAiApps(
             mutation: source,
             fetchPolicy: "no-cache",
           });
+          const data = result.data!;
 
-          manifestOperations.push(result.data!);
+          if (data.tools.length > 0 || data.prefetch) {
+            manifestOperations.push(data);
+          }
           break;
         }
         default:

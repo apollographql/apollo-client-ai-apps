@@ -410,7 +410,8 @@ describe("operations", () => {
     vol.fromJSON({
       "package.json": mockPackageJson(),
       "src/my-component.tsx": declareOperation(gql`
-        query HelloWorldQuery {
+        "Returns a greeting"
+        query HelloWorldQuery @tool {
           helloWorld
         }
       `),
@@ -445,7 +446,12 @@ describe("operations", () => {
             "id": "f8604bba13e2f589608c0eb36c3039c5ef3a4c5747bc1596f9dbcbe924dc90f9",
             "name": "HelloWorldQuery",
             "prefetch": false,
-            "tools": [],
+            "tools": [
+              {
+                "description": "Returns a greeting",
+                "name": "HelloWorldQuery",
+              },
+            ],
             "type": "query",
             "variables": {},
           },
@@ -506,6 +512,49 @@ describe("operations", () => {
             "variables": {},
           },
         ],
+        "resource": "http://localhost:3333",
+        "version": "1",
+      }
+    `);
+  });
+
+  test("does not write operations if not annotated with `@tool` or `@prefetch`", async () => {
+    vol.fromJSON({
+      "package.json": mockPackageJson(),
+      "src/my-component.tsx": declareOperation(gql`
+        query HelloWorldQuery {
+          helloWorld
+        }
+      `),
+      "src/my-mutation.tsx": declareOperation(gql`
+        mutation SendGreeting {
+          sendGreeting(message: "Hello")
+        }
+      `),
+    });
+
+    await using server = await setupServer({
+      plugins: [
+        apolloClientAiApps({ targets: ["mcp"], appsOutDir: "dist/apps" }),
+      ],
+    });
+    await server.listen();
+
+    const manifest = readManifestFile();
+    expect(manifest).toMatchInlineSnapshot(`
+      {
+        "appVersion": "1.0.0",
+        "csp": {
+          "baseUriDomains": [],
+          "connectDomains": [],
+          "frameDomains": [],
+          "redirectDomains": [],
+          "resourceDomains": [],
+        },
+        "format": "apollo-ai-app-manifest",
+        "hash": "abc",
+        "name": "my-app",
+        "operations": [],
         "resource": "http://localhost:3333",
         "version": "1",
       }
