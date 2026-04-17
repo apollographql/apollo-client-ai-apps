@@ -1,0 +1,10 @@
+type Query {
+  hello: String!
+  echo(message: String!): String!
+  user: User
+}
+
+type User {
+  address: String
+  fullName: String
+}
