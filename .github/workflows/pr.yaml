@@ -80,7 +80,7 @@ jobs:
         shell: bash
         run: npm test -- --coverage
 
-  e2e:
+  integration-tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -95,24 +95,24 @@ jobs:
       - name: Install root dependencies
         run: npm ci
 
-      - name: Install e2e dependencies
+      - name: Install integration tests dependencies
         run: npm ci
-        working-directory: e2e
+        working-directory: integration-tests
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
-        working-directory: e2e
+        working-directory: integration-tests
 
-      - name: Run e2e tests
+      - name: Run integration tests
         run: npm test
-        working-directory: e2e
+        working-directory: integration-tests
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: e2e/playwright-report
+          path: integration-tests/playwright-report
           retention-days: 7
 
   arethetypeswrong:

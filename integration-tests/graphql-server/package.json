@@ -1,5 +1,5 @@
 {
-  "name": "e2e-graphql-server",
+  "name": "integration-tests-graphql-server",
   "private": true,
   "type": "module",
   "dependencies": {
