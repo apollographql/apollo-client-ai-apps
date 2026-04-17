@@ -10,7 +10,7 @@ interface Data {
 
 const SEMI_PRIVATE_QUERY: TypedDocumentNode<Data, Record<string, never>> = gql`
   "Returns user information with a private field"
-  query SemiPrivate($message: String!) @tool {
+  query SemiPrivate @tool {
     user {
       fullName
       address @private

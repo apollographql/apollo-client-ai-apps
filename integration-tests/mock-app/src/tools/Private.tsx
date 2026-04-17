@@ -10,7 +10,7 @@ interface Data {
 
 const PRIVATE_QUERY: TypedDocumentNode<Data, Record<string, never>> = gql`
   "Returns private user information"
-  query Private($message: String!) @tool {
+  query Private @tool {
     user @private {
       fullName
       address
