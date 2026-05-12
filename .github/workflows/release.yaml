@@ -17,13 +17,16 @@ jobs:
     if: github.repository == 'apollographql/apollo-client-ai-apps' && (github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/'))
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Setup Node.js 20.x
-        uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+
         with:
-          node-version: ">=23.6.0"
+          node-version: 24.x
           registry-url: "https://registry.npmjs.org/"
+          package-manager-cache: false
+
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -40,7 +43,7 @@ jobs:
           git config --global user.name GitHub Actions
           git config user.email github-actions@github.com
 
-      - uses: knope-dev/action@v2.1.0
+      - uses: knope-dev/action@19617851f9f13ab2f27a05989c55efb18aca3675 # v2.1.2
         with:
           version: 0.22.0
 
