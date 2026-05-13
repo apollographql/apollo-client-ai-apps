@@ -77,6 +77,68 @@ eachHostEnv((setupHost, ApolloClient) => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  test("returns tool input value when @tool name is defined by operation name", async () => {
+    using _ = spyOnConsole("debug");
+
+    const query: TypedDocumentNode<
+      { products: Array<{ __typename: "Product"; id: string }> },
+      { category: string; page: number; sortBy: string }
+    > = gql`
+      "Get products by category"
+      query Products($category: String!, $page: Int!, $sortBy: String!) @tool {
+        products(category: $category, page: $page, sortBy: $sortBy) {
+          id
+        }
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      manifest: mockApplicationManifest({
+        operations: [parseManifestOperation(query)],
+      }),
+    });
+
+    using env = await setupHost({
+      client,
+      toolCall: {
+        name: "Products",
+        input: { category: "electronics", page: 1, sortBy: "title" },
+        result: { structuredContent: { result: { data: { products: [] } } } },
+      },
+    });
+    const { host, params } = env;
+
+    host.sendToolInput(params.toolInput);
+    host.sendToolResult(params.toolResult);
+
+    const { useHydratedVariables } = createHydrationUtils(query);
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () =>
+        useHydratedVariables({
+          category: "music",
+          page: 1,
+          sortBy: "name",
+        }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    const [variables] = await takeSnapshot();
+    expect(variables).toStrictEqual({
+      category: "electronics",
+      page: 1,
+      sortBy: "title",
+    });
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
   test("returns user-provided variables when tool name does not match", async () => {
     using _ = spyOnConsole("debug");
     const query = gql`
