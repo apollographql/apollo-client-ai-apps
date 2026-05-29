@@ -299,10 +299,11 @@ async function generateOperationTypes(
       documents,
       generates: {
         "operation-types.d.ts": {
-          plugins: ["typescript", "typescript-operations"],
+          plugins: ["typescript-operations"],
           config: {
             nonOptionalTypename: true,
             skipTypeNameForRoot: true,
+            namingConvention: "keep",
           } satisfies TypeScriptDocumentsPluginConfig,
         },
       },
