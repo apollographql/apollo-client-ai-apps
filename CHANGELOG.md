@@ -1,3 +1,11 @@
+## 0.7.5 (2026-05-29)
+
+### Fixes
+
+#### Remove unused dependencies
+
+Remove unused `crypto-hash` dependency.
+
 ## 0.7.4 (2026-05-29)
 
 ### Fixes
