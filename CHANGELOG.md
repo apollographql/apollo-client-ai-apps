@@ -1,3 +1,11 @@
+## 0.7.4 (2026-05-29)
+
+### Fixes
+
+#### Handle lowercase operation names
+
+Fixes tool input type generation when the tool name is set from the operation name and the operation name is lowercase.
+
 ## 0.7.3 (2026-05-13)
 
 ### Fixes
